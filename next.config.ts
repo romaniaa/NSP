@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  allowedDevOrigins: ["northshore-peaks.test"],
 };
 
 export default nextConfig;

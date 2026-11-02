@@ -1,69 +1,173 @@
-import Image from "next/image";
+import ElevationVisualizer from "@/components/ElevationVisualizer";
+import FreezingChart from "@/components/FreezingChart";
+import StationTable from "@/components/StationTable";
+import Summary from "@/components/Summary";
+import TemperatureChart from "@/components/TemperatureChart";
+import WindChart from "@/components/WindChart";
+import { SectionLabel, Unavailable } from "@/components/Ui";
+import { MOUNTAINS } from "@/config/mountains";
+import { tallestId } from "@/lib/Conditions";
+import { getFreezingSeries, getPointReadings } from "@/lib/Forecast";
+import { fetchMountainWeather } from "@/lib/Weather";
 
-export default function Home() {
+const trendWord = (delta: number | null, up: string, down: string, flat: string) =>
+  delta == null ? flat : Math.abs(delta) < 100 ? flat : delta > 0 ? up : down;
+
+const trendDetail = (delta: number | null, when: string) => {
+  if (delta == null) return "";
+  const m = Math.round(Math.abs(delta) / 10) * 10;
+  if (m < 100) return `Little change over ${when}.`;
+  return `${delta > 0 ? "Up" : "Down"} ${m} m over ${when}.`;
+};
+
+export default async function Home() {
+  const [mountainResults, readingsResult, freezingResult] = await Promise.all([
+    Promise.allSettled(MOUNTAINS.map((m) => fetchMountainWeather(m))),
+    Promise.allSettled([getPointReadings()]).then((r) => r[0]),
+    Promise.allSettled([getFreezingSeries()]).then((r) => r[0]),
+  ]);
+
+  for (const r of [...mountainResults, readingsResult, freezingResult]) {
+    if (r.status === "rejected") console.error("Fetch failure:", r.reason);
+  }
+
+  const readings =
+    readingsResult.status === "fulfilled" ? readingsResult.value : null;
+  const freezing =
+    freezingResult.status === "fulfilled" ? freezingResult.value : null;
+
+  const rows = MOUNTAINS.map((config, i) => {
+    const r = mountainResults[i];
+    return { config, weather: r.status === "fulfilled" ? r.value : null };
+  });
+  const tallest = tallestId(MOUNTAINS);
+
+  const tops = readings
+    ? MOUNTAINS.map((m) => ({
+        name: m.name,
+        reading: readings.find((r) => r.id === `${m.id}-top`),
+      })).filter((x) => x.reading)
+    : [];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+    <main className="min-h-screen bg-[#0b0e11] px-4 py-8 text-white md:px-10">
+      <div className="mx-auto max-w-6xl space-y-5">
+        <header className="flex flex-wrap items-end justify-between gap-3 pb-2">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              North Shore Peaks
+            </h1>
+            <p className="mt-1 text-sm text-[#9aa7b5]">
+              Rain or snow on Cypress, Grouse and Seymour.
+            </p>
+          </div>
+          {freezing && (
+            <p className="text-xs text-[#7d8da1]">
+              Model data · updated {freezing.updated}
+            </p>
+          )}
+        </header>
+
+        {freezing && readings && tops.length > 0 ? (
+          <Summary
+            freezing={freezing}
+            precip={rows
+              .filter((r) => r.weather)
+              .map((r) => ({
+                name: r.config.name,
+                precipitation: r.weather!.precipitation,
+              }))}
+            gusts={tops.map((t) => ({
+              name: t.name,
+              gust: t.reading!.gust,
+            }))}
+          />
+        ) : (
+          <Unavailable title="North Shore summary" />
+        )}
+
+        <SectionLabel>Rain and snow line</SectionLabel>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {rows.map(({ config, weather }) => (
+            <ElevationVisualizer
+              key={config.id}
+              config={config}
+              weather={weather}
+              isTallest={config.id === tallest}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ))}
         </div>
-      </main>
-    </div>
+
+        <SectionLabel>Freezing level</SectionLabel>
+        {freezing ? (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <FreezingChart
+              title="Freezing level forecast"
+              badge="6-day forecast"
+              current={freezing.current}
+              trend={trendWord(
+                freezing.deltaNext24,
+                "Expected to rise",
+                "Expected to fall",
+                "Holding steady"
+              )}
+              detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
+              days={freezing.forecast}
+              updated={freezing.updated}
+              note="Daily low–high range · Open-Meteo model"
+            />
+            <FreezingChart
+              title="Freezing level history"
+              badge="10-day history"
+              current={freezing.current}
+              trend={trendWord(
+                freezing.deltaPast25,
+                "Rising",
+                "Falling",
+                "Steady"
+              )}
+              detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
+              days={freezing.history}
+              updated={freezing.updated}
+              note="Daily low–high range · Open-Meteo model"
+            />
+          </div>
+        ) : (
+          <Unavailable title="Freezing level" />
+        )}
+
+        <SectionLabel>Temperature and wind</SectionLabel>
+        {readings ? (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <TemperatureChart readings={readings} />
+            <WindChart
+              rows={tops.map((t) => ({
+                label: t.name,
+                avg: t.reading!.wind,
+                gust: t.reading!.gust,
+              }))}
+            />
+          </div>
+        ) : (
+          <Unavailable title="Temperature and wind" />
+        )}
+
+        <SectionLabel>Conditions by elevation</SectionLabel>
+        {readings && freezing ? (
+          <StationTable readings={readings} freezingLevel={freezing.current} />
+        ) : (
+          <Unavailable title="Conditions by elevation" />
+        )}
+
+        <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
+          Model estimates, not station observations. Snow line is estimated at
+          150 m below the freezing level. Weather data by{" "}
+          <a href="https://open-meteo.com" className="underline hover:text-white">
+            Open-Meteo.com
+          </a>
+          .
+        </footer>
+      </div>
+    </main>
   );
 }
