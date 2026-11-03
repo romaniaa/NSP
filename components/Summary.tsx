@@ -6,11 +6,12 @@ interface Props {
   freezing: FreezingSeries;
   precip: { name: string; precipitation: number }[];
   gusts: { name: string; gust: number }[];
+  cloud: number | null;
 }
 
 const round10 = (n: number) => Math.round(n / 10) * 10;
 
-export default function Summary({ freezing, precip, gusts }: Props) {
+export default function Summary({ freezing, precip, gusts, cloud }: Props) {
   const fl = freezing.current;
   const wet = precip.filter((p) => p.precipitation > 0.1);
   const windiest = gusts.reduce((a, b) => (b.gust > a.gust ? b : a));
@@ -21,7 +22,15 @@ export default function Summary({ freezing, precip, gusts }: Props) {
   if (wet.length === 0) {
     items.push({
       title: "Dry",
-      body: `No precipitation this hour on any of the three mountains. Freezing level is ${fmt(fl)} m.`,
+      body: `No precipitation this hour on any of the three mountains.${
+        cloud == null
+          ? ""
+          : cloud < 20
+          ? " Mostly clear skies."
+          : cloud < 60
+          ? " Partly cloudy."
+          : " Mostly cloudy."
+      } Freezing level is ${fmt(fl)} m.`,
     });
   } else {
     items.push({
@@ -62,14 +71,16 @@ export default function Summary({ freezing, precip, gusts }: Props) {
 
   return (
     <Card>
-      <h2 className="text-xs uppercase tracking-wider text-[#7d8da1]">
+      <h2 className="text-sm font-medium text-[#9aa7b5]">
         North Shore summary
       </h2>
-      <div className="mt-4 space-y-4">
+      <div className="mt-4 grid gap-5 md:auto-cols-fr md:grid-flow-col md:gap-0 md:divide-x md:divide-[#2f3840]">
         {items.map((it) => (
-          <div key={it.title}>
-            <p className="font-semibold text-white">{it.title}</p>
-            <p className="mt-1 text-[#a9c1dc]">{it.body}</p>
+          <div key={it.title} className="md:px-5 md:first:pl-0 md:last:pr-0">
+            <p className="font-display text-2xl font-bold uppercase tracking-wide text-white">
+              {it.title}
+            </p>
+            <p className="mt-1 text-[#c9d3dd]">{it.body}</p>
           </div>
         ))}
       </div>

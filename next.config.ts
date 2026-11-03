@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  allowedDevOrigins: ["northshore-peaks.test"],
+  allowedDevOrigins: ["nsp.test"],
 };
 
 export default nextConfig;

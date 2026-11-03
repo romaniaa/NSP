@@ -1,5 +1,6 @@
 import { cacheLife } from "next/cache";
-import { MOUNTAINS } from "@/config/mountains";
+import { LIFTS } from "@/config/lifts";
+import { MOUNTAINS, type MountainId } from "@/config/mountains";
 
 const TZ = "America/Vancouver";
 // Roughly central to the three mountains; freezing level barely varies between them at model resolution.
@@ -9,12 +10,16 @@ export interface PointReading {
   id: string;
   label: string;
   mountain: string;
+  color: string;
   elevation: number;
   temp: number; // °C
   rh: number; // %
   wind: number; // km/h average
   gust: number; // km/h
   dir: number; // degrees the wind comes from
+  precipitation: number; // mm/h
+  cloud: number | null; // %
+  code: number | null; // WMO weather code
 }
 
 export interface DayStat {
@@ -40,6 +45,7 @@ const POINTS = MOUNTAINS.flatMap((m) => [
     id: `${m.id}-top`,
     label: `${m.name} top`,
     mountain: m.name,
+    color: m.color,
     lat: m.lat,
     lon: m.lon,
     elevation: m.lifts.top.elevation,
@@ -48,6 +54,7 @@ const POINTS = MOUNTAINS.flatMap((m) => [
     id: `${m.id}-bottom`,
     label: `${m.name} bottom`,
     mountain: m.name,
+    color: m.color,
     lat: m.lat,
     lon: m.lon,
     elevation: m.lifts.bottom.elevation,
@@ -65,7 +72,7 @@ export async function getPointReadings(): Promise<PointReading[]> {
   url.searchParams.set("elevation", POINTS.map((p) => p.elevation).join(","));
   url.searchParams.set(
     "current",
-    "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m"
+    "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,cloud_cover,weather_code"
   );
   url.searchParams.set("timezone", TZ);
 
@@ -81,12 +88,16 @@ export async function getPointReadings(): Promise<PointReading[]> {
       id: p.id,
       label: p.label,
       mountain: p.mountain,
+      color: p.color,
       elevation: p.elevation,
       temp: Math.round(c.temperature_2m * 10) / 10,
       rh: Math.round(c.relative_humidity_2m),
       wind: Math.round(c.wind_speed_10m),
       gust: Math.round(c.wind_gusts_10m),
       dir: Math.round(c.wind_direction_10m),
+      precipitation: c.precipitation ?? 0,
+      cloud: c.cloud_cover ?? null,
+      code: c.weather_code ?? null,
     };
   });
 }
@@ -170,4 +181,67 @@ export async function getFreezingSeries(): Promise<FreezingSeries> {
       minute: "2-digit",
     }),
   };
+}
+
+export interface StationReading {
+  elevation: number;
+  temp: number;
+  rh: number;
+  wind: number;
+  gust: number;
+  dir: number;
+  precipitation: number;
+  cloud: number | null;
+  code: number | null;
+}
+
+// Current model readings at every lift station elevation on one mountain.
+export async function getMountainReadings(
+  id: MountainId
+): Promise<StationReading[]> {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 900, expire: 3600 });
+
+  const m = MOUNTAINS.find((x) => x.id === id);
+  if (!m) throw new Error(`unknown mountain: ${id}`);
+
+  const elevations = [
+    ...new Set(
+      LIFTS[id]
+        .flatMap((l) => [l.bottom, l.top])
+        .filter((e): e is number => e != null)
+    ),
+  ].sort((a, b) => b - a);
+  if (elevations.length === 0) return [];
+
+  const url = new URL("https://api.open-meteo.com/v1/forecast");
+  url.searchParams.set("latitude", elevations.map(() => m.lat).join(","));
+  url.searchParams.set("longitude", elevations.map(() => m.lon).join(","));
+  url.searchParams.set("elevation", elevations.join(","));
+  url.searchParams.set(
+    "current",
+    "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,cloud_cover,weather_code"
+  );
+  url.searchParams.set("timezone", TZ);
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`stations: ${res.status} ${res.statusText}`);
+  const json = await res.json();
+  const list = Array.isArray(json) ? json : [json];
+
+  return elevations.map((elevation, i) => {
+    const c = list[i]?.current;
+    if (!c) throw new Error(`stations: no data at ${elevation} m`);
+    return {
+      elevation,
+      temp: Math.round(c.temperature_2m * 10) / 10,
+      rh: Math.round(c.relative_humidity_2m),
+      wind: Math.round(c.wind_speed_10m),
+      gust: Math.round(c.wind_gusts_10m),
+      dir: Math.round(c.wind_direction_10m),
+      precipitation: c.precipitation ?? 0,
+      cloud: c.cloud_cover ?? null,
+      code: c.weather_code ?? null,
+    };
+  });
 }

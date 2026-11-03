@@ -8,7 +8,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={`rounded-2xl bg-[#1d2227] p-5 ${className}`}>
+    <section className={`plate border border-[#232a31] bg-[#13181d] p-5 ${className}`}>
       {children}
     </section>
   );
@@ -16,8 +16,9 @@ export function Card({
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <h2 className="px-1 text-xs uppercase tracking-wider text-[#7d8da1]">
+    <h2 className="section-label flex items-center gap-3 pt-4 text-lg font-semibold text-[#e6edf3]">
       {children}
+      <span className="h-px flex-1 bg-[#2f3840]" aria-hidden="true" />
     </h2>
   );
 }

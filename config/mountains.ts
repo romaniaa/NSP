@@ -13,6 +13,7 @@ export interface LiftPoint {
 export interface MountainConfig {
   id: MountainId;
   name: string;
+  color: string; // accent colour used for this mountain across the page
   lat: number;
   lon: number;
   minElevation: number; // bottom of the diagram
@@ -30,17 +31,18 @@ export const MOUNTAINS: MountainConfig[] = [
   {
     id: "cypress",
     name: "Cypress",
+    color: "#8aa583",
     lat: 49.396,
     lon: -123.204,
     minElevation: 700,
-    maxElevation: 1500,
+    maxElevation: 1560,
     landmarks: [
       { name: "Base lodge", elevation: 915 },
       { name: "Black Mountain", elevation: 1200 },
       { name: "Mt. Strachan", elevation: 1440 },
     ],
     lifts: {
-      bottom: { label: "Base lodge lifts", elevation: 915 },
+      bottom: { label: "Eagle Express (bottom)", elevation: 921 },
       top: { label: "Sky Quad (top)", elevation: 1440 },
     },
     profile: [[0,780],[12,910],[25,1060],[38,1200],[50,1130],[62,1440],[75,1300],[88,1180],[100,1050]],
@@ -48,6 +50,7 @@ export const MOUNTAINS: MountainConfig[] = [
   {
     id: "grouse",
     name: "Grouse",
+    color: "#c4764f",
     lat: 49.379,
     lon: -123.082,
     minElevation: 200,
@@ -66,6 +69,7 @@ export const MOUNTAINS: MountainConfig[] = [
   {
     id: "seymour",
     name: "Seymour",
+    color: "#cfae6b",
     lat: 49.367,
     lon: -122.948,
     minElevation: 800,

@@ -11,9 +11,9 @@ function Chip({ elevation, fl }: { elevation: number; fl: number }) {
   const p = precipAt(elevation, fl);
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium ${PRECIP[p].chip}`}
+      className={`chip ${PRECIP[p].chip}`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${PRECIP[p].dot}`} />
+      <span className={`h-1.5 w-1.5 ${PRECIP[p].dot}`} />
       {PRECIP[p].label}
     </span>
   );
@@ -21,7 +21,7 @@ function Chip({ elevation, fl }: { elevation: number; fl: number }) {
 
 export default function SummaryTable({ rows }: { rows: Row[] }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-[#262626] bg-[#121212]">
+    <div className="overflow-x-auto border border-[#262626] bg-[#121212]">
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr className="border-b border-[#262626] text-xs text-[#8f8f8f]">

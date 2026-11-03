@@ -1,5 +1,6 @@
 import BubbleChart, { niceDomain } from "@/components/BubbleChart";
 import { Card } from "@/components/Ui";
+import type { MountainId } from "@/config/mountains";
 import type { PointReading } from "@/lib/Forecast";
 
 export default function TemperatureChart({
@@ -24,6 +25,8 @@ export default function TemperatureChart({
           value: r.temp,
           display: `${r.temp}°`,
           warm: r.temp > 0,
+          color: r.color,
+          mountain: r.id.split("-")[0] as MountainId,
         }))}
         min={min}
         max={max}

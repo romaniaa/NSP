@@ -73,11 +73,11 @@ export default function FreezingChart({
     <Card>
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-semibold text-white">{title}</h3>
-        <span className="text-xs text-[#7fb0ff]">{badge}</span>
+        <span className="chip bg-[#7fb0ff]/10 text-[#7fb0ff]">{badge}</span>
       </div>
 
       <div className="mt-5 flex items-center gap-4">
-        <p className="text-5xl font-semibold tabular-nums text-white">
+        <p className="font-display text-6xl font-bold tabular-nums text-white">
           {fmt(current)}
           <span className="ml-1 text-2xl text-[#9aa7b5]">m</span>
         </p>
@@ -115,14 +115,14 @@ export default function FreezingChart({
           <path
             d={smooth(low)}
             fill="none"
-            stroke="#a9b6c4"
+            stroke="#6f7f90"
             strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           />
           <path
             d={smooth(high)}
             fill="none"
-            stroke="#f2994a"
+            stroke="#e6edf3"
             strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           />

@@ -3,11 +3,14 @@
 import { useState } from "react";
 import BubbleChart from "@/components/BubbleChart";
 import { Card } from "@/components/Ui";
+import type { MountainId } from "@/config/mountains";
 
 export interface WindRow {
   label: string;
   avg: number;
   gust: number;
+  color: string;
+  mountain: MountainId;
 }
 
 export default function WindChart({ rows }: { rows: WindRow[] }) {
@@ -25,15 +28,17 @@ export default function WindChart({ rows }: { rows: WindRow[] }) {
             Model wind at 10 m above ground
           </p>
         </div>
-        <div className="flex rounded-full bg-[#2a3138] p-1 text-xs">
+        <div className="flex border border-[#2f3840] font-display text-sm uppercase tracking-wider">
           {(["avg", "gust"] as const).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => setMode(m)}
               aria-pressed={mode === m}
-              className={`rounded-full px-3 py-1 font-semibold ${
-                mode === m ? "bg-[#3b4651] text-white" : "text-[#9aa7b5]"
+              className={`px-3 py-1 font-semibold ${
+                mode === m
+                  ? "bg-[#e6edf3] text-[#0a0d10]"
+                  : "text-[#9aa7b5] hover:text-white"
               }`}
             >
               {m === "avg" ? "Average" : "Gusts"}
@@ -43,7 +48,12 @@ export default function WindChart({ rows }: { rows: WindRow[] }) {
       </div>
       <div className="mt-5">
         <BubbleChart
-          rows={rows.map((r, i) => ({ label: r.label, value: values[i] }))}
+          rows={rows.map((r, i) => ({
+            label: r.label,
+            value: values[i],
+            color: r.color,
+            mountain: r.mountain,
+          }))}
           min={0}
           max={max}
           step={step}

@@ -1,8 +1,13 @@
+import MountainIcon from "@/components/MountainIcon";
+import type { MountainId } from "@/config/mountains";
+
 export interface BubbleRow {
   label: string;
   value: number;
   display?: string;
   warm?: boolean;
+  color?: string; // mountain accent colour
+  mountain?: MountainId;
 }
 
 const ROW_H = 52;
@@ -56,7 +61,12 @@ export default function BubbleChart({
               className="flex items-center text-xs text-[#c9d3dd]"
               style={{ height: ROW_H }}
             >
-              {r.label}
+              <span className="flex items-center gap-2">
+                {r.color && r.mountain && (
+                  <MountainIcon id={r.mountain} color={r.color} className="h-3 w-4" />
+                )}
+                {r.label}
+              </span>
             </div>
           ))}
         </div>
@@ -87,15 +97,38 @@ export default function BubbleChart({
                 />
               )
           )}
+          {/* Each reading is a gauge flag standing on a stem at its value. */}
+          {rows.map(
+            (r, i) =>
+              r.color && (
+                <div
+                  key={`stem-${r.label}`}
+                  className="absolute w-px"
+                  style={{
+                    left: `${pct(r.value)}%`,
+                    top: i * ROW_H,
+                    height: ROW_H,
+                    backgroundColor: r.color,
+                  }}
+                />
+              )
+          )}
           {rows.map((r, i) => (
             <div
               key={r.label}
-              className={`absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums text-white ${
-                r.warm ? "bg-[#a4612f]/85" : "bg-[#3b4651]"
+              className={`absolute flex h-7 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-[11px] font-medium tabular-nums text-white ${
+                r.color ? "" : r.warm ? "bg-[#a4612f]/85" : "bg-[#3b4651]"
               }`}
               style={{
                 left: `${pct(r.value)}%`,
                 top: i * ROW_H + ROW_H / 2,
+                ...(r.color
+                  ? {
+                      // Opaque base keeps the stem and gridlines from showing through the number.
+                      background: `linear-gradient(${r.color}33, ${r.color}33), #13181d`,
+                      boxShadow: `inset 0 0 0 1px ${r.color}`,
+                    }
+                  : {}),
               }}
             >
               {r.display ?? r.value}

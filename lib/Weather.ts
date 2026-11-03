@@ -7,6 +7,8 @@ export interface MountainWeather {
   snowfall: number; // cm/h
   temperature: number; // °C at model surface
   wind: number; // km/h
+  cloud: number | null; // % total cloud cover
+  code: number | null; // WMO weather code
   time: string; // ISO, UTC
 }
 
@@ -26,7 +28,7 @@ async function fetchWithModel(m: MountainConfig, model?: string) {
   url.searchParams.set("longitude", String(m.lon));
   url.searchParams.set(
     "hourly",
-    "temperature_2m,precipitation,snowfall,freezing_level_height,wind_speed_10m"
+    "temperature_2m,precipitation,snowfall,freezing_level_height,wind_speed_10m,cloud_cover,weather_code"
   );
   if (model) url.searchParams.set("models", model);
   // GMT so response times line up with new Date().toISOString()
@@ -67,6 +69,8 @@ export async function fetchMountainWeather(
         snowfall: h.snowfall?.[i] ?? 0,
         temperature: Math.round((h.temperature_2m?.[i] ?? 0) * 10) / 10,
         wind: Math.round(h.wind_speed_10m?.[i] ?? 0),
+        cloud: h.cloud_cover?.[i] ?? null,
+        code: h.weather_code?.[i] ?? null,
         time: times[i] + "Z",
       };
     } catch (err) {
