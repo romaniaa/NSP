@@ -112,7 +112,6 @@ export default async function Home() {
                   config={config}
                   weather={weather}
                   isTallest={config.id === tallest}
-                  showLink
                 />
               </Link>
             ))}
