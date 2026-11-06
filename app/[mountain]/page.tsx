@@ -6,14 +6,18 @@ import FreezingChart from "@/components/FreezingChart";
 import LiftTable from "@/components/LiftTable";
 import LiftTemperatureChart from "@/components/LiftTemperatureChart";
 import MountainIcon from "@/components/MountainIcon";
+import SnowDepthCard from "@/components/SnowDepthCard";
 import SiteNav from "@/components/SiteNav";
 import Summary from "@/components/Summary";
+import WebcamGallery from "@/components/WebcamGallery";
 import WindCard from "@/components/WindCard";
 import { SectionLabel, Unavailable } from "@/components/Ui";
 import { LIFTS } from "@/config/lifts";
 import { MOUNTAINS } from "@/config/mountains";
+import { WEBCAMS } from "@/config/webcams";
 import { extremes, fmt, vertical } from "@/lib/Conditions";
 import { getFreezingSeries, getMountainReadings } from "@/lib/Forecast";
+import { getSnowReport } from "@/lib/SnowReport";
 import { trendDetail, trendWord } from "@/lib/Trend";
 import { fetchMountainWeather } from "@/lib/Weather";
 
@@ -76,18 +80,23 @@ async function MountainContent({
 
   const lifts = LIFTS[config.id];
 
-  const [weatherRes, stationsRes, freezingRes] = await Promise.allSettled([
-    fetchMountainWeather(config),
-    getMountainReadings(config.id),
-    getFreezingSeries(),
-  ]);
-  for (const r of [weatherRes, stationsRes, freezingRes]) {
+  const [weatherRes, stationsRes, freezingRes, snowRes] =
+    await Promise.allSettled([
+      fetchMountainWeather(config),
+      getMountainReadings(config.id),
+      getFreezingSeries(),
+      getSnowReport(config.id),
+    ]);
+  for (const r of [weatherRes, stationsRes, freezingRes, snowRes]) {
     if (r.status === "rejected") console.error("Fetch failure:", r.reason);
   }
 
   const weather = weatherRes.status === "fulfilled" ? weatherRes.value : null;
   const stations = stationsRes.status === "fulfilled" ? stationsRes.value : null;
   const freezing = freezingRes.status === "fulfilled" ? freezingRes.value : null;
+  // null when fulfilled means it's outside the snow season, so the section is hidden.
+  const snowFailed = snowRes.status === "rejected";
+  const snow = snowRes.status === "fulfilled" ? snowRes.value : null;
 
   const freezingLevel = weather?.freezingLevel ?? freezing?.current ?? null;
   const { low, high } = extremes(config);
@@ -131,6 +140,17 @@ async function MountainContent({
             />
           ) : (
             <Unavailable title={`${config.name} summary`} />
+          )}
+
+          {(snow || snowFailed) && (
+            <>
+              <SectionLabel>Snow depth</SectionLabel>
+              {snow ? (
+                <SnowDepthCard name={config.name} report={snow} />
+              ) : (
+                <Unavailable title="Snow depth" />
+              )}
+            </>
           )}
 
           <SectionLabel>Rain and snow line, and lifts</SectionLabel>
@@ -202,6 +222,9 @@ async function MountainContent({
           ) : (
             <Unavailable title="Temperature and wind" />
           )}
+
+          <SectionLabel>Webcams</SectionLabel>
+          <WebcamGallery name={config.name} webcams={WEBCAMS[config.id]} />
 
           <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
             Model estimates, not station observations. Snow line is estimated at
