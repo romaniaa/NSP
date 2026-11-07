@@ -47,7 +47,7 @@ export default function FreezingChart({
 }: Props) {
   const lowest = Math.min(...days.map((d) => d.low));
   const highest = Math.max(...days.map((d) => d.high));
-  let yMin = Math.floor(lowest / 500) * 500;
+  const yMin = Math.floor(lowest / 500) * 500;
   let yMax = Math.ceil(highest / 500) * 500;
   if (yMax === yMin) yMax = yMin + 500;
   if (yMax - yMin < 1000) {

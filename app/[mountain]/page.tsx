@@ -13,11 +13,20 @@ import WebcamGallery from "@/components/WebcamGallery";
 import WindCard from "@/components/WindCard";
 import { SectionLabel, Unavailable } from "@/components/Ui";
 import { LIFTS } from "@/config/lifts";
-import { MOUNTAINS } from "@/config/mountains";
+import { MOUNTAINS, type MountainConfig } from "@/config/mountains";
 import { WEBCAMS } from "@/config/webcams";
-import { extremes, fmt, vertical } from "@/lib/Conditions";
+import { extremes, fmt, verdict, vertical } from "@/lib/Conditions";
 import { getFreezingSeries, getMountainReadings } from "@/lib/Forecast";
-import { getSnowReport } from "@/lib/SnowReport";
+import {
+  HOME_TITLE,
+  OPEN_GRAPH,
+  SITE_NAME,
+  SITE_URL,
+  jsonLd,
+  mountainDescription,
+  mountainTitle,
+} from "@/lib/Site";
+import { getSnowReport, type SnowReport } from "@/lib/SnowReport";
 import { trendDetail, trendWord } from "@/lib/Trend";
 import { fetchMountainWeather } from "@/lib/Weather";
 
@@ -32,27 +41,141 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { mountain } = await params;
   const m = MOUNTAINS.find((x) => x.id === mountain);
-  return { title: m ? `${m.name} · North Shore Peaks` : "North Shore Peaks" };
+  if (!m) return {};
+
+  const title = mountainTitle(m);
+  const description = mountainDescription(m);
+  return {
+    title,
+    description,
+    alternates: { canonical: `/${m.id}` },
+    openGraph: {
+      ...OPEN_GRAPH,
+      title: `${title} | ${SITE_NAME}`,
+      description,
+      url: `/${m.id}`,
+    },
+  };
 }
 
-// The nav and page frame render instantly; everything that depends on the URL
-// streams in inside <Suspense>, which cacheComponents requires.
-export default function MountainPage({
+// Tells search engines what the page is about: a conditions page for a
+// named ski area, sitting under the overview.
+function structuredData(m: MountainConfig) {
+  const url = `${SITE_URL}/${m.id}`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": url,
+        url,
+        name: mountainTitle(m),
+        description: mountainDescription(m),
+        inLanguage: "en-CA",
+        isPartOf: { "@id": `${SITE_URL}/#website` },
+        about: { "@id": `${url}#resort` },
+        breadcrumb: { "@id": `${url}#breadcrumb` },
+      },
+      {
+        "@type": "SkiResort",
+        "@id": `${url}#resort`,
+        name: m.fullName,
+        url: m.website,
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: m.lat,
+          longitude: m.lon,
+          elevation: m.lifts.top.elevation,
+        },
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: m.locality,
+          addressRegion: "BC",
+          addressCountry: "CA",
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${url}#breadcrumb`,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: HOME_TITLE, item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: m.fullName, item: url },
+        ],
+      },
+    ],
+  };
+}
+
+// The hill is looked up before the page content renders. An unknown URL shows
+// the not-found page with a noindex tag, so search engines skip it, although the
+// status can still be 200 because the page shell has already started streaming.
+// generateStaticParams makes the param known at build time, which lets this
+// await sit outside <Suspense> under cacheComponents.
+export default async function MountainPage({
   params,
 }: {
   params: Promise<{ mountain: string }>;
 }) {
+  const { mountain: id } = await params;
+  const config = MOUNTAINS.find((m) => m.id === id);
+  if (!config) notFound();
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(structuredData(config)) }}
+      />
       <SiteNav />
       <main className="min-h-screen px-4 py-8 text-white md:px-10">
         <div className="mx-auto max-w-8xl space-y-5">
           <Suspense fallback={<Loading />}>
-            <MountainContent params={params} />
+            <MountainContent config={config} />
           </Suspense>
         </div>
       </main>
     </>
+  );
+}
+
+// "Dry · fog" → "dry with fog", "Snow above 1630 m" → "snow above 1630 m".
+function phrase(v: string) {
+  const [first, sky] = v.split(" · ");
+  const lead = first.charAt(0).toLowerCase() + first.slice(1);
+  if (!sky) return lead;
+  return sky === "fog" ? `${lead} with fog` : `${lead} and ${sky}`;
+}
+
+// One plain-language paragraph of current conditions. It gives search engines
+// and people a readable answer before the charts.
+function Intro({
+  config,
+  sky,
+  freezingLevel,
+  snow,
+}: {
+  config: MountainConfig;
+  sky: { precipitation: number; cloud: number | null; code: number | null } | null;
+  freezingLevel: number | null;
+  snow: SnowReport | null;
+}) {
+  const now =
+    freezingLevel != null
+      ? `Right now on ${config.fullName}: ${phrase(verdict(config, freezingLevel, sky ?? undefined))}. Freezing level ${fmt(freezingLevel)} m.`
+      : null;
+  const depth =
+    snow?.status === "ok"
+      ? `The resort reports ${snow.depths
+          .map((d) => `${fmt(d.cm)} cm at the ${d.label.toLowerCase()}`)
+          .join(" and ")}.`
+      : null;
+
+  return (
+    <p className="mt-3 max-w-3xl text-[#c9d3dd]">
+      {[now, depth].filter(Boolean).join(" ")}{" "}
+      Below: live webcams and rain or snow at each lift on this{" "}
+      {config.locality} ski area, updated every 15 minutes.
+    </p>
   );
 }
 
@@ -69,15 +192,7 @@ function Loading() {
   );
 }
 
-async function MountainContent({
-  params,
-}: {
-  params: Promise<{ mountain: string }>;
-}) {
-  const { mountain: id } = await params;
-  const config = MOUNTAINS.find((m) => m.id === id);
-  if (!config) notFound();
-
+async function MountainContent({ config }: { config: MountainConfig }) {
   const lifts = LIFTS[config.id];
 
   const [weatherRes, stationsRes, freezingRes, snowRes] =
@@ -114,13 +229,19 @@ async function MountainContent({
                   color={config.color}
                   className="h-10 w-[54px]"
                 />
-                {config.name}
+                {config.fullName}
               </h1>
               <p className="mt-2 text-sm tabular-nums text-[#9aa7b5]">
                 {fmt(low)}–{fmt(high)} m lifts · {fmt(vertical(config))} m
                 vertical · {config.lat.toFixed(3)}°N{" "}
                 {Math.abs(config.lon).toFixed(3)}°W
               </p>
+              <Intro
+                config={config}
+                sky={weather}
+                freezingLevel={freezingLevel}
+                snow={snow}
+              />
             </div>
             {freezing && (
               <p className="text-xs text-[#7d8da1]">
@@ -129,29 +250,41 @@ async function MountainContent({
             )}
           </header>
 
-          {freezing && weather && topStation ? (
-            <Summary
-              freezing={freezing}
-              precip={[
-                { name: config.name, precipitation: weather.precipitation },
-              ]}
-              gusts={[{ name: config.name, gust: topStation.gust }]}
-              cloud={topStation.cloud}
-            />
-          ) : (
-            <Unavailable title={`${config.name} summary`} />
-          )}
-
-          {(snow || snowFailed) && (
-            <>
-              <SectionLabel>Snow depth</SectionLabel>
-              {snow ? (
-                <SnowDepthCard name={config.name} report={snow} />
+          {/* Summary and snow depth share a row on desktop. Outside the snow
+              season there is no depth card, so the summary takes the full width. */}
+          <div
+            className={`grid grid-cols-1 gap-4 ${
+              snow || snowFailed ? "lg:grid-cols-5" : ""
+            }`}
+          >
+            <div className="lg:col-span-3">
+              {freezing && weather && topStation ? (
+                <Summary
+                  compact
+                  freezing={freezing}
+                  precip={[
+                    { name: config.name, precipitation: weather.precipitation },
+                  ]}
+                  gusts={[{ name: config.name, gust: topStation.gust }]}
+                  cloud={topStation.cloud}
+                />
               ) : (
-                <Unavailable title="Snow depth" />
+                <Unavailable title={`${config.name} summary`} />
               )}
-            </>
-          )}
+            </div>
+            {(snow || snowFailed) && (
+              <div className="lg:col-span-2">
+                {snow ? (
+                  <SnowDepthCard name={config.name} report={snow} />
+                ) : (
+                  <Unavailable title="Snow depth" />
+                )}
+              </div>
+            )}
+          </div>
+
+          <SectionLabel>Webcams</SectionLabel>
+          <WebcamGallery name={config.name} webcams={WEBCAMS[config.id]} />
 
           <SectionLabel>Rain and snow line, and lifts</SectionLabel>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -222,9 +355,6 @@ async function MountainContent({
           ) : (
             <Unavailable title="Temperature and wind" />
           )}
-
-          <SectionLabel>Webcams</SectionLabel>
-          <WebcamGallery name={config.name} webcams={WEBCAMS[config.id]} />
 
           <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
             Model estimates, not station observations. Snow line is estimated at

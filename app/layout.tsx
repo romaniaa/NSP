@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { Barlow, Barlow_Condensed, IBM_Plex_Mono } from "next/font/google";
 import Topo from "@/components/Topo";
+import {
+  HOME_DESCRIPTION,
+  HOME_TITLE,
+  OPEN_GRAPH,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/Site";
 import "./globals.css";
 
 const barlow = Barlow({
@@ -22,14 +29,21 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "North Shore Peaks",
-  description: "Rain or snow on Cypress, Grouse and Seymour.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${HOME_TITLE} | ${SITE_NAME}`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: HOME_DESCRIPTION,
+  applicationName: SITE_NAME,
+  openGraph: OPEN_GRAPH,
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="en-CA"
       className={`${barlow.variable} ${barlowCondensed.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="relative flex min-h-full flex-col font-sans">

@@ -11,7 +11,7 @@ export default function WebcamGallery({
 }) {
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-3">
         {webcams.cams.map((cam) => (
           <figure
             key={cam.src}
@@ -29,7 +29,7 @@ export default function WebcamGallery({
                 className="absolute inset-0 h-full w-full border-0"
               />
             </div>
-            <figcaption className="px-4 py-3 text-sm font-semibold text-white">
+            <figcaption className="px-4 py-3 text-sm font-semibold text-white lg:px-3 lg:py-2 lg:text-xs">
               {cam.name}
             </figcaption>
           </figure>

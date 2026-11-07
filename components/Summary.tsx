@@ -7,11 +7,19 @@ interface Props {
   precip: { name: string; precipitation: number }[];
   gusts: { name: string; gust: number }[];
   cloud: number | null;
+  // Tighter type and spacing, for sitting beside another card.
+  compact?: boolean;
 }
 
 const round10 = (n: number) => Math.round(n / 10) * 10;
 
-export default function Summary({ freezing, precip, gusts, cloud }: Props) {
+export default function Summary({
+  freezing,
+  precip,
+  gusts,
+  cloud,
+  compact = false,
+}: Props) {
   const fl = freezing.current;
   const wet = precip.filter((p) => p.precipitation > 0.1);
   const windiest = gusts.reduce((a, b) => (b.gust > a.gust ? b : a));
@@ -70,17 +78,30 @@ export default function Summary({ freezing, precip, gusts, cloud }: Props) {
   }
 
   return (
-    <Card>
+    <Card className={compact ? "h-full p-4!" : ""}>
       <h2 className="text-sm font-medium text-[#9aa7b5]">
         North Shore summary
       </h2>
-      <div className="mt-4 grid gap-5 md:auto-cols-fr md:grid-flow-col md:gap-0 md:divide-x md:divide-[#2f3840]">
+      <div
+        className={`grid md:auto-cols-fr md:grid-flow-col md:gap-0 md:divide-x md:divide-[#2f3840] ${
+          compact ? "mt-3 gap-3" : "mt-4 gap-5"
+        }`}
+      >
         {items.map((it) => (
-          <div key={it.title} className="md:px-5 md:first:pl-0 md:last:pr-0">
-            <p className="font-display text-2xl font-bold uppercase tracking-wide text-white">
+          <div
+            key={it.title}
+            className={`md:first:pl-0 md:last:pr-0 ${compact ? "md:px-4" : "md:px-5"}`}
+          >
+            <p
+              className={`font-display font-bold uppercase tracking-wide text-white ${
+                compact ? "text-lg leading-tight" : "text-2xl"
+              }`}
+            >
               {it.title}
             </p>
-            <p className="mt-1 text-[#c9d3dd]">{it.body}</p>
+            <p className={`mt-1 text-[#c9d3dd] ${compact ? "text-sm" : ""}`}>
+              {it.body}
+            </p>
           </div>
         ))}
       </div>

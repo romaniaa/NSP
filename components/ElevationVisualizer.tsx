@@ -80,6 +80,136 @@ function Ridge({
   );
 }
 
+// Height of the ridge at x (0–100), read off the straight segments of the profile.
+function ridgeAt(profile: [number, number][], x: number) {
+  for (let i = 1; i < profile.length; i++) {
+    const [x0, e0] = profile[i - 1];
+    const [x1, e1] = profile[i];
+    if (x <= x1) return e0 + ((e1 - e0) * (x - x0)) / (x1 - x0 || 1);
+  }
+  return profile[profile.length - 1][1];
+}
+
+// Small seeded random generator (mulberry32). Seeding it with the hill's id gives
+// each hill its own scatter that stays put between renders and refreshes.
+function seeded(key: string) {
+  let a = [...key].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 2654435761), 7);
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+interface Tree {
+  x: number; // % from the left
+  y: number; // % from the bottom, where the trunk meets the ground
+  size: number; // px tall
+  opacity: number;
+}
+
+// Trees on the ridge line, plus a scatter down the slope below it. Lower trees
+// are nearer the viewer, so they're drawn larger and stronger. Trees too close
+// to one already placed are skipped so the scatter doesn't clump.
+function placeTrees(
+  key: string,
+  profile: [number, number][],
+  pct: (m: number) => number
+): Tree[] {
+  const rand = seeded(key);
+  const trees: Tree[] = [];
+  const clear = (x: number, y: number) =>
+    trees.every((t) => Math.abs(t.x - x) > 5 || Math.abs(t.y - y) > 8);
+
+  // Along the ridge, keeping clear of the elevation ticks on the left edge.
+  for (let i = 0; i < 40 && trees.length < 9; i++) {
+    const x = 6 + rand() * 91;
+    const y = pct(ridgeAt(profile, x));
+    if (clear(x, y)) trees.push({ x, y, size: 18 + rand() * 6, opacity: 0.8 });
+  }
+
+  // Down the slope: depth runs from just under the ridge (0) to the foot of the card (1).
+  const ridgeCount = trees.length;
+  for (let i = 0; i < 200 && trees.length < ridgeCount + 18; i++) {
+    const x = 6 + rand() * 91;
+    const depth = 0.12 + rand() * 0.8;
+    const y = pct(ridgeAt(profile, x)) * (1 - depth);
+    if (y < 3 || !clear(x, y)) continue;
+    trees.push({
+      x,
+      y,
+      size: 18 + depth * 18 + rand() * 4,
+      opacity: 0.45 + depth * 0.4,
+    });
+  }
+  return trees;
+}
+
+// Line-drawn spruce: a straight trunk with pairs of drooping branches that
+// leave the trunk heading down and sweep outward, longer toward the base.
+// Built once on a 20 x 32 grid; each branch is a quadratic curve.
+const SPRUCE = (() => {
+  const cx = 10;
+  const parts = [`M${cx} 2V31`];
+  for (let i = 0; i < 5; i++) {
+    const y = 4 + i * 4.5; // where the branch leaves the trunk
+    const reach = 3.5 + i * 1.6; // how far out it goes
+    const drop = 4 + i * 0.8; // how far it falls on the way
+    for (const dir of [-1, 1]) {
+      parts.push(
+        `M${cx} ${y}Q${cx + dir * reach * 0.15} ${y + drop * 0.9} ${cx + dir * reach} ${y + drop}`
+      );
+    }
+  }
+  return parts.join("");
+})();
+
+// Drawn as its own small SVG so it keeps its shape while the ridge beneath it
+// stretches to fit the card.
+function Spruce({ size, color }: { size: number; color: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 32"
+      width={size * (20 / 32)}
+      height={size}
+      fill="none"
+      stroke={color}
+      strokeWidth="1"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d={SPRUCE} vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+function Trees({
+  id,
+  profile,
+  pct,
+  color,
+}: {
+  id: string;
+  profile: [number, number][];
+  pct: (m: number) => number;
+  color: string;
+}) {
+  return (
+    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      {placeTrees(id, profile, pct).map((t, i) => (
+        <div
+          key={i}
+          className="absolute flex -translate-x-1/2 translate-y-[1px]"
+          style={{ left: `${t.x}%`, bottom: `${t.y}%`, opacity: t.opacity }}
+        >
+          <Spruce size={Math.round(t.size)} color={color} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface Props {
   config: MountainConfig;
   weather: MountainWeather | null;
@@ -176,6 +306,7 @@ export default function ElevationVisualizer({
         />
 
         <Ridge profile={profile} pct={pct} color={config.color} />
+        <Trees id={config.id} profile={profile} pct={pct} color={config.color} />
 
         <div
           className="absolute inset-x-0 border-t border-dashed border-white/70"

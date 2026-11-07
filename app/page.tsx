@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import ElevationVisualizer from "@/components/ElevationVisualizer";
 import FreezingChart from "@/components/FreezingChart";
@@ -13,7 +14,35 @@ import { MOUNTAINS } from "@/config/mountains";
 import { tallestId } from "@/lib/Conditions";
 import { getFreezingSeries, getPointReadings } from "@/lib/Forecast";
 import { trendDetail, trendWord } from "@/lib/Trend";
+import {
+  HOME_DESCRIPTION,
+  HOME_TITLE,
+  OPEN_GRAPH,
+  SITE_NAME,
+  SITE_URL,
+  jsonLd,
+} from "@/lib/Site";
 import { fetchMountainWeather } from "@/lib/Weather";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: {
+    ...OPEN_GRAPH,
+    title: `${HOME_TITLE} | ${SITE_NAME}`,
+    description: HOME_DESCRIPTION,
+    url: "/",
+  },
+};
+
+const STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${SITE_URL}/#website`,
+  url: `${SITE_URL}/`,
+  name: SITE_NAME,
+  description: HOME_DESCRIPTION,
+  inLanguage: "en-CA",
+};
 
 export default async function Home() {
   const [mountainResults, readingsResult, freezingResult] = await Promise.all([
@@ -55,20 +84,33 @@ export default async function Home() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(STRUCTURED_DATA) }}
+      />
       <SiteNav />
       <main className="min-h-screen px-4 py-8 text-white md:px-10">
         <div className="mx-auto max-w-8xl space-y-5">
           <header className="flex flex-wrap items-end justify-between gap-3 pb-2">
             <div>
-              <h1 className="text-6xl font-bold">Overview</h1>
-              <p className="mt-1 text-[#c9d3dd]">
-                Rain or snow on Cypress, Grouse and Seymour.
+              <h1 className="text-6xl font-bold">North Shore ski conditions</h1>
+              <p className="mt-2 max-w-3xl text-[#c9d3dd]">
+                Rain or snow on Cypress Mountain, Grouse Mountain and Mount
+                Seymour, the three ski areas on Vancouver&apos;s North Shore.
+                Freezing level, wind and temperature at every lift, plus each
+                hill&apos;s snow report and live webcams on its own page.
+                Updated every 15 minutes.
               </p>
               <ul className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[#c9d3dd]">
                 {MOUNTAINS.map((m) => (
-                  <li key={m.id} className="flex items-center gap-1.5">
-                    <MountainIcon id={m.id} color={m.color} className="h-3 w-4" />
-                    {m.name}
+                  <li key={m.id}>
+                    <Link
+                      href={`/${m.id}`}
+                      className="flex items-center gap-1.5 hover:text-white hover:underline"
+                    >
+                      <MountainIcon id={m.id} color={m.color} className="h-3 w-4" />
+                      {m.fullName} conditions
+                    </Link>
                   </li>
                 ))}
               </ul>

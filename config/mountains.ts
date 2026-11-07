@@ -13,6 +13,9 @@ export interface LiftPoint {
 export interface MountainConfig {
   id: MountainId;
   name: string;
+  fullName: string; // the name people search for, e.g. "Cypress Mountain"
+  locality: string; // municipality the ski area is in
+  website: string; // the resort's own site
   color: string; // accent colour used for this mountain across the page
   lat: number;
   lon: number;
@@ -31,6 +34,9 @@ export const MOUNTAINS: MountainConfig[] = [
   {
     id: "cypress",
     name: "Cypress",
+    fullName: "Cypress Mountain",
+    locality: "West Vancouver",
+    website: "https://www.cypressmountain.com",
     color: "#8aa583",
     lat: 49.396,
     lon: -123.204,
@@ -50,6 +56,9 @@ export const MOUNTAINS: MountainConfig[] = [
   {
     id: "grouse",
     name: "Grouse",
+    fullName: "Grouse Mountain",
+    locality: "North Vancouver",
+    website: "https://www.grousemountain.com",
     color: "#c4764f",
     lat: 49.379,
     lon: -123.082,
@@ -69,6 +78,9 @@ export const MOUNTAINS: MountainConfig[] = [
   {
     id: "seymour",
     name: "Seymour",
+    fullName: "Mount Seymour",
+    locality: "North Vancouver",
+    website: "https://mtseymour.ca",
     color: "#cfae6b",
     lat: 49.367,
     lon: -122.948,
