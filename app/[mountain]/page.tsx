@@ -11,6 +11,7 @@ import SiteNav from "@/components/SiteNav";
 import Summary from "@/components/Summary";
 import WebcamGallery from "@/components/WebcamGallery";
 import WindCard from "@/components/WindCard";
+import { PageTransition, SharedTransition } from "@/components/Transitions";
 import { SectionLabel, Unavailable } from "@/components/Ui";
 import { LIFTS } from "@/config/lifts";
 import { MOUNTAINS, type MountainConfig } from "@/config/mountains";
@@ -127,13 +128,15 @@ export default async function MountainPage({
         dangerouslySetInnerHTML={{ __html: jsonLd(structuredData(config)) }}
       />
       <SiteNav />
-      <main className="min-h-screen px-4 py-8 text-white md:px-10">
-        <div className="mx-auto max-w-8xl space-y-5">
-          <Suspense fallback={<Loading />}>
-            <MountainContent config={config} />
-          </Suspense>
-        </div>
-      </main>
+      <PageTransition>
+        <main className="min-h-screen px-4 py-8 text-white md:px-10">
+          <div className="mx-auto max-w-8xl space-y-5">
+            <Suspense fallback={<Loading />}>
+              <MountainContent config={config} />
+            </Suspense>
+          </div>
+        </main>
+      </PageTransition>
     </>
   );
 }
@@ -288,7 +291,9 @@ async function MountainContent({ config }: { config: MountainConfig }) {
 
           <SectionLabel>Rain and snow line, and lifts</SectionLabel>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <ElevationVisualizer config={config} weather={weather} />
+            <SharedTransition name={`resort-${config.id}`}>
+              <ElevationVisualizer config={config} weather={weather} />
+            </SharedTransition>
             <div className="lg:col-span-2">
               {stations && freezingLevel != null ? (
                 <LiftTable
@@ -306,36 +311,40 @@ async function MountainContent({ config }: { config: MountainConfig }) {
           <SectionLabel>Freezing level</SectionLabel>
           {freezing ? (
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <FreezingChart
-                title="Freezing level forecast"
-                badge="6-day forecast"
-                current={freezing.current}
-                trend={trendWord(
-                  freezing.deltaNext24,
-                  "Expected to rise",
-                  "Expected to fall",
-                  "Holding steady"
-                )}
-                detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
-                days={freezing.forecast}
-                updated={freezing.updated}
-                note="Daily low–high range · Open-Meteo model · North Shore area"
-              />
-              <FreezingChart
-                title="Freezing level history"
-                badge="10-day history"
-                current={freezing.current}
-                trend={trendWord(
-                  freezing.deltaPast25,
-                  "Rising",
-                  "Falling",
-                  "Steady"
-                )}
-                detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
-                days={freezing.history}
-                updated={freezing.updated}
-                note="Daily low–high range · Open-Meteo model · North Shore area"
-              />
+              <SharedTransition name="freezing-forecast">
+                <FreezingChart
+                  title="Freezing level forecast"
+                  badge="6-day forecast"
+                  current={freezing.current}
+                  trend={trendWord(
+                    freezing.deltaNext24,
+                    "Expected to rise",
+                    "Expected to fall",
+                    "Holding steady"
+                  )}
+                  detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
+                  days={freezing.forecast}
+                  updated={freezing.updated}
+                  note="Daily low–high range · Open-Meteo model · North Shore area"
+                />
+              </SharedTransition>
+              <SharedTransition name="freezing-history">
+                <FreezingChart
+                  title="Freezing level history"
+                  badge="10-day history"
+                  current={freezing.current}
+                  trend={trendWord(
+                    freezing.deltaPast25,
+                    "Rising",
+                    "Falling",
+                    "Steady"
+                  )}
+                  detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
+                  days={freezing.history}
+                  updated={freezing.updated}
+                  note="Daily low–high range · Open-Meteo model · North Shore area"
+                />
+              </SharedTransition>
             </div>
           ) : (
             <Unavailable title="Freezing level" />

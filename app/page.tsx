@@ -9,6 +9,11 @@ import StationTable from "@/components/StationTable";
 import Summary from "@/components/Summary";
 import TemperatureChart from "@/components/TemperatureChart";
 import WindChart from "@/components/WindChart";
+import {
+  NAV_FORWARD,
+  PageTransition,
+  SharedTransition,
+} from "@/components/Transitions";
 import { SectionLabel, Unavailable } from "@/components/Ui";
 import { MOUNTAINS } from "@/config/mountains";
 import { tallestId } from "@/lib/Conditions";
@@ -89,155 +94,165 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: jsonLd(STRUCTURED_DATA) }}
       />
       <SiteNav />
-      <main className="min-h-screen px-4 py-8 text-white md:px-10">
-        <div className="mx-auto max-w-8xl space-y-5">
-          <header className="flex flex-wrap items-end justify-between gap-3 pb-2">
-            <div>
-              <h1 className="text-6xl font-bold">North Shore ski conditions</h1>
-              <p className="mt-2 max-w-3xl text-[#c9d3dd]">
-                Rain or snow on Cypress Mountain, Grouse Mountain and Mount
-                Seymour, the three ski areas on Vancouver&apos;s North Shore.
-                Freezing level, wind and temperature at every lift, plus each
-                hill&apos;s snow report and live webcams on its own page.
-                Updated every 15 minutes.
-              </p>
-              <ul className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[#c9d3dd]">
-                {MOUNTAINS.map((m) => (
-                  <li key={m.id}>
-                    <Link
-                      href={`/${m.id}`}
-                      className="flex items-center gap-1.5 hover:text-white hover:underline"
-                    >
-                      <MountainIcon id={m.id} color={m.color} className="h-3 w-4" />
-                      {m.fullName} conditions
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {freezing && (
-              <p className="text-xs text-[#7d8da1]">
-                Model data · updated {freezing.updated}
-              </p>
-            )}
-          </header>
+      <PageTransition>
+        <main className="min-h-screen px-4 py-8 text-white md:px-10">
+          <div className="mx-auto max-w-8xl space-y-5">
+            <header className="flex flex-wrap items-end justify-between gap-3 pb-2">
+              <div>
+                <h1 className="text-6xl font-bold">North Shore ski conditions</h1>
+                <p className="mt-2 max-w-3xl text-[#c9d3dd]">
+                  Rain or snow on Cypress Mountain, Grouse Mountain and Mount
+                  Seymour, the three ski areas on Vancouver&apos;s North Shore.
+                  Freezing level, wind and temperature at every lift, plus each
+                  hill&apos;s snow report and live webcams on its own page.
+                  Updated every 15 minutes.
+                </p>
+                <ul className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[#c9d3dd]">
+                  {MOUNTAINS.map((m) => (
+                    <li key={m.id}>
+                      <Link
+                        href={`/${m.id}`}
+                        transitionTypes={NAV_FORWARD}
+                        className="flex items-center gap-1.5 hover:text-white hover:underline"
+                      >
+                        <MountainIcon id={m.id} color={m.color} className="h-3 w-4" />
+                        {m.fullName} conditions
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {freezing && (
+                <p className="text-xs text-[#7d8da1]">
+                  Model data · updated {freezing.updated}
+                </p>
+              )}
+            </header>
 
-          {freezing && readings && tops.length > 0 ? (
-            <Summary
-              freezing={freezing}
-              precip={rows
-                .filter((r) => r.weather)
-                .map((r) => ({
-                  name: r.config.name,
-                  precipitation: r.weather!.precipitation,
-                }))}
-              cloud={cloud}
-              gusts={tops.map((t) => ({
-                name: t.name,
-                gust: t.reading!.gust,
-              }))}
-            />
-          ) : (
-            <Unavailable title="North Shore summary" />
-          )}
-
-          <SectionLabel>Rain and snow line</SectionLabel>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            {rows.map(({ config, weather }) => (
-              <Link
-                key={config.id}
-                href={`/${config.id}`}
-                className="group block transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-                style={{ "--accent": config.color } as CSSProperties}
-              >
-                <ElevationVisualizer
-                  config={config}
-                  weather={weather}
-                  isTallest={config.id === tallest}
-                />
-              </Link>
-            ))}
-          </div>
-
-          <SectionLabel>Freezing level</SectionLabel>
-          {freezing ? (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <FreezingChart
-                title="Freezing level forecast"
-                badge="6-day forecast"
-                current={freezing.current}
-                trend={trendWord(
-                  freezing.deltaNext24,
-                  "Expected to rise",
-                  "Expected to fall",
-                  "Holding steady"
-                )}
-                detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
-                days={freezing.forecast}
-                updated={freezing.updated}
-                note="Daily low–high range · Open-Meteo model"
-              />
-              <FreezingChart
-                title="Freezing level history"
-                badge="10-day history"
-                current={freezing.current}
-                trend={trendWord(
-                  freezing.deltaPast25,
-                  "Rising",
-                  "Falling",
-                  "Steady"
-                )}
-                detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
-                days={freezing.history}
-                updated={freezing.updated}
-                note="Daily low–high range · Open-Meteo model"
-              />
-            </div>
-          ) : (
-            <Unavailable title="Freezing level" />
-          )}
-
-          <SectionLabel>Temperature and wind</SectionLabel>
-          {readings ? (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <TemperatureChart readings={readings} />
-              <WindChart
-                rows={tops.map((t) => ({
-                  label: t.name,
-                  mountain: t.mountain,
-                  color: t.color,
-                  avg: t.reading!.wind,
+            {freezing && readings && tops.length > 0 ? (
+              <Summary
+                freezing={freezing}
+                precip={rows
+                  .filter((r) => r.weather)
+                  .map((r) => ({
+                    name: r.config.name,
+                    precipitation: r.weather!.precipitation,
+                  }))}
+                cloud={cloud}
+                gusts={tops.map((t) => ({
+                  name: t.name,
                   gust: t.reading!.gust,
                 }))}
               />
+            ) : (
+              <Unavailable title="North Shore summary" />
+            )}
+
+            <SectionLabel>Rain and snow line</SectionLabel>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              {rows.map(({ config, weather }) => (
+                <Link
+                  key={config.id}
+                  href={`/${config.id}`}
+                  transitionTypes={NAV_FORWARD}
+                  className="group block transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                  style={{ "--accent": config.color } as CSSProperties}
+                >
+                  <SharedTransition name={`resort-${config.id}`}>
+                    <ElevationVisualizer
+                      config={config}
+                      weather={weather}
+                      isTallest={config.id === tallest}
+                    />
+                  </SharedTransition>
+                </Link>
+              ))}
             </div>
-          ) : (
-            <Unavailable title="Temperature and wind" />
-          )}
 
-          <SectionLabel>Conditions by elevation</SectionLabel>
-          {readings && freezing ? (
-            <StationTable
-              readings={readings}
-              freezingLevel={freezing.current}
-            />
-          ) : (
-            <Unavailable title="Conditions by elevation" />
-          )}
+            <SectionLabel>Freezing level</SectionLabel>
+            {freezing ? (
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SharedTransition name="freezing-forecast">
+                  <FreezingChart
+                    title="Freezing level forecast"
+                    badge="6-day forecast"
+                    current={freezing.current}
+                    trend={trendWord(
+                      freezing.deltaNext24,
+                      "Expected to rise",
+                      "Expected to fall",
+                      "Holding steady"
+                    )}
+                    detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
+                    days={freezing.forecast}
+                    updated={freezing.updated}
+                    note="Daily low–high range · Open-Meteo model"
+                  />
+                </SharedTransition>
+                <SharedTransition name="freezing-history">
+                  <FreezingChart
+                    title="Freezing level history"
+                    badge="10-day history"
+                    current={freezing.current}
+                    trend={trendWord(
+                      freezing.deltaPast25,
+                      "Rising",
+                      "Falling",
+                      "Steady"
+                    )}
+                    detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
+                    days={freezing.history}
+                    updated={freezing.updated}
+                    note="Daily low–high range · Open-Meteo model"
+                  />
+                </SharedTransition>
+              </div>
+            ) : (
+              <Unavailable title="Freezing level" />
+            )}
 
-          <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
-            Model estimates, not station observations. Snow line is estimated at
-            150 m below the freezing level. Weather data by{" "}
-            <a
-              href="https://open-meteo.com"
-              className="underline hover:text-white"
-            >
-              Open-Meteo.com
-            </a>
-            .
-          </footer>
-        </div>
-      </main>
+            <SectionLabel>Temperature and wind</SectionLabel>
+            {readings ? (
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <TemperatureChart readings={readings} />
+                <WindChart
+                  rows={tops.map((t) => ({
+                    label: t.name,
+                    mountain: t.mountain,
+                    color: t.color,
+                    avg: t.reading!.wind,
+                    gust: t.reading!.gust,
+                  }))}
+                />
+              </div>
+            ) : (
+              <Unavailable title="Temperature and wind" />
+            )}
+
+            <SectionLabel>Conditions by elevation</SectionLabel>
+            {readings && freezing ? (
+              <StationTable
+                readings={readings}
+                freezingLevel={freezing.current}
+              />
+            ) : (
+              <Unavailable title="Conditions by elevation" />
+            )}
+
+            <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
+              Model estimates, not station observations. Snow line is estimated at
+              150 m below the freezing level. Weather data by{" "}
+              <a
+                href="https://open-meteo.com"
+                className="underline hover:text-white"
+              >
+                Open-Meteo.com
+              </a>
+              .
+            </footer>
+          </div>
+        </main>
+      </PageTransition>
     </>
   );
 }

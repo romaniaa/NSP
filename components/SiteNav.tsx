@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MountainIcon from "@/components/MountainIcon";
+import { NAV_BACK, NAV_FORWARD } from "@/components/Transitions";
 import { MOUNTAINS } from "@/config/mountains";
 
 export default function SiteNav() {
@@ -22,7 +23,11 @@ export default function SiteNav() {
   ];
 
   return (
-    <nav aria-label="Main" className="border-b border-[#2f3840] bg-[#0a0d10]/70 px-4 md:px-10">
+    // Named so it stays put while the page content slides beneath it.
+    <nav
+      aria-label="Main"
+      style={{ viewTransitionName: "site-nav" }}
+      className="border-b border-[#2f3840] bg-[#0a0d10]/70 px-4 md:px-10">
       <div className="mx-auto flex max-w-8xl items-center gap-1 overflow-x-auto">
         <span className="mr-4 whitespace-nowrap py-3 font-display text-lg font-bold uppercase tracking-widest text-white">
           North Shore Peaks
@@ -33,6 +38,13 @@ export default function SiteNav() {
             <Link
               key={item.id}
               href={item.href}
+              transitionTypes={
+                item.id === "home"
+                  ? NAV_BACK
+                  : active === "home"
+                    ? NAV_FORWARD
+                    : undefined
+              }
               aria-current={isActive ? "page" : undefined}
               className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-sm ${
                 isActive

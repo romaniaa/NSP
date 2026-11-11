@@ -109,6 +109,10 @@ interface Tree {
   opacity: number;
 }
 
+// Upper bounds per card; fewer may fit once the spacing check skips crowded spots.
+const RIDGE_TREES = 5;
+const SLOPE_TREES = 8;
+
 // Trees on the ridge line, plus a scatter down the slope below it. Lower trees
 // are nearer the viewer, so they're drawn larger and stronger. Trees too close
 // to one already placed are skipped so the scatter doesn't clump.
@@ -123,7 +127,7 @@ function placeTrees(
     trees.every((t) => Math.abs(t.x - x) > 5 || Math.abs(t.y - y) > 8);
 
   // Along the ridge, keeping clear of the elevation ticks on the left edge.
-  for (let i = 0; i < 40 && trees.length < 9; i++) {
+  for (let i = 0; i < 40 && trees.length < RIDGE_TREES; i++) {
     const x = 6 + rand() * 91;
     const y = pct(ridgeAt(profile, x));
     if (clear(x, y)) trees.push({ x, y, size: 18 + rand() * 6, opacity: 0.8 });
@@ -131,7 +135,7 @@ function placeTrees(
 
   // Down the slope: depth runs from just under the ridge (0) to the foot of the card (1).
   const ridgeCount = trees.length;
-  for (let i = 0; i < 200 && trees.length < ridgeCount + 18; i++) {
+  for (let i = 0; i < 200 && trees.length < ridgeCount + SLOPE_TREES; i++) {
     const x = 6 + rand() * 91;
     const depth = 0.12 + rand() * 0.8;
     const y = pct(ridgeAt(profile, x)) * (1 - depth);
