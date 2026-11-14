@@ -66,7 +66,7 @@ export default async function ZonePage({ params }: { params: Promise<{ zone: str
               </h1>
               <p className="mt-2 max-w-3xl text-[#c9d3dd]">{zone.description}</p>
               <div className="mt-4">
-                <PinButton id={zone.id} name={zone.fullName} size="large" />
+                <PinButton id={zone.id} name={zone.fullName} color={zone.color} size="large" />
               </div>
             </header>
             <Suspense fallback={<div className="h-96 animate-pulse bg-[#13181d]" aria-busy="true" />}>

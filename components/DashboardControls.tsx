@@ -44,14 +44,12 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
     }
   }
 
-  const btn = "border border-white/40 px-3 py-1.5 text-sm text-white hover:bg-white/10";
-
   return (
     <div className="space-y-3">
       {shared && (
         <div className="flex flex-wrap items-center gap-3 border border-[#3a4550] bg-[#13181d] px-4 py-3 text-sm">
           <span className="text-[#c9d3dd]">You&apos;re viewing a shared dashboard.</span>
-          <button type="button" onClick={() => save(fromHash)} className={btn}>
+          <button type="button" onClick={() => save(fromHash)} className="orb-pill">
             Save as my hills
           </button>
           <button
@@ -73,12 +71,21 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
             setEditing(!editing);
             setCopied(false);
           }}
-          className={
-            editing
-              ? "border border-white bg-white px-3 py-1.5 text-sm font-medium text-black hover:bg-white/85"
-              : btn
-          }
+          className="orb-pill"
+          data-on={editing || undefined}
         >
+          <svg
+            viewBox="0 0 16 16"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            {editing ? <path d="M3 8.5 6.5 12 13 4.5" /> : <path d="M3 13h3l7-7-3-3-7 7v3Z" />}
+          </svg>
           {editing ? "Done" : "Edit dashboard"}
         </button>
         {ids.length > 0 && !editing && (

@@ -142,7 +142,14 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
     drawer.current?.close();
   }, [pathname]);
 
-  const items: { id: ItemId; href: string; label: string; color: string; icon?: MountainId }[] = [
+  const items: {
+    id: ItemId;
+    href: string;
+    label: string;
+    color: string;
+    icon?: MountainId;
+    count?: number;
+  }[] = [
     { id: "home", href: "/", label: "Overview", color: "#e6edf3" },
     ...TABS.map((m) => ({
       id: m.id,
@@ -157,7 +164,8 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
           {
             id: "dashboard" as const,
             href: "/dashboard",
-            label: saved.length > 0 ? `My hills · ${saved.length}` : "My hills",
+            label: "My hills",
+            count: saved.length,
             color: "#e6edf3",
           },
         ]
@@ -186,11 +194,11 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
           North Shore Peaks
         </Link>
         {saved.length > 0 && active !== "dashboard" && (
-          <Link
-            href="/dashboard"
-            className="whitespace-nowrap border border-white/30 px-2.5 py-1.5 text-xs text-white"
-          >
-            My hills · {saved.length}
+          <Link href="/dashboard" className="orb-pill !min-h-11 !px-3.5 whitespace-nowrap">
+            My hills
+            <span className="orb-badge" aria-label={`${saved.length} saved`}>
+              {saved.length}
+            </span>
           </Link>
         )}
         <button
@@ -198,14 +206,14 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
           aria-haspopup="dialog"
           aria-controls={drawerId}
           onClick={() => drawer.current?.showModal()}
-          className="flex items-center gap-2 border border-white/30 px-2.5 py-1.5 text-sm text-white"
+          aria-label="Menu: every hill and zone, with live conditions"
+          className="orb"
         >
           <svg viewBox="0 0 16 12" className="h-3 w-4" aria-hidden="true" fill="currentColor">
-            <rect width="16" height="2" />
-            <rect y="5" width="16" height="2" />
-            <rect y="10" width="16" height="2" />
+            <rect width="16" height="2" rx="1" />
+            <rect y="5" width="16" height="2" rx="1" />
+            <rect y="10" width="16" height="2" rx="1" />
           </svg>
-          Menu
         </button>
       </div>
 
@@ -231,6 +239,11 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
             >
               {item.icon && <MountainIcon id={item.icon} color={item.color} className="h-3 w-4" />}
               {item.label}
+              {item.count ? (
+                <span className="orb-badge" aria-label={`${item.count} saved`}>
+                  {item.count}
+                </span>
+              ) : null}
             </Link>
           );
         })}
@@ -261,13 +274,18 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                   : "Live conditions unavailable right now"}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={close}
-              aria-label="Close menu"
-              className="border border-white/30 px-2.5 py-1 text-lg leading-none text-white"
-            >
-              ×
+            <button type="button" onClick={close} aria-label="Close menu" className="orb orb-sm">
+              <svg
+                viewBox="0 0 16 16"
+                className="h-3.5 w-3.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="m4 4 8 8M12 4l-8 8" />
+              </svg>
             </button>
           </div>
 

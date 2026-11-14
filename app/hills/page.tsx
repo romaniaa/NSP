@@ -63,7 +63,7 @@ export default async function HillsPage() {
                         <div className="flex-1">
                           <HillCard config={m} now={now?.[m.id] ?? null} />
                         </div>
-                        <PinButton id={m.id} name={m.fullName} />
+                        <PinButton id={m.id} name={m.fullName} color={m.color} />
                       </div>
                     ))}
                     {zones.map((z) => (
@@ -75,7 +75,7 @@ export default async function HillsPage() {
                             forecast={avalanche[z.id] ?? null}
                           />
                         </div>
-                        <PinButton id={z.id} name={z.fullName} />
+                        <PinButton id={z.id} name={z.fullName} color={z.color} />
                       </div>
                     ))}
                   </div>

@@ -250,7 +250,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
                 snow={snow}
               />
               <div className="mt-4">
-                <PinButton id={config.id} name={config.fullName} size="large" />
+                <PinButton id={config.id} name={config.fullName} color={config.color} size="large" />
               </div>
             </div>
             {freezing && (
