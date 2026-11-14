@@ -123,6 +123,19 @@ export default async function Home() {
                       </Link>
                     </li>
                   ))}
+                  <li>
+                    <Link href="/hills" className="hover:text-white hover:underline">
+                      More hills and backcountry
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/dashboard"
+                      className="border border-white/40 px-2 py-0.5 text-white hover:bg-white/10"
+                    >
+                      + Build your own dashboard
+                    </Link>
+                  </li>
                 </ul>
               </div>
               {freezing && (

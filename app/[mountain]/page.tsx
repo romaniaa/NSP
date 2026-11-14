@@ -6,6 +6,7 @@ import FreezingChart from "@/components/FreezingChart";
 import LiftTable from "@/components/LiftTable";
 import LiftTemperatureChart from "@/components/LiftTemperatureChart";
 import MountainIcon from "@/components/MountainIcon";
+import PinButton from "@/components/PinButton";
 import SnowDepthCard from "@/components/SnowDepthCard";
 import SiteNav from "@/components/SiteNav";
 import Summary from "@/components/Summary";
@@ -250,6 +251,9 @@ async function MountainContent({ config }: { config: MountainConfig }) {
                 freezingLevel={freezingLevel}
                 snow={snow}
               />
+              <div className="mt-4">
+                <PinButton id={config.id} name={config.fullName} size="large" />
+              </div>
             </div>
             {freezing && (
               <p className="text-xs text-[#7d8da1]">

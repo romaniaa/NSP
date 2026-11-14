@@ -1,77 +1,35 @@
 "use client";
 
-import { useLayoutEffect, useState, useSyncExternalStore } from "react";
-import {
-  DASHBOARD_EVENT,
-  DASHBOARD_KEY,
-  parseSelection,
-  writeSaved,
-} from "@/lib/Dashboard";
+import Link from "next/link";
+import { useLayoutEffect, useState } from "react";
+import { useDashboard } from "@/components/useDashboard";
+import { applyToDashboard } from "@/lib/Dashboard";
 
 export interface PickerGroup {
   region: string;
   places: { id: string; name: string; kind: "Resort" | "Backcountry" }[];
 }
 
-function subscribe(onChange: () => void) {
-  window.addEventListener("storage", onChange); // other tabs
-  window.addEventListener("hashchange", onChange);
-  window.addEventListener(DASHBOARD_EVENT, onChange);
-  return () => {
-    window.removeEventListener("storage", onChange);
-    window.removeEventListener("hashchange", onChange);
-    window.removeEventListener(DASHBOARD_EVENT, onChange);
-  };
-}
-
-const savedSnapshot = () => {
-  try {
-    return localStorage.getItem(DASHBOARD_KEY) ?? "";
-  } catch {
-    return "";
-  }
-};
-const hashSnapshot = () => {
-  try {
-    return decodeURIComponent(location.hash.slice(1));
-  } catch {
-    return "";
-  }
-};
-
-// The dashboard's picker, share link and shared-view banner. The cards themselves
-// are server-rendered; this only sets which ones show (data-dash on #dashboard,
-// read by the CSS in lib/Dashboard.ts).
+// The dashboard's toolbar: edit mode (picker plus per-card move and remove
+// controls), the share link and the shared-view banner. The cards themselves are
+// server-rendered; this only sets which show and in what order, through
+// attributes on #dashboard that the CSS in lib/Dashboard.ts reads.
 export default function DashboardControls({ groups }: { groups: PickerGroup[] }) {
-  // null on the server and during hydration, so the first render matches the HTML.
-  const savedRaw = useSyncExternalStore(subscribe, savedSnapshot, () => null);
-  const hashRaw = useSyncExternalStore(subscribe, hashSnapshot, () => null);
-  const hydrated = savedRaw !== null;
+  const { hydrated, ids, shared, fromHash, save, toggle, dismissShared } = useDashboard();
 
-  const saved = parseSelection(savedRaw);
-  const fromHash = parseSelection(hashRaw);
-  const ids = fromHash.length ? fromHash : saved;
-  const shared = fromHash.length > 0 && fromHash.join() !== saved.join();
-
-  const [openPref, setOpen] = useState<boolean | null>(null);
-  const open = hydrated && (openPref ?? ids.length === 0);
+  const [editPref, setEditing] = useState<boolean | null>(null);
+  // Starts in edit mode when there's nothing to show yet.
+  const editing = hydrated && (editPref ?? ids.length === 0);
   const [copied, setCopied] = useState(false);
 
   // Before paint, so a client-side navigation here never flashes every card.
   const key = ids.join(" ");
   useLayoutEffect(() => {
-    if (hydrated) document.getElementById("dashboard")?.setAttribute("data-dash", key);
-  }, [hydrated, key]);
-
-  function save(next: string[]) {
-    if (location.hash) history.replaceState(history.state, "", location.pathname);
-    writeSaved(next);
-    setCopied(false);
-  }
-
-  function toggle(id: string) {
-    save(ids.includes(id) ? ids.filter((x) => x !== id) : parseSelection([...ids, id].join(",")));
-  }
+    const el = document.getElementById("dashboard");
+    if (!el || !hydrated) return;
+    applyToDashboard(el, key ? key.split(" ") : []);
+    el.toggleAttribute("data-editing", editing);
+  }, [hydrated, key, editing]);
 
   async function copyLink() {
     const url = `${location.origin}${location.pathname}#${ids.join(",")}`;
@@ -83,24 +41,19 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
     }
   }
 
+  const btn = "border border-white/40 px-3 py-1.5 text-sm text-white hover:bg-white/10";
+
   return (
     <div className="space-y-3">
       {shared && (
         <div className="flex flex-wrap items-center gap-3 border border-[#3a4550] bg-[#13181d] px-4 py-3 text-sm">
           <span className="text-[#c9d3dd]">You&apos;re viewing a shared dashboard.</span>
-          <button
-            type="button"
-            onClick={() => save(fromHash)}
-            className="border border-white/40 px-3 py-1 text-white hover:bg-white/10"
-          >
+          <button type="button" onClick={() => save(fromHash)} className={btn}>
             Save as my hills
           </button>
           <button
             type="button"
-            onClick={() => {
-              history.replaceState(history.state, "", location.pathname);
-              window.dispatchEvent(new Event(DASHBOARD_EVENT));
-            }}
+            onClick={dismissShared}
             className="text-[#9aa7b5] underline hover:text-white"
           >
             Back to mine
@@ -111,14 +64,21 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <button
           type="button"
-          aria-expanded={open}
+          aria-expanded={editing}
           aria-controls="dashboard-picker"
-          onClick={() => setOpen(!open)}
-          className="border border-white/40 px-3 py-1.5 text-white hover:bg-white/10"
+          onClick={() => {
+            setEditing(!editing);
+            setCopied(false);
+          }}
+          className={
+            editing
+              ? "border border-white bg-white px-3 py-1.5 text-sm font-medium text-black hover:bg-white/85"
+              : btn
+          }
         >
-          {open ? "Done" : "Choose hills"}
+          {editing ? "Done" : "Edit dashboard"}
         </button>
-        {ids.length > 0 && (
+        {ids.length > 0 && !editing && (
           <button
             type="button"
             onClick={copyLink}
@@ -127,39 +87,60 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
             {copied ? "Link copied" : "Copy a link to share"}
           </button>
         )}
-        <span className="text-xs text-[#7d8da1]">Saved in this browser only.</span>
+        {editing && ids.length > 1 && (
+          <button
+            type="button"
+            onClick={() => save([])}
+            className="text-[#9aa7b5] underline hover:text-white"
+          >
+            Clear all
+          </button>
+        )}
+        <span className="text-xs text-[#7d8da1]">
+          {hydrated && `${ids.length} picked · `}Saved in this browser only.
+        </span>
       </div>
 
-      {open && (
-        <fieldset
+      {editing && (
+        <div
           id="dashboard-picker"
-          className="grid grid-cols-1 gap-4 border border-[#232a31] bg-[#13181d] p-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="space-y-3 border border-[#232a31] bg-[#13181d] p-4"
         >
-          <legend className="sr-only">Hills and backcountry zones to show</legend>
-          {groups.map((g) => (
-            <div key={g.region}>
-              <p className="text-xs uppercase tracking-widest text-[#9aa7b5]">{g.region}</p>
-              <ul className="mt-2 space-y-1.5">
-                {g.places.map((p) => (
-                  <li key={p.id}>
-                    <label className="flex cursor-pointer items-center gap-2 text-sm text-white">
-                      <input
-                        type="checkbox"
-                        checked={ids.includes(p.id)}
-                        onChange={() => toggle(p.id)}
-                        className="h-4 w-4 accent-white"
-                      />
-                      {p.name}
-                      {p.kind === "Backcountry" && (
-                        <span className="text-xs text-[#9aa7b5]">backcountry</span>
-                      )}
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </fieldset>
+          <p className="text-sm text-[#c9d3dd]">
+            Tick what you want on your dashboard, then use the controls under each
+            card to reorder or remove it. You can also add hills from{" "}
+            <Link href="/hills" className="underline hover:text-white">
+              All hills
+            </Link>{" "}
+            or any hill&apos;s page.
+          </p>
+          <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <legend className="sr-only">Hills and backcountry zones to show</legend>
+            {groups.map((g) => (
+              <div key={g.region}>
+                <p className="text-xs uppercase tracking-widest text-[#9aa7b5]">{g.region}</p>
+                <ul className="mt-2 space-y-1.5">
+                  {g.places.map((p) => (
+                    <li key={p.id}>
+                      <label className="flex cursor-pointer items-center gap-2 text-sm text-white">
+                        <input
+                          type="checkbox"
+                          checked={ids.includes(p.id)}
+                          onChange={() => toggle(p.id)}
+                          className="h-4 w-4 accent-white"
+                        />
+                        {p.name}
+                        {p.kind === "Backcountry" && (
+                          <span className="text-xs text-[#9aa7b5]">backcountry</span>
+                        )}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </fieldset>
+        </div>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import HillCard from "@/components/HillCard";
+import PinButton from "@/components/PinButton";
 import ZoneCard from "@/components/ZoneCard";
 import SiteNav from "@/components/SiteNav";
 import { PageTransition } from "@/components/Transitions";
@@ -58,15 +59,24 @@ export default async function HillsPage() {
                   <SectionLabel>{region.name}</SectionLabel>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {hills.map((m) => (
-                      <HillCard key={m.id} config={m} now={now?.[m.id] ?? null} />
+                      <div key={m.id} className="flex flex-col gap-2">
+                        <div className="flex-1">
+                          <HillCard config={m} now={now?.[m.id] ?? null} />
+                        </div>
+                        <PinButton id={m.id} name={m.fullName} />
+                      </div>
                     ))}
                     {zones.map((z) => (
-                      <ZoneCard
-                        key={z.id}
-                        zone={z}
-                        now={now?.[z.id] ?? null}
-                        forecast={avalanche[z.id] ?? null}
-                      />
+                      <div key={z.id} className="flex flex-col gap-2">
+                        <div className="flex-1">
+                          <ZoneCard
+                            zone={z}
+                            now={now?.[z.id] ?? null}
+                            forecast={avalanche[z.id] ?? null}
+                          />
+                        </div>
+                        <PinButton id={z.id} name={z.fullName} />
+                      </div>
                     ))}
                   </div>
                 </section>

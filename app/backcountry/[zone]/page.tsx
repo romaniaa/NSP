@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import AvalancheCard from "@/components/AvalancheCard";
 import FreezingChart from "@/components/FreezingChart";
+import PinButton from "@/components/PinButton";
 import SiteNav from "@/components/SiteNav";
 import { PageTransition } from "@/components/Transitions";
 import { Card, SectionLabel, Unavailable } from "@/components/Ui";
@@ -60,6 +61,9 @@ export default async function ZonePage({ params }: { params: Promise<{ zone: str
               <p className="text-xs uppercase tracking-widest text-[#9aa7b5]">Backcountry</p>
               <h1 className="text-6xl font-bold">{zone.fullName}</h1>
               <p className="mt-2 max-w-3xl text-[#c9d3dd]">{zone.description}</p>
+              <div className="mt-4">
+                <PinButton id={zone.id} name={zone.fullName} size="large" />
+              </div>
             </header>
             <Suspense fallback={<div className="h-96 animate-pulse bg-[#13181d]" aria-busy="true" />}>
               <ZoneContent zone={zone} />

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import CardActions from "@/components/CardActions";
 import DashboardControls, { type PickerGroup } from "@/components/DashboardControls";
+import Link from "next/link";
 import HillCard from "@/components/HillCard";
 import SiteNav from "@/components/SiteNav";
 import { PageTransition } from "@/components/Transitions";
@@ -60,19 +62,29 @@ export default async function DashboardPage() {
             <DashboardControls groups={GROUPS} />
 
             <p className="dash-empty border border-dashed border-[#2f3840] p-6 text-[#c9d3dd]">
-              Nothing picked yet. Choose hills and backcountry zones above, and
-              they&apos;ll be here whenever you come back.
+              Nothing picked yet. Tick hills and backcountry zones above, or use{" "}
+              <span className="whitespace-nowrap text-white">+ Add to My hills</span> on{" "}
+              <Link href="/hills" className="underline hover:text-white">
+                All hills
+              </Link>{" "}
+              or any hill&apos;s page. They&apos;ll be here whenever you come back.
             </p>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {MOUNTAINS.map((m) => (
-                <div key={m.id} data-place={m.id}>
-                  <HillCard config={m} now={now?.[m.id] ?? null} />
+                <div key={m.id} data-place={m.id} className="flex flex-col">
+                  <div className="flex-1">
+                    <HillCard config={m} now={now?.[m.id] ?? null} />
+                  </div>
+                  <CardActions id={m.id} name={m.fullName} />
                 </div>
               ))}
               {ZONES.map((z) => (
-                <div key={z.id} data-place={z.id}>
-                  <ZoneCard zone={z} now={now?.[z.id] ?? null} forecast={avalanche[z.id] ?? null} />
+                <div key={z.id} data-place={z.id} className="flex flex-col">
+                  <div className="flex-1">
+                    <ZoneCard zone={z} now={now?.[z.id] ?? null} forecast={avalanche[z.id] ?? null} />
+                  </div>
+                  <CardActions id={z.id} name={z.fullName} />
                 </div>
               ))}
             </div>
