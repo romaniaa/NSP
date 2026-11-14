@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { DANGER_STYLE } from "@/components/AvalancheCard";
+import { DANGER_STYLE } from "@/lib/DangerStyle";
 import { NAV_FORWARD } from "@/components/Transitions";
 import type { ZoneConfig } from "@/config/zones";
 import { highestDanger, type AvalancheForecast } from "@/lib/Avalanche";

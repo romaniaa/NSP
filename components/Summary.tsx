@@ -32,7 +32,7 @@ export default function Summary({
   if (wet.length === 0) {
     items.push({
       title: "Dry",
-      body: `No precipitation this hour on any of the three mountains.${
+      body: `No precipitation this hour${precip.length > 1 ? ` on any of the ${precip.length} mountains` : ""}.${
         cloud == null
           ? ""
           : cloud < 20

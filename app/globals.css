@@ -14,6 +14,11 @@
     color: #e6edf3;
   }
 
+  /* Keep the page from scrolling behind the open nav drawer. */
+  html:has(dialog[data-nav-drawer][open]) {
+    overflow: hidden;
+  }
+
   /* Numbered section labels, counted per page. */
   main {
     counter-reset: section;
