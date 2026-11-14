@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import Link from "next/link";
+import { PillLink } from "@/components/Ui";
 import { useDashboard } from "@/components/useDashboard";
 
 // Adds a hill or zone to the visitor's dashboard, or takes it off: a round button
@@ -68,9 +68,7 @@ export default function PinButton({
         </span>
       </button>
       {on && size === "large" && (
-        <Link href="/dashboard" className="text-sm text-[#9aa7b5] underline hover:text-white">
-          View dashboard
-        </Link>
+        <PillLink href="/dashboard">View dashboard</PillLink>
       )}
     </span>
   );

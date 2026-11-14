@@ -1,18 +1,13 @@
-import { Card } from "@/components/Ui";
+import { Card, PillLink } from "@/components/Ui";
 import type { SnowReport } from "@/lib/SnowReport";
 
 const cm = (n: number) => n.toLocaleString("en-CA");
 
 function SourceLink({ name, url }: { name: string; url: string }) {
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="underline hover:text-white"
-    >
-      {name}&apos;s snow report
-    </a>
+    <PillLink href={url} filled>
+      {name} snow report
+    </PillLink>
   );
 }
 
@@ -60,18 +55,22 @@ export default function SnowDepthCard({
             )}
           </div>
 
-          <p className="mt-3 text-xs text-[#7d8da1]">
-            From <SourceLink name={name} url={report.url} />
-            {report.updated ? ` · updated ${report.updated}` : ""}.
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <SourceLink name={name} url={report.url} />
+            {report.updated && (
+              <span className="text-xs text-[#7d8da1]">Updated {report.updated}</span>
+            )}
+          </div>
         </>
       ) : (
-        <p className="mt-2 text-sm text-[#9aa7b5]">
-          {report.status === "not-posted"
-            ? `${name} hasn't posted a snow report yet this season. `
-            : "Not available here yet. "}
-          See <SourceLink name={name} url={report.url} />.
-        </p>
+        <div className="mt-2 space-y-3">
+          <p className="text-sm text-[#9aa7b5]">
+            {report.status === "not-posted"
+              ? `${name} hasn't posted a snow report yet this season.`
+              : "Not available here yet."}
+          </p>
+          <SourceLink name={name} url={report.url} />
+        </div>
       )}
     </Card>
   );

@@ -1,4 +1,4 @@
-import { Card } from "@/components/Ui";
+import { Card, PillLink } from "@/components/Ui";
 import type { MountainWebcams } from "@/config/webcams";
 
 // Each cam is the resort's own embed, loaded lazily so cams below the fold
@@ -13,18 +13,14 @@ export default function WebcamGallery({
   if (webcams.cams.length === 0) {
     return (
       <Card>
-        <p className="text-sm text-[#c9d3dd]">
-          {name} doesn&apos;t offer its webcams for embedding.{" "}
-          <a
-            href={webcams.page}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-white"
-          >
-            See them on the resort&apos;s webcam page
-          </a>
-          .
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-[#c9d3dd]">
+            {name} doesn&apos;t offer its webcams for embedding.
+          </p>
+          <PillLink href={webcams.page} filled>
+            {name} webcams
+          </PillLink>
+        </div>
       </Card>
     );
   }
@@ -55,18 +51,12 @@ export default function WebcamGallery({
           </figure>
         ))}
       </div>
-      <p className="text-xs text-[#7d8da1]">
-        Live cams from {name}.{" "}
-        <a
-          href={webcams.page}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline hover:text-white"
-        >
-          Open the resort&apos;s webcam page
-        </a>{" "}
-        if one isn&apos;t loading.
-      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-xs text-[#7d8da1]">
+          Live cams from {name}. If one isn&apos;t loading, try the resort&apos;s page.
+        </p>
+        <PillLink href={webcams.page}>{name} webcam page</PillLink>
+      </div>
     </div>
   );
 }

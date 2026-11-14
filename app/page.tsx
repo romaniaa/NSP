@@ -14,7 +14,7 @@ import {
   PageTransition,
   SharedTransition,
 } from "@/components/Transitions";
-import { SectionLabel, Unavailable } from "@/components/Ui";
+import { PillLink, SectionLabel, Unavailable } from "@/components/Ui";
 import { MOUNTAINS } from "@/config/mountains";
 
 // The overview covers the North Shore; other hills are on their own pages and /hills.
@@ -129,12 +129,7 @@ export default async function Home() {
                     </Link>
                   </li>
                   <li>
-                    <Link
-                      href="/dashboard"
-                      className="border border-white/40 px-2 py-0.5 text-white hover:bg-white/10"
-                    >
-                      + Build your own dashboard
-                    </Link>
+                    <PillLink href="/dashboard">+ Build your own dashboard</PillLink>
                   </li>
                 </ul>
               </div>

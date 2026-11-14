@@ -49,14 +49,15 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
       {shared && (
         <div className="flex flex-wrap items-center gap-3 border border-[#3a4550] bg-[#13181d] px-4 py-3 text-sm">
           <span className="text-[#c9d3dd]">You&apos;re viewing a shared dashboard.</span>
-          <button type="button" onClick={() => save(fromHash)} className="orb-pill">
-            Save as my hills
-          </button>
           <button
             type="button"
-            onClick={dismissShared}
-            className="text-[#9aa7b5] underline hover:text-white"
+            onClick={() => save(fromHash)}
+            className="orb-pill orb-pill-sm"
+            data-on
           >
+            Save as my hills
+          </button>
+          <button type="button" onClick={dismissShared} className="orb-pill orb-pill-sm">
             Back to mine
           </button>
         </div>
@@ -71,7 +72,7 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
             setEditing(!editing);
             setCopied(false);
           }}
-          className="orb-pill"
+          className="orb-pill orb-pill-sm"
           data-on={editing || undefined}
         >
           <svg
@@ -89,20 +90,12 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
           {editing ? "Done" : "Edit dashboard"}
         </button>
         {ids.length > 0 && !editing && (
-          <button
-            type="button"
-            onClick={copyLink}
-            className="text-[#9aa7b5] underline hover:text-white"
-          >
+          <button type="button" onClick={copyLink} className="orb-pill orb-pill-sm">
             {copied ? "Link copied" : "Copy a link to share"}
           </button>
         )}
         {editing && ids.length > 1 && (
-          <button
-            type="button"
-            onClick={() => save([])}
-            className="text-[#9aa7b5] underline hover:text-white"
-          >
+          <button type="button" onClick={() => save([])} className="orb-pill orb-pill-sm">
             Clear all
           </button>
         )}

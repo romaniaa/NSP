@@ -176,7 +176,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
     .map((id) => PLACES.find((p) => p.id === id))
     .filter((p): p is Place => p != null);
 
-  const quick = "border border-[#2f3840] px-3 py-2 text-center text-sm text-white hover:bg-white/10";
+  const quick = "orb-pill orb-pill-sm justify-center text-center";
 
   return (
     // Named so it stays put while the page content slides beneath it.
@@ -297,7 +297,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                 aria-current={active === "home" ? "page" : undefined}
                 className={quick}
               >
-                North Shore overview
+                Overview
               </Link>
               <Link
                 href="/hills"
@@ -305,7 +305,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                 aria-current={pathname === "/hills" ? "page" : undefined}
                 className={quick}
               >
-                All hills & backcountry
+                All hills
               </Link>
             </div>
 
@@ -314,11 +314,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                 <h2 id="drawer-mine" className="text-sm text-[#9aa7b5]">
                   My hills
                 </h2>
-                <Link
-                  href="/dashboard"
-                  onClick={close}
-                  className="text-xs text-[#9aa7b5] underline hover:text-white"
-                >
+                <Link href="/dashboard" onClick={close} className="orb-pill orb-pill-sm">
                   {savedPlaces.length ? "Open dashboard" : "Build one"}
                 </Link>
               </div>
