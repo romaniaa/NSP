@@ -224,6 +224,9 @@
   .orb-pill[data-on]::before {
     clip-path: inset(0);
   }
+  .orb-pill[data-on]:hover::before {
+    filter: brightness(1.12);
+  }
 
   /* A small solid count, e.g. on "My hills". */
   .orb-badge {

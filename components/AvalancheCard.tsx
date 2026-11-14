@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Card } from "@/components/Ui";
 import { isRated, type AvalancheForecast, type Danger } from "@/lib/Avalanche";
 import { DANGER_STYLE } from "@/lib/DangerStyle";
@@ -29,6 +30,45 @@ const BANDS = [
   { key: "btl", label: "Below treeline" },
 ] as const;
 
+// The way to the full forecast, as a solid button: on these pages it's the most
+// important thing to click.
+// On phones it spans the card with a shorter label, so it stays on one line.
+function ForecastLink({
+  href,
+  children,
+  short,
+}: {
+  href: string;
+  children: ReactNode;
+  short: ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="orb-pill !min-h-11 w-full justify-center !font-semibold sm:w-auto"
+      data-on
+    >
+      <span className="sm:hidden">{short}</span>
+      <span className="hidden sm:inline">{children}</span>
+      <svg
+        viewBox="0 0 16 16"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6 3h7v7M13 3 3 13" />
+      </svg>
+      <span className="sr-only">(opens avalanche.ca in a new tab)</span>
+    </a>
+  );
+}
+
 function Disclaimer() {
   return (
     <p className="text-xs text-[#9aa7b5]">
@@ -53,17 +93,12 @@ export default function AvalancheCard({
           <span className="chip bg-white/10 text-[#c9d3dd]">Avalanche Canada</span>
         </div>
         <p className="text-sm text-[#c9d3dd]">
-          No current avalanche forecast covers this area.{" "}
-          <a
-            href={forecast.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-white"
-          >
-            Check Avalanche Canada&apos;s map
-          </a>{" "}
-          for the latest.
+          No current avalanche forecast covers this area. Check Avalanche Canada&apos;s
+          map for the latest.
         </p>
+        <ForecastLink href={forecast.url} short="Open the forecast map">
+          Open Avalanche Canada&apos;s map
+        </ForecastLink>
         <Disclaimer />
       </Card>
     );
@@ -141,15 +176,10 @@ export default function AvalancheCard({
         </div>
       )}
 
-      <div className="space-y-2">
-        <a
-          href={forecast.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block text-sm text-white underline"
-        >
+      <div className="space-y-3">
+        <ForecastLink href={forecast.url} short="Read the full forecast">
           Read the full forecast on Avalanche Canada
-        </a>
+        </ForecastLink>
         <Disclaimer />
       </div>
     </Card>
