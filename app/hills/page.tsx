@@ -6,11 +6,10 @@ import { PageTransition } from "@/components/Transitions";
 import { SectionLabel } from "@/components/Ui";
 import { MOUNTAINS } from "@/config/mountains";
 import { REGIONS } from "@/config/regions";
-import { ZONES, type ZoneId } from "@/config/zones";
-import { getAvalancheForecast, type AvalancheForecast } from "@/lib/Avalanche";
-import type { PlaceId } from "@/lib/Model";
+import Link from "next/link";
+import { ZONES } from "@/config/zones";
+import { getPlacesNow } from "@/lib/Places";
 import { OPEN_GRAPH, SITE_NAME } from "@/lib/Site";
-import { getCurrentConditions, type HillNow } from "@/lib/Weather";
 
 const TITLE = "Ski & Backcountry Conditions Near Vancouver";
 const DESCRIPTION =
@@ -29,16 +28,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HillsPage() {
-  const [nowRes, avyRes] = await Promise.allSettled([
-    getCurrentConditions(),
-    Promise.all(ZONES.map(async (z) => [z.id, await getAvalancheForecast(z.id)] as const)),
-  ]);
-  for (const r of [nowRes, avyRes]) {
-    if (r.status === "rejected") console.error("Fetch failure:", r.reason);
-  }
-  const now: Record<PlaceId, HillNow> | null = nowRes.status === "fulfilled" ? nowRes.value : null;
-  const avalanche: Partial<Record<ZoneId, AvalancheForecast>> =
-    avyRes.status === "fulfilled" ? Object.fromEntries(avyRes.value) : {};
+  const { now, avalanche } = await getPlacesNow();
 
   return (
     <>
@@ -51,7 +41,11 @@ export default async function HillsPage() {
               <p className="mt-2 max-w-3xl text-[#c9d3dd]">
                 Current conditions at every ski area and backcountry zone we cover,
                 grouped by region. Open one for its freezing-level forecast, and lifts
-                or avalanche danger.
+                or avalanche danger.{" "}
+                <Link href="/dashboard" className="underline hover:text-white">
+                  Pick your favourites for a dashboard
+                </Link>
+                .
               </p>
             </header>
 

@@ -2,22 +2,39 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import MountainIcon from "@/components/MountainIcon";
 import { NAV_BACK, NAV_FORWARD } from "@/components/Transitions";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
+import { DASHBOARD_EVENT, readSaved } from "@/lib/Dashboard";
+
+function subscribe(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(DASHBOARD_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(DASHBOARD_EVENT, onChange);
+  };
+}
+const hasSaved = () => readSaved().length > 0;
 
 // The North Shore hills get their own tabs; every other hill and the backcountry
 // zones are reached through "All hills", which stays highlighted on their pages.
 const TABS = MOUNTAINS.filter((m) => m.region === "north-shore");
 
-type ItemId = "home" | "hills" | MountainId;
+type ItemId = "home" | "hills" | "dashboard" | MountainId;
 
 export default function SiteNav() {
   const pathname = usePathname();
+  // Shown once a dashboard is saved in this browser. False on the server, so the
+  // link appears after hydration.
+  const saved = useSyncExternalStore(subscribe, hasSaved, () => false);
   const hill = MOUNTAINS.find((m) => pathname === `/${m.id}`);
   const active: ItemId | null =
     pathname === "/"
       ? "home"
+      : pathname === "/dashboard"
+        ? "dashboard"
       : pathname === "/hills" || pathname.startsWith("/backcountry/")
         ? "hills"
         : hill
@@ -36,6 +53,9 @@ export default function SiteNav() {
       icon: m.id,
     })),
     { id: "hills", href: "/hills", label: "All hills & backcountry", color: "#e6edf3" },
+    ...(saved || active === "dashboard"
+      ? [{ id: "dashboard" as const, href: "/dashboard", label: "My hills", color: "#e6edf3" }]
+      : []),
   ];
 
   return (
