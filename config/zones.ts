@@ -12,7 +12,7 @@ export interface ZoneConfig {
   name: string; // short, for cards and the nav
   fullName: string;
   description: string; // the terrain it covers, in one sentence
-  region: RegionId; // where its freezing-level history and forecast come from
+  region: RegionId; // the group it is listed under on the site
   color: string;
   // Used both to look up the avalanche forecast and as the weather model point,
   // so it sits in the middle of the terrain people tour.

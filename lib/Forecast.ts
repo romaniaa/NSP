@@ -2,10 +2,10 @@ import { cacheLife } from "next/cache";
 import { LIFTS } from "@/config/lifts";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
 import type { RegionId } from "@/config/regions";
-import { HISTORY_TZ, fetchFreezingHistory, tempAt } from "@/lib/Model";
+import { fetchSnapshot, tempAt, type PlaceId } from "@/lib/Model";
 import { getCurrentConditions, type HillNow } from "@/lib/Weather";
 
-const TZ = HISTORY_TZ;
+const TZ = "America/Vancouver";
 
 export interface PointReading {
   id: string;
@@ -91,40 +91,44 @@ export async function getPointReadings(region: RegionId): Promise<PointReading[]
   }));
 }
 
-export async function getFreezingSeries(region: RegionId): Promise<FreezingSeries> {
+// Freezing-level history and forecast for one place, or the average of several
+// (the North Shore overview). "Now" is the same model hour and value that current
+// conditions use, so a page shows one freezing level throughout.
+export async function getFreezingSeries(ids: PlaceId[]): Promise<FreezingSeries> {
   "use cache";
   cacheLife({ stale: 300, revalidate: 900, expire: 3600 });
 
-  const history = await fetchFreezingHistory();
-  const { time: times, level: vals } = history.regions[region];
+  const [snapshot, now] = await Promise.all([fetchSnapshot(), getCurrentConditions()]);
+  const series = ids.map((id) => snapshot.places[id].levels);
+  const times = series[0].time;
 
-  const now = new Date();
-  const nowKey = new Intl.DateTimeFormat("sv-SE", {
+  // Hourly mean across the places, skipping any gaps.
+  const vals = times.map((_, i) => {
+    const vs = series.map((s) => s.level[i]).filter((v): v is number => v != null);
+    return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
+  });
+
+  const nowTime = now[ids[0]].time;
+  const idx = times.indexOf(nowTime);
+  if (idx === -1) throw new Error(`freezing: ${nowTime} not in the series`);
+  const current = ids.reduce((sum, id) => sum + now[id].freezingLevel, 0) / ids.length;
+
+  const at = (i: number) => vals[i] ?? null;
+  const next = at(idx + 24);
+  const past = at(idx - 25);
+
+  // Days run midnight to midnight in Vancouver.
+  const dayOf = new Intl.DateTimeFormat("en-CA", {
     timeZone: TZ,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    hour: "2-digit",
-    hourCycle: "h23",
-  })
-    .format(now)
-    .replace(" ", "T");
-
-  const idx = times.findIndex((t) => t.startsWith(nowKey));
-  if (idx === -1) throw new Error("freezing: current hour not in response");
-
-  const at = (i: number) => vals[i] ?? null;
-  const current = at(idx);
-  if (current == null) throw new Error("freezing: no freezing level in response");
-
-  const next = at(idx + 24);
-  const past = at(idx - 25);
-
+  });
   const byDay = new Map<string, number[]>();
   times.forEach((t, i) => {
     const v = vals[i];
     if (v == null) return;
-    const key = t.slice(0, 10);
+    const key = dayOf.format(new Date(t)); // YYYY-MM-DD
     const arr = byDay.get(key) ?? [];
     arr.push(v);
     byDay.set(key, arr);
@@ -140,16 +144,16 @@ export async function getFreezingSeries(region: RegionId): Promise<FreezingSerie
     high: Math.round(Math.max(...vs)),
   }));
 
-  const todayIdx = days.findIndex((d) => d.key === nowKey.slice(0, 10));
+  const todayIdx = days.findIndex((d) => d.key === dayOf.format(new Date(nowTime)));
   const start = todayIdx === -1 ? 0 : todayIdx;
 
   return {
     current: Math.round(current),
-    deltaNext24: next == null ? null : next - current,
-    deltaPast25: past == null ? null : current - past,
+    deltaNext24: next == null ? null : Math.round(next - current),
+    deltaPast25: past == null ? null : Math.round(current - past),
     history: days.slice(Math.max(0, start - 9), start + 1),
     forecast: days.slice(start, start + 6),
-    updated: new Date(history.fetched).toLocaleString("en-CA", {
+    updated: new Date(snapshot.fetched).toLocaleString("en-CA", {
       timeZone: TZ,
       month: "short",
       day: "numeric",

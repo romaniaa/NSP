@@ -26,7 +26,7 @@ export interface MountainConfig {
   locality: string; // municipality or area the ski area is in
   province: "BC" | "WA"; // province or state, for structured data
   country: "CA" | "US";
-  region: RegionId; // where its freezing-level history and forecast come from
+  region: RegionId; // the group it is listed under on the site
   website: string; // the resort's own site
   color: string; // accent colour used for this mountain across the page
   lat: number;

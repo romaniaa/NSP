@@ -16,7 +16,6 @@ import { PageTransition, SharedTransition } from "@/components/Transitions";
 import { SectionLabel, Unavailable } from "@/components/Ui";
 import { LIFTS } from "@/config/lifts";
 import { MOUNTAINS, type MountainConfig } from "@/config/mountains";
-import { regionById } from "@/config/regions";
 import { WEBCAMS } from "@/config/webcams";
 import { extremes, fmt, verdict, vertical } from "@/lib/Conditions";
 import { getFreezingSeries, getMountainReadings } from "@/lib/Forecast";
@@ -201,14 +200,13 @@ function Loading() {
 
 async function MountainContent({ config }: { config: MountainConfig }) {
   const lifts = LIFTS[config.id];
-  const region = regionById(config.region);
   const webcams = WEBCAMS[config.id];
 
   const [weatherRes, stationsRes, freezingRes, snowRes] =
     await Promise.allSettled([
       getMountainWeather(config),
       getMountainReadings(config.id),
-      getFreezingSeries(config.region),
+      getFreezingSeries([config.id]),
       getSnowReport(config.id),
     ]);
   for (const r of [weatherRes, stationsRes, freezingRes, snowRes]) {
@@ -339,7 +337,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
                   detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
                   days={freezing.forecast}
                   updated={freezing.updated}
-                  note={`Daily low–high range · Open-Meteo model · ${region.name} area`}
+                  note={`Daily low–high range at ${config.fullName} · Open-Meteo model`}
                 />
               </SharedTransition>
               <SharedTransition name="freezing-history">
@@ -356,7 +354,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
                   detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
                   days={freezing.history}
                   updated={freezing.updated}
-                  note={`Daily low–high range · Open-Meteo model · ${region.name} area`}
+                  note={`Daily low–high range at ${config.fullName} · Open-Meteo model`}
                 />
               </SharedTransition>
             </div>

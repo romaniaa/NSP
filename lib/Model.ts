@@ -1,17 +1,16 @@
 import { cacheLife } from "next/cache";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
-import { REGIONS, type RegionId } from "@/config/regions";
 import { ZONES, type ZoneId } from "@/config/zones";
 
-// Raw weather-model data from Open-Meteo, fetched at most once an hour and shared
+// Raw weather-model data from Open-Meteo, one request at most once an hour, shared
 // by every page through the remote cache. On Vercel that cache is shared between
 // server instances, so one fetch serves the home page, every hill page and any later
 // dashboard. Pages pick the current hour from it (see lib/Weather.ts).
 //
 // Free tier: 10,000 calls a day. Open-Meteo weights a request by its locations,
-// variables (per 10) and days (per 14), so these two requests come to roughly
-// 2.7 calls per place (hill or backcountry zone) and 2.4 per region, each hour.
-// With 7 hills, 5 zones and 7 regions that is about 1,200 calls a day.
+// variables (per 10) and days (per 14): 27 variables over 17 days is about 3.3
+// calls per place (hill or backcountry zone), each hour. With 7 hills and 5 zones
+// that is about 950 calls a day.
 
 const API = "https://api.open-meteo.com/v1/forecast";
 
@@ -113,7 +112,7 @@ async function fetchPoints<T>(
       for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
       if (model) url.searchParams.set("models", model);
 
-      const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+      const res = await fetch(url, { signal: AbortSignal.timeout(45_000) });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       const json = await res.json();
       const list: { hourly?: Hourly }[] = Array.isArray(json) ? json : [json];
@@ -155,40 +154,68 @@ export interface ModelHour {
 export type PlaceId = MountainId | ZoneId;
 const PLACES: { id: PlaceId; lat: number; lon: number }[] = [...MOUNTAINS, ...ZONES];
 
+export interface PlaceLevels {
+  time: string[]; // ISO, UTC, every hour from 10 days ago to 7 days ahead
+  level: (number | null)[]; // freezing level, m; null where the model has a gap
+}
+
+export interface PlaceData {
+  hours: ModelHour[]; // full detail for the hours around the fetch
+  levels: PlaceLevels; // freezing level for the whole period
+}
+
 export interface Snapshot {
   model: string;
   fetched: string; // ISO
-  places: Record<PlaceId, ModelHour[]>;
+  places: Record<PlaceId, PlaceData>;
 }
 
-// The hours around now for every place, from one request.
+// Full detail is kept only this many hours either side of the fetch. That covers
+// the 6 hours an entry can be served if refreshes fail, and keeps the entry small.
+const DETAIL_BEFORE_H = 3;
+const DETAIL_AFTER_H = 9;
+
+// Everything weather for every place, from one request: the hours around now in
+// full, and the freezing level for the past 10 days and next 7. Current conditions
+// and the freezing-level charts come from the same data, so a page never shows
+// two different freezing levels for one place.
 export async function fetchSnapshot(): Promise<Snapshot> {
   "use cache: remote";
-  // The model runs a few times a day, so hourly is plenty. The window below covers
-  // the 6 hours an entry can be served, in case refreshes fail.
+  // The model runs a few times a day, so hourly is plenty.
   cacheLife({ stale: 300, revalidate: 3600, expire: 6 * 3600 });
 
+  const now = Date.now();
   const { model, data } = await fetchPoints(
     PLACES,
     {
       hourly: [...PROFILE_VARS, ...SURFACE_VARS].join(","),
-      past_hours: "2",
-      forecast_hours: "8",
+      past_days: "10",
+      forecast_days: "7",
       timezone: "GMT",
     },
     (hourly) =>
-      hourly.map((h, loc) =>
-        h.time.map((time, i): ModelHour => {
-          const profile = profileAt(h, i);
+      hourly.map((h, loc): PlaceData => {
+        const time = h.time.map((t) => `${t}Z`); // Open-Meteo gives "YYYY-MM-DDTHH:MM" in GMT
+        const profiles = time.map((_, i) => profileAt(h, i));
+        const level = profiles.map((p) => (p ? freezingLevel(p) : null));
+        if (level.filter((v) => v != null).length < level.length / 2) {
+          throw new Error(`mostly empty freezing levels for ${PLACES[loc].id}`);
+        }
+
+        const hours: ModelHour[] = [];
+        time.forEach((t, i) => {
+          const offset = (Date.parse(t) - now) / 3600_000;
+          if (offset < -DETAIL_BEFORE_H || offset > DETAIL_AFTER_H) return;
+          const profile = profiles[i];
           const rh = value(h, "relative_humidity_2m", i);
           const wind = value(h, "wind_speed_10m", i);
           const gust = value(h, "wind_gusts_10m", i);
           const dir = value(h, "wind_direction_10m", i);
           if (!profile || rh == null || wind == null || gust == null || dir == null) {
-            throw new Error(`gap at ${PLACES[loc].id} ${time}`);
+            throw new Error(`gap at ${PLACES[loc].id} ${t}`);
           }
-          return {
-            time: `${time}Z`, // Open-Meteo gives "YYYY-MM-DDTHH:MM" in GMT
+          hours.push({
+            time: t,
             profile,
             rh,
             precipitation: value(h, "precipitation", i) ?? 0,
@@ -197,9 +224,11 @@ export async function fetchSnapshot(): Promise<Snapshot> {
             wind,
             gust,
             dir,
-          };
-        })
-      )
+          });
+        });
+
+        return { hours, levels: { time, level } };
+      })
   );
 
   return {
@@ -207,56 +236,7 @@ export async function fetchSnapshot(): Promise<Snapshot> {
     fetched: new Date().toISOString(),
     places: Object.fromEntries(PLACES.map((p, i) => [p.id, data[i]])) as Record<
       PlaceId,
-      ModelHour[]
-    >,
-  };
-}
-
-export interface RegionLevels {
-  time: string[]; // "YYYY-MM-DDTHH:MM", Vancouver time
-  level: (number | null)[]; // freezing level, m
-}
-
-export interface FreezingHistory {
-  model: string;
-  fetched: string; // ISO
-  regions: Record<RegionId, RegionLevels>;
-}
-
-export const HISTORY_TZ = "America/Vancouver";
-
-// Hourly freezing level for the past 10 days and next 7, for every region.
-export async function fetchFreezingHistory(): Promise<FreezingHistory> {
-  "use cache: remote";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 6 * 3600 });
-
-  const { model, data } = await fetchPoints(
-    REGIONS,
-    {
-      hourly: PROFILE_VARS.join(","),
-      past_days: "10",
-      forecast_days: "7",
-      timezone: HISTORY_TZ,
-    },
-    (hourly) =>
-      hourly.map((h, loc): RegionLevels => {
-        const level = h.time.map((_, i) => {
-          const p = profileAt(h, i);
-          return p ? freezingLevel(p) : null;
-        });
-        if (level.filter((v) => v != null).length < level.length / 2) {
-          throw new Error(`mostly empty freezing levels for ${REGIONS[loc].id}`);
-        }
-        return { time: h.time, level };
-      })
-  );
-
-  return {
-    model,
-    fetched: new Date().toISOString(),
-    regions: Object.fromEntries(REGIONS.map((r, i) => [r.id, data[i]])) as Record<
-      RegionId,
-      RegionLevels
+      PlaceData
     >,
   };
 }

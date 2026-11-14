@@ -9,7 +9,6 @@ import RangeIcon from "@/components/RangeIcon";
 import SiteNav from "@/components/SiteNav";
 import { PageTransition } from "@/components/Transitions";
 import { Card, SectionLabel, Unavailable } from "@/components/Ui";
-import { regionById } from "@/config/regions";
 import { ZONES, type ZoneConfig } from "@/config/zones";
 import { getAvalancheForecast } from "@/lib/Avalanche";
 import { CONDITION, conditionAt, fmt } from "@/lib/Conditions";
@@ -191,11 +190,10 @@ function ZoneDiagram({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
 }
 
 async function ZoneContent({ zone }: { zone: ZoneConfig }) {
-  const region = regionById(zone.region);
   const [avyRes, nowRes, freezingRes] = await Promise.allSettled([
     getAvalancheForecast(zone.id),
     getCurrentConditions().then((c) => c[zone.id]),
-    getFreezingSeries(zone.region),
+    getFreezingSeries([zone.id]),
   ]);
   for (const r of [avyRes, nowRes, freezingRes]) {
     if (r.status === "rejected") console.error("Fetch failure:", r.reason);
@@ -235,7 +233,7 @@ async function ZoneContent({ zone }: { zone: ZoneConfig }) {
             detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
             days={freezing.forecast}
             updated={freezing.updated}
-            note={`Daily low–high range · Open-Meteo model · ${region.name} area`}
+            note={`Daily low–high range at ${zone.fullName} · Open-Meteo model`}
           />
           <FreezingChart
             title="Freezing level history"
@@ -245,7 +243,7 @@ async function ZoneContent({ zone }: { zone: ZoneConfig }) {
             detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
             days={freezing.history}
             updated={freezing.updated}
-            note={`Daily low–high range · Open-Meteo model · ${region.name} area`}
+            note={`Daily low–high range at ${zone.fullName} · Open-Meteo model`}
           />
         </div>
       ) : (

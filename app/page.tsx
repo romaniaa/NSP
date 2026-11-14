@@ -56,7 +56,7 @@ export default async function Home() {
   const [mountainResults, readingsResult, freezingResult] = await Promise.all([
     Promise.allSettled(HILLS.map((m) => getMountainWeather(m))),
     Promise.allSettled([getPointReadings("north-shore")]).then((r) => r[0]),
-    Promise.allSettled([getFreezingSeries("north-shore")]).then((r) => r[0]),
+    Promise.allSettled([getFreezingSeries(HILLS.map((m) => m.id))]).then((r) => r[0]),
   ]);
 
   for (const r of [...mountainResults, readingsResult, freezingResult]) {
@@ -202,7 +202,7 @@ export default async function Home() {
                     detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
                     days={freezing.forecast}
                     updated={freezing.updated}
-                    note="Daily low–high range · Open-Meteo model"
+                    note="Daily low–high range · average of Cypress, Grouse and Seymour · Open-Meteo model"
                   />
                 </SharedTransition>
                 <SharedTransition name="freezing-history">
@@ -219,7 +219,7 @@ export default async function Home() {
                     detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
                     days={freezing.history}
                     updated={freezing.updated}
-                    note="Daily low–high range · Open-Meteo model"
+                    note="Daily low–high range · average of Cypress, Grouse and Seymour · Open-Meteo model"
                   />
                 </SharedTransition>
               </div>

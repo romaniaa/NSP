@@ -28,7 +28,7 @@ export async function getCurrentConditions(): Promise<Record<PlaceId, HillNow>> 
   const snapshot = await fetchSnapshot();
   const now = Date.now();
 
-  const entries = Object.entries(snapshot.places).map(([id, hours]) => {
+  const entries = Object.entries(snapshot.places).map(([id, { hours }]) => {
     let best: ModelHour | null = null;
     let bestGap = Infinity;
     for (const h of hours) {
