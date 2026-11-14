@@ -194,7 +194,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
           North Shore Peaks
         </Link>
         {saved.length > 0 && active !== "dashboard" && (
-          <Link href="/dashboard" className="orb-pill !min-h-11 !px-3.5 whitespace-nowrap">
+          <Link href="/dashboard" className="orb-pill min-h-[30px] !px-3.5 whitespace-nowrap">
             My hills
             <span className="orb-badge" aria-label={`${saved.length} saved`}>
               {saved.length}

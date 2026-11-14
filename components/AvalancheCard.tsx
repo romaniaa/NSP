@@ -47,7 +47,7 @@ function ForecastLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="orb-pill !min-h-11 w-full justify-center !font-semibold sm:w-auto"
+      className="orb-pill min-h-[30px] w-full justify-center !font-semibold sm:w-auto"
       data-on
     >
       <span className="sm:hidden">{short}</span>
