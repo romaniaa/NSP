@@ -18,7 +18,7 @@ const Arrow = ({ flip = false }: { flip?: boolean }) => (
   </svg>
 );
 
-// Move and remove controls under a dashboard card, as small glass orbs. The
+// Move and remove controls under a dashboard card, as small round buttons. The
 // dashboard's CSS shows them only in edit mode.
 export default function CardActions({ id, name }: { id: string; name: string }) {
   const { ids, move, remove } = useDashboard();

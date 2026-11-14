@@ -4,11 +4,8 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useDashboard } from "@/components/useDashboard";
 
-// Brightened so the glow reads on the dark page; the hill colours are muted.
-const glow = (color: string) => `color-mix(in srgb, ${color} 75%, white)`;
-
-// Adds a hill or zone to the visitor's dashboard, or takes it off: a glass orb that
-// floods with the place's colour and pops a check when it's on. Until the page
+// Adds a hill or zone to the visitor's dashboard, or takes it off: a round button
+// that fills with the place's colour and shows a check when it's on. Until the page
 // hydrates it can't know the saved state, so it renders off and disabled.
 export default function PinButton({
   id,
@@ -39,7 +36,7 @@ export default function PinButton({
         <span
           className={`orb ${size === "large" ? "" : "orb-sm"}`}
           data-on={on || undefined}
-          style={{ "--orb": glow(color) } as CSSProperties}
+          style={{ "--orb": color } as CSSProperties}
           aria-hidden="true"
         >
           <svg
