@@ -1,4 +1,4 @@
-import type { MountainConfig } from "@/config/mountains";
+import type { Landmark, MountainConfig } from "@/config/mountains";
 import type { MountainWeather } from "@/lib/Weather";
 import {
   CONDITION,
@@ -9,6 +9,7 @@ import {
   conditionAt,
   verdict,
   vertical,
+  type Sky,
 } from "@/lib/Conditions";
 
 // Simple line-art ridge. Heights match the real elevations, so the peaks sit at the right level.
@@ -214,80 +215,39 @@ function Trees({
   );
 }
 
-interface Props {
-  config: MountainConfig;
-  weather: MountainWeather | null;
-  isTallest?: boolean;
-}
-
-export default function ElevationVisualizer({
-  config,
-  weather,
-  isTallest = false,
-}: Props) {
-  const { minElevation, maxElevation, landmarks, name, profile } = config;
-  const range = maxElevation - minElevation;
-  const pct = (m: number) =>
-    ((Math.min(maxElevation, Math.max(minElevation, m)) - minElevation) /
-      range) *
-    100;
-
-  if (!weather) {
-    return (
-      <section
-      className="border border-[#232a31] bg-[#13181d] p-5"
-      style={{ borderTop: `3px solid ${config.color}` }}
-    >
-        <h2 className="text-lg font-semibold text-white">{name}</h2>
-        <p className="mt-3 text-sm text-[#8f8f8f]">
-          Weather data is unavailable. It will retry on the next refresh.
-        </p>
-      </section>
-    );
-  }
+// The elevation diagram on its own: rain, wet snow and snow bands, the ridge,
+// trees, the freezing level, altimeter ticks and labelled heights. Used for hills
+// (with their real ridge) and backcountry zones (with a generic one).
+export function ElevationDiagram({
+  id,
+  name,
+  min,
+  max,
+  profile,
+  landmarks,
+  color,
+  freezingLevel: fl,
+  sky,
+}: {
+  id: string;
+  name: string;
+  min: number;
+  max: number;
+  profile: [number, number][];
+  landmarks: Landmark[];
+  color: string;
+  freezingLevel: number;
+  sky: Sky;
+}) {
+  const pct = (m: number) => ((Math.min(max, Math.max(min, m)) - min) / (max - min)) * 100;
+  const snowLine = fl - SNOW_LINE_OFFSET;
 
   // Altimeter ticks every 100 m, longer at each 500 m.
   const ticks: number[] = [];
-  for (let m = Math.ceil(minElevation / 100) * 100; m <= maxElevation; m += 100) {
-    ticks.push(m);
-  }
-
-  const fl = weather.freezingLevel;
-  const snowLine = fl - SNOW_LINE_OFFSET;
-  const sky = {
-    precipitation: weather.precipitation,
-    cloud: weather.cloud,
-    code: weather.code,
-  };
+  for (let m = Math.ceil(min / 100) * 100; m <= max; m += 100) ticks.push(m);
 
   return (
-    <section
-      className="border border-[#232a31] bg-[#13181d] p-5"
-      style={{ borderTop: `3px solid ${config.color}` }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-3xl font-bold text-white">{name}</h2>
-            {isTallest && (
-              <span className="chip bg-white/10 text-white">Highest peak</span>
-            )}
-          </div>
-          <p className="font-sans text-xs tabular-nums text-[#8f8f8f]">
-            {fmt(extremes(config).low)}–{fmt(extremes(config).high)} m lifts ·{" "}
-            {fmt(vertical(config))} m vertical
-          </p>
-          <p className="mt-1 text-sm text-[#d4d4d4]">{verdict(config, fl, sky)}</p>
-        </div>
-        <div className="text-right">
-          <p className="font-display text-4xl font-bold tabular-nums text-white">
-            {fl.toLocaleString("en-CA")}
-            <span className="ml-0.5 text-sm font-normal text-[#8f8f8f]">m</span>
-          </p>
-          <p className="text-xs text-[#8f8f8f]">Freezing level</p>
-        </div>
-      </div>
-
+    <>
       <div
         className="relative mt-5 h-96 overflow-hidden border border-[#2f3840] bg-black"
         role="img"
@@ -309,8 +269,8 @@ export default function ElevationVisualizer({
           style={{ height: `${100 - pct(fl)}%` }}
         />
 
-        <Ridge profile={profile} pct={pct} color={config.color} />
-        <Trees id={config.id} profile={profile} pct={pct} color={config.color} />
+        <Ridge profile={profile} pct={pct} color={color} />
+        <Trees id={id} profile={profile} pct={pct} color={color} />
 
         <div
           className="absolute inset-x-0 border-t border-dashed border-white/70"
@@ -353,6 +313,84 @@ export default function ElevationVisualizer({
         Shaded bands show what would fall at each height. Chips show what is
         happening now.
       </p>
+    </>
+  );
+}
+
+interface Props {
+  config: MountainConfig;
+  weather: MountainWeather | null;
+  isTallest?: boolean;
+}
+
+export default function ElevationVisualizer({
+  config,
+  weather,
+  isTallest = false,
+}: Props) {
+  const { minElevation, maxElevation, landmarks, name, profile } = config;
+
+  if (!weather) {
+    return (
+      <section
+      className="border border-[#232a31] bg-[#13181d] p-5"
+      style={{ borderTop: `3px solid ${config.color}` }}
+    >
+        <h2 className="text-lg font-semibold text-white">{name}</h2>
+        <p className="mt-3 text-sm text-[#8f8f8f]">
+          Weather data is unavailable. It will retry on the next refresh.
+        </p>
+      </section>
+    );
+  }
+
+  const fl = weather.freezingLevel;
+  const snowLine = fl - SNOW_LINE_OFFSET;
+  const sky = {
+    precipitation: weather.precipitation,
+    cloud: weather.cloud,
+    code: weather.code,
+  };
+
+  return (
+    <section
+      className="border border-[#232a31] bg-[#13181d] p-5"
+      style={{ borderTop: `3px solid ${config.color}` }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-3xl font-bold text-white">{name}</h2>
+            {isTallest && (
+              <span className="chip bg-white/10 text-white">Highest peak</span>
+            )}
+          </div>
+          <p className="font-sans text-xs tabular-nums text-[#8f8f8f]">
+            {fmt(extremes(config).low)}–{fmt(extremes(config).high)} m lifts ·{" "}
+            {fmt(vertical(config))} m vertical
+          </p>
+          <p className="mt-1 text-sm text-[#d4d4d4]">{verdict(config, fl, sky)}</p>
+        </div>
+        <div className="text-right">
+          <p className="font-display text-4xl font-bold tabular-nums text-white">
+            {fl.toLocaleString("en-CA")}
+            <span className="ml-0.5 text-sm font-normal text-[#8f8f8f]">m</span>
+          </p>
+          <p className="text-xs text-[#8f8f8f]">Freezing level</p>
+        </div>
+      </div>
+
+      <ElevationDiagram
+        id={config.id}
+        name={name}
+        min={minElevation}
+        max={maxElevation}
+        profile={profile}
+        landmarks={landmarks}
+        color={config.color}
+        freezingLevel={fl}
+        sky={sky}
+      />
 
       <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
         <div>

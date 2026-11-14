@@ -46,8 +46,11 @@ export interface MountainConfig {
 // elevations from Open-Meteo's 90 m terrain model, replaced by published figures where
 // a resort or Wikipedia gives one. The terrain model reads sharp summits low (Whistler
 // Peak by ~70 m), so treat their alpine tops as a little conservative. lat/lon is the
-// model point for weather: the middle of the lift network. Ridge outlines for those
-// four are schematic, drawn through the landmarks.
+// model point for weather: the middle of the lift network. Their ridge outlines are
+// real: the same terrain model sampled along a line through each hill's named peaks
+// and lift tops, simplified (Whistler: Whistler Mountain to Blackcomb Peak; Baker:
+// Panorama Dome along the Shuksan Arm; Sasquatch: Mount Davies past both lift tops
+// toward Mount Klaudt; Manning: Mara Peak past both lift tops).
 export const MOUNTAINS: MountainConfig[] = [
   {
     id: "cypress",
@@ -147,7 +150,7 @@ export const MOUNTAINS: MountainConfig[] = [
       bottom: { label: "Creekside Gondola (bottom)", elevation: 653 },
       top: { label: "7th Heaven Express (top)", elevation: 2240 },
     },
-    profile: [[0,660],[10,1200],[20,1850],[28,2182],[36,1900],[48,760],[58,1150],[70,1860],[80,2240],[86,2440],[100,2050]],
+    profile: [[0,1483],[22,2161],[28,1900],[33,1950],[42,1603],[48,1534],[57,1028],[69,1648],[80,1921],[85,2413],[92,2250],[97,2350],[100,2244]],
   },
   {
     id: "sasquatch",
@@ -172,7 +175,7 @@ export const MOUNTAINS: MountainConfig[] = [
       bottom: { label: "Sasquatch Triple (bottom)", elevation: 979 },
       top: { label: "Sasquatch Triple (top)", elevation: 1317 },
     },
-    profile: [[0,960],[20,980],[40,1100],[60,1285],[75,1317],[88,1250],[100,1150]],
+    profile: [[0,1235],[12,933],[29,1285],[34,1214],[39,1244],[46,1194],[53,1320],[56,1311],[66,1112],[80,1190],[90,1337],[100,1391]],
   },
   {
     id: "manning",
@@ -196,7 +199,7 @@ export const MOUNTAINS: MountainConfig[] = [
       bottom: { label: "Blue Chair (bottom)", elevation: 1453 },
       top: { label: "Bear Chair (top)", elevation: 1785 },
     },
-    profile: [[0,1420],[20,1453],[40,1560],[60,1668],[78,1785],[90,1740],[100,1650]],
+    profile: [[0,1771],[20,1720],[36,1565],[41,1558],[49,1611],[54,1724],[66,1785],[80,1667],[86,1678],[92,1769],[100,1713]],
   },
   {
     id: "baker",
@@ -211,7 +214,7 @@ export const MOUNTAINS: MountainConfig[] = [
     lat: 48.857,
     lon: -121.667,
     minElevation: 1000,
-    maxElevation: 1650,
+    maxElevation: 1750,
     // From the resort's snow report (feet, converted).
     landmarks: [
       { name: "White Salmon base", elevation: 1106 },
@@ -223,6 +226,6 @@ export const MOUNTAINS: MountainConfig[] = [
       // Published summit, 5,089 ft.
       top: { label: "Chair 8 (top)", elevation: 1551 },
     },
-    profile: [[0,1110],[18,1200],[32,1283],[48,1530],[60,1400],[75,1551],[88,1450],[100,1300]],
+    profile: [[0,1678],[4,1537],[11,1550],[21,1281],[29,1346],[35,1527],[38,1523],[45,1384],[49,1558],[53,1547],[54,1582],[65,1437],[69,1522],[80,1593],[81,1679],[84,1629],[88,1665],[92,1571],[97,1558],[100,1710]],
   },
 ];

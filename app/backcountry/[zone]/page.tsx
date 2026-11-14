@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import AvalancheCard from "@/components/AvalancheCard";
+import { ElevationDiagram } from "@/components/ElevationVisualizer";
 import FreezingChart from "@/components/FreezingChart";
 import PinButton from "@/components/PinButton";
+import RangeIcon from "@/components/RangeIcon";
 import SiteNav from "@/components/SiteNav";
 import { PageTransition } from "@/components/Transitions";
 import { Card, SectionLabel, Unavailable } from "@/components/Ui";
@@ -59,7 +61,10 @@ export default async function ZonePage({ params }: { params: Promise<{ zone: str
           <div className="mx-auto max-w-8xl space-y-5">
             <header className="pb-2">
               <p className="text-xs uppercase tracking-widest text-[#9aa7b5]">Backcountry</p>
-              <h1 className="text-6xl font-bold">{zone.fullName}</h1>
+              <h1 className="flex items-center gap-4 text-6xl font-bold">
+                <RangeIcon color={zone.color} className="h-10 w-[54px]" />
+                {zone.fullName}
+              </h1>
               <p className="mt-2 max-w-3xl text-[#c9d3dd]">{zone.description}</p>
               <div className="mt-4">
                 <PinButton id={zone.id} name={zone.fullName} size="large" />
@@ -132,6 +137,59 @@ function ElevationTable({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
   );
 }
 
+// A generic range outline: zones span many peaks, so no single ridge is drawn as
+// a likeness. Its heights are scaled to the zone's terrain, so the snow line and
+// the labelled heights sit at the right levels against it.
+const GENERIC_RIDGE: [number, number][] = [
+  [0, 0.25], [12, 0.5], [22, 0.85], [30, 0.62], [42, 1], [52, 0.7],
+  [60, 0.78], [72, 0.45], [84, 0.66], [100, 0.35],
+];
+const BANDS = ["Upper", "Middle", "Lower"];
+
+function ZoneDiagram({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
+  const heights = [...zone.heights].sort((a, b) => b - a);
+  const top = heights[0];
+  const bottom = heights[heights.length - 1];
+  const lo = bottom - 250;
+  const hi = top + 120;
+  return (
+    <section
+      className="border border-[#232a31] bg-[#13181d] p-5"
+      style={{ borderTop: `3px solid ${zone.color}` }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-2xl font-bold text-white">{zone.name}</h3>
+          <p className="text-xs tabular-nums text-[#8f8f8f]">
+            {fmt(bottom)}–{fmt(top)} m terrain
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="font-display text-4xl font-bold tabular-nums text-white">
+            {fmt(now.freezingLevel)}
+            <span className="ml-0.5 text-sm font-normal text-[#8f8f8f]">m</span>
+          </p>
+          <p className="text-xs text-[#8f8f8f]">Freezing level</p>
+        </div>
+      </div>
+      <ElevationDiagram
+        id={zone.id}
+        name={zone.fullName}
+        min={bottom - 400}
+        max={top + 250}
+        profile={GENERIC_RIDGE.map(([x, f]) => [x, Math.round(lo + f * (hi - lo))])}
+        landmarks={heights.map((h, i) => ({ name: BANDS[i] ?? "", elevation: h }))}
+        color={zone.color}
+        freezingLevel={now.freezingLevel}
+        sky={{ precipitation: now.precipitation, cloud: now.cloud, code: now.code }}
+      />
+      <p className="mt-1 text-xs text-[#7d8da1]">
+        Heights are to scale; the ridge is a generic outline.
+      </p>
+    </section>
+  );
+}
+
 async function ZoneContent({ zone }: { zone: ZoneConfig }) {
   const region = regionById(zone.region);
   const [avyRes, nowRes, freezingRes] = await Promise.allSettled([
@@ -148,18 +206,23 @@ async function ZoneContent({ zone }: { zone: ZoneConfig }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          {forecast ? (
-            <AvalancheCard name={zone.fullName} forecast={forecast} />
-          ) : (
-            <Unavailable title={`${zone.fullName} avalanche danger`} />
-          )}
+      {forecast ? (
+        <AvalancheCard name={zone.fullName} forecast={forecast} />
+      ) : (
+        <Unavailable title={`${zone.fullName} avalanche danger`} />
+      )}
+
+      <SectionLabel>Rain and snow line, by elevation</SectionLabel>
+      {now ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <ZoneDiagram zone={zone} now={now} />
+          <div className="lg:col-span-2">
+            <ElevationTable zone={zone} now={now} />
+          </div>
         </div>
-        <div className="lg:col-span-2">
-          {now ? <ElevationTable zone={zone} now={now} /> : <Unavailable title="Conditions by elevation" />}
-        </div>
-      </div>
+      ) : (
+        <Unavailable title="Conditions by elevation" />
+      )}
 
       <SectionLabel>Freezing level</SectionLabel>
       {freezing ? (

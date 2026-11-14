@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { DANGER_STYLE } from "@/lib/DangerStyle";
+import RangeIcon from "@/components/RangeIcon";
 import { NAV_FORWARD } from "@/components/Transitions";
 import type { ZoneConfig } from "@/config/zones";
 import { highestDanger, type AvalancheForecast } from "@/lib/Avalanche";
@@ -38,7 +39,10 @@ export default function ZoneCard({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="truncate text-xl font-bold text-white">{zone.fullName}</h3>
+            <h3 className="flex items-center gap-2 text-xl font-bold text-white">
+              <RangeIcon color={zone.color} className="h-3.5 w-5" />
+              <span className="truncate">{zone.fullName}</span>
+            </h3>
             <p className="text-xs text-[#8f8f8f]">Backcountry · {zone.description}</p>
           </div>
           {now && (

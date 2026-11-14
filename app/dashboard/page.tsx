@@ -26,11 +26,13 @@ const GROUPS: PickerGroup[] = REGIONS.map((r) => ({
     ...MOUNTAINS.filter((m) => m.region === r.id).map((m) => ({
       id: m.id,
       name: m.fullName,
+      color: m.color,
       kind: "Resort" as const,
     })),
     ...ZONES.filter((z) => z.region === r.id).map((z) => ({
       id: z.id,
       name: z.fullName,
+      color: z.color,
       kind: "Backcountry" as const,
     })),
   ],

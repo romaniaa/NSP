@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useLayoutEffect, useState } from "react";
+import MountainIcon from "@/components/MountainIcon";
+import RangeIcon from "@/components/RangeIcon";
 import { useDashboard } from "@/components/useDashboard";
+import type { MountainId } from "@/config/mountains";
 import { applyToDashboard } from "@/lib/Dashboard";
 
 export interface PickerGroup {
   region: string;
-  places: { id: string; name: string; kind: "Resort" | "Backcountry" }[];
+  places: { id: string; name: string; color: string; kind: "Resort" | "Backcountry" }[];
 }
 
 // The dashboard's toolbar: edit mode (picker plus per-card move and remove
@@ -129,6 +132,11 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
                           onChange={() => toggle(p.id)}
                           className="h-4 w-4 accent-white"
                         />
+                        {p.kind === "Backcountry" ? (
+                          <RangeIcon color={p.color} className="h-3 w-4" />
+                        ) : (
+                          <MountainIcon id={p.id as MountainId} color={p.color} className="h-3 w-4" />
+                        )}
                         {p.name}
                         {p.kind === "Backcountry" && (
                           <span className="text-xs text-[#9aa7b5]">backcountry</span>

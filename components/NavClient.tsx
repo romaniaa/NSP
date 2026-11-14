@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef } from "react";
 import MountainIcon from "@/components/MountainIcon";
+import RangeIcon from "@/components/RangeIcon";
 import { NAV_BACK, NAV_FORWARD } from "@/components/Transitions";
 import { useDashboard } from "@/components/useDashboard";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
@@ -23,7 +24,7 @@ interface Place {
   href: string;
   name: string;
   color: string;
-  icon?: MountainId; // hills have a silhouette; zones get a colour dot
+  icon?: MountainId; // hills have their silhouette; zones the generic range
   backcountry: boolean;
 }
 
@@ -89,7 +90,7 @@ function PlaceRow({
           {place.icon ? (
             <MountainIcon id={place.icon} color={place.color} className="h-3.5 w-5" />
           ) : (
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: place.color }} />
+            <RangeIcon color={place.color} className="h-3.5 w-5" />
           )}
         </span>
         <span className="min-w-0 flex-1">
