@@ -28,7 +28,7 @@ export const mountainTitle = (m: MountainConfig) =>
   `${m.fullName} Snow Report, Webcams & Conditions`;
 
 export const mountainDescription = (m: MountainConfig) =>
-  `${m.fullName} conditions today: snow depth, live webcams, freezing level, and whether it's raining or snowing at each lift. Updated every 15 minutes.`;
+  `${m.fullName} conditions today: snow depth, live webcams, freezing level, and whether it's raining or snowing at each lift. Updated hourly.`;
 
 // JSON-LD for a <script type="application/ld+json">, with "<" escaped so
 // nothing in it can close the script tag.

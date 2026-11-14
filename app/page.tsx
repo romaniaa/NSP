@@ -27,7 +27,7 @@ import {
   SITE_URL,
   jsonLd,
 } from "@/lib/Site";
-import { fetchMountainWeather } from "@/lib/Weather";
+import { getMountainWeather } from "@/lib/Weather";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -51,9 +51,9 @@ const STRUCTURED_DATA = {
 
 export default async function Home() {
   const [mountainResults, readingsResult, freezingResult] = await Promise.all([
-    Promise.allSettled(MOUNTAINS.map((m) => fetchMountainWeather(m))),
+    Promise.allSettled(MOUNTAINS.map((m) => getMountainWeather(m))),
     Promise.allSettled([getPointReadings()]).then((r) => r[0]),
-    Promise.allSettled([getFreezingSeries()]).then((r) => r[0]),
+    Promise.allSettled([getFreezingSeries("north-shore")]).then((r) => r[0]),
   ]);
 
   for (const r of [...mountainResults, readingsResult, freezingResult]) {
@@ -105,7 +105,7 @@ export default async function Home() {
                   Seymour, the three ski areas on Vancouver&apos;s North Shore.
                   Freezing level, wind and temperature at every lift, plus each
                   hill&apos;s snow report and live webcams on its own page.
-                  Updated every 15 minutes.
+                  Updated hourly.
                 </p>
                 <ul className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[#c9d3dd]">
                   {MOUNTAINS.map((m) => (

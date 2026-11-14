@@ -15,6 +15,7 @@ import { PageTransition, SharedTransition } from "@/components/Transitions";
 import { SectionLabel, Unavailable } from "@/components/Ui";
 import { LIFTS } from "@/config/lifts";
 import { MOUNTAINS, type MountainConfig } from "@/config/mountains";
+import { regionById } from "@/config/regions";
 import { WEBCAMS } from "@/config/webcams";
 import { extremes, fmt, verdict, vertical } from "@/lib/Conditions";
 import { getFreezingSeries, getMountainReadings } from "@/lib/Forecast";
@@ -29,7 +30,7 @@ import {
 } from "@/lib/Site";
 import { getSnowReport, type SnowReport } from "@/lib/SnowReport";
 import { trendDetail, trendWord } from "@/lib/Trend";
-import { fetchMountainWeather } from "@/lib/Weather";
+import { getMountainWeather } from "@/lib/Weather";
 
 export function generateStaticParams() {
   return MOUNTAINS.map((m) => ({ mountain: m.id }));
@@ -177,7 +178,7 @@ function Intro({
     <p className="mt-3 max-w-3xl text-[#c9d3dd]">
       {[now, depth].filter(Boolean).join(" ")}{" "}
       Below: live webcams and rain or snow at each lift on this{" "}
-      {config.locality} ski area, updated every 15 minutes.
+      {config.locality} ski area, updated hourly.
     </p>
   );
 }
@@ -197,12 +198,13 @@ function Loading() {
 
 async function MountainContent({ config }: { config: MountainConfig }) {
   const lifts = LIFTS[config.id];
+  const region = regionById(config.region);
 
   const [weatherRes, stationsRes, freezingRes, snowRes] =
     await Promise.allSettled([
-      fetchMountainWeather(config),
+      getMountainWeather(config),
       getMountainReadings(config.id),
-      getFreezingSeries(),
+      getFreezingSeries(config.region),
       getSnowReport(config.id),
     ]);
   for (const r of [weatherRes, stationsRes, freezingRes, snowRes]) {
@@ -325,7 +327,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
                   detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
                   days={freezing.forecast}
                   updated={freezing.updated}
-                  note="Daily low–high range · Open-Meteo model · North Shore area"
+                  note={`Daily low–high range · Open-Meteo model · ${region.name} area`}
                 />
               </SharedTransition>
               <SharedTransition name="freezing-history">
@@ -342,7 +344,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
                   detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
                   days={freezing.history}
                   updated={freezing.updated}
-                  note="Daily low–high range · Open-Meteo model · North Shore area"
+                  note={`Daily low–high range · Open-Meteo model · ${region.name} area`}
                 />
               </SharedTransition>
             </div>

@@ -1,10 +1,11 @@
 import { cacheLife } from "next/cache";
 import { LIFTS } from "@/config/lifts";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
+import type { RegionId } from "@/config/regions";
+import { HISTORY_TZ, fetchFreezingHistory, tempAt } from "@/lib/Model";
+import { getCurrentConditions, type HillNow } from "@/lib/Weather";
 
-const TZ = "America/Vancouver";
-// Roughly central to the three mountains; freezing level barely varies between them at model resolution.
-const CENTER = { lat: 49.38, lon: -123.08 };
+const TZ = HISTORY_TZ;
 
 export interface PointReading {
   id: string;
@@ -46,8 +47,7 @@ const POINTS = MOUNTAINS.flatMap((m) => [
     label: `${m.name} top`,
     mountain: m.name,
     color: m.color,
-    lat: m.lat,
-    lon: m.lon,
+    hill: m.id,
     elevation: m.lifts.top.elevation,
   },
   {
@@ -55,71 +55,45 @@ const POINTS = MOUNTAINS.flatMap((m) => [
     label: `${m.name} bottom`,
     mountain: m.name,
     color: m.color,
-    lat: m.lat,
-    lon: m.lon,
+    hill: m.id,
     elevation: m.lifts.bottom.elevation,
   },
 ]).sort((a, b) => b.elevation - a.elevation);
 
-export async function getPointReadings(): Promise<PointReading[]> {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 900, expire: 3600 });
-
-  const url = new URL("https://api.open-meteo.com/v1/forecast");
-  url.searchParams.set("latitude", POINTS.map((p) => p.lat).join(","));
-  url.searchParams.set("longitude", POINTS.map((p) => p.lon).join(","));
-  // Open-Meteo adjusts temperature to the elevation you give it.
-  url.searchParams.set("elevation", POINTS.map((p) => p.elevation).join(","));
-  url.searchParams.set(
-    "current",
-    "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,cloud_cover,weather_code"
-  );
-  url.searchParams.set("timezone", TZ);
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`readings: ${res.status} ${res.statusText}`);
-  const json = await res.json();
-  const list = Array.isArray(json) ? json : [json];
-
-  return POINTS.map((p, i) => {
-    const c = list[i]?.current;
-    if (!c) throw new Error(`readings: no current data for ${p.label}`);
-    return {
-      id: p.id,
-      label: p.label,
-      mountain: p.mountain,
-      color: p.color,
-      elevation: p.elevation,
-      temp: Math.round(c.temperature_2m * 10) / 10,
-      rh: Math.round(c.relative_humidity_2m),
-      wind: Math.round(c.wind_speed_10m),
-      gust: Math.round(c.wind_gusts_10m),
-      dir: Math.round(c.wind_direction_10m),
-      precipitation: c.precipitation ?? 0,
-      cloud: c.cloud_cover ?? null,
-      code: c.weather_code ?? null,
-    };
-  });
+// Reading at a lift station. Temperature comes from the model's air temperature at
+// that height. The other values are the model's surface values for the hill, so
+// they are the same at every station on it.
+function readingAt(h: HillNow, elevation: number) {
+  return {
+    temp: Math.round(tempAt(h.profile, elevation) * 10) / 10,
+    rh: Math.round(h.rh),
+    wind: Math.round(h.wind),
+    gust: Math.round(h.gust),
+    dir: Math.round(h.dir),
+    precipitation: h.precipitation,
+    cloud: h.cloud,
+    code: h.code,
+  };
 }
 
-export async function getFreezingSeries(): Promise<FreezingSeries> {
+export async function getPointReadings(): Promise<PointReading[]> {
+  const now = await getCurrentConditions();
+  return POINTS.map((p) => ({
+    id: p.id,
+    label: p.label,
+    mountain: p.mountain,
+    color: p.color,
+    elevation: p.elevation,
+    ...readingAt(now[p.hill], p.elevation),
+  }));
+}
+
+export async function getFreezingSeries(region: RegionId): Promise<FreezingSeries> {
   "use cache";
   cacheLife({ stale: 300, revalidate: 900, expire: 3600 });
 
-  const url = new URL("https://api.open-meteo.com/v1/forecast");
-  url.searchParams.set("latitude", String(CENTER.lat));
-  url.searchParams.set("longitude", String(CENTER.lon));
-  url.searchParams.set("hourly", "freezing_level_height");
-  url.searchParams.set("past_days", "10");
-  url.searchParams.set("forecast_days", "7");
-  url.searchParams.set("timezone", TZ);
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`freezing: ${res.status} ${res.statusText}`);
-  const json = await res.json();
-
-  const times: string[] = json.hourly?.time ?? [];
-  const vals: (number | null)[] = json.hourly?.freezing_level_height ?? [];
+  const history = await fetchFreezingHistory();
+  const { time: times, level: vals } = history.regions[region];
 
   const now = new Date();
   const nowKey = new Intl.DateTimeFormat("sv-SE", {
@@ -172,7 +146,7 @@ export async function getFreezingSeries(): Promise<FreezingSeries> {
     deltaPast25: past == null ? null : current - past,
     history: days.slice(Math.max(0, start - 9), start + 1),
     forecast: days.slice(start, start + 6),
-    updated: now.toLocaleString("en-CA", {
+    updated: new Date(history.fetched).toLocaleString("en-CA", {
       timeZone: TZ,
       month: "short",
       day: "numeric",
@@ -195,16 +169,10 @@ export interface StationReading {
   code: number | null;
 }
 
-// Current model readings at every lift station elevation on one mountain.
+// Current readings at every lift station elevation on one mountain, highest first.
 export async function getMountainReadings(
   id: MountainId
 ): Promise<StationReading[]> {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 900, expire: 3600 });
-
-  const m = MOUNTAINS.find((x) => x.id === id);
-  if (!m) throw new Error(`unknown mountain: ${id}`);
-
   const elevations = [
     ...new Set(
       LIFTS[id]
@@ -212,36 +180,7 @@ export async function getMountainReadings(
         .filter((e): e is number => e != null)
     ),
   ].sort((a, b) => b - a);
-  if (elevations.length === 0) return [];
 
-  const url = new URL("https://api.open-meteo.com/v1/forecast");
-  url.searchParams.set("latitude", elevations.map(() => m.lat).join(","));
-  url.searchParams.set("longitude", elevations.map(() => m.lon).join(","));
-  url.searchParams.set("elevation", elevations.join(","));
-  url.searchParams.set(
-    "current",
-    "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,cloud_cover,weather_code"
-  );
-  url.searchParams.set("timezone", TZ);
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`stations: ${res.status} ${res.statusText}`);
-  const json = await res.json();
-  const list = Array.isArray(json) ? json : [json];
-
-  return elevations.map((elevation, i) => {
-    const c = list[i]?.current;
-    if (!c) throw new Error(`stations: no data at ${elevation} m`);
-    return {
-      elevation,
-      temp: Math.round(c.temperature_2m * 10) / 10,
-      rh: Math.round(c.relative_humidity_2m),
-      wind: Math.round(c.wind_speed_10m),
-      gust: Math.round(c.wind_gusts_10m),
-      dir: Math.round(c.wind_direction_10m),
-      precipitation: c.precipitation ?? 0,
-      cloud: c.cloud_cover ?? null,
-      code: c.weather_code ?? null,
-    };
-  });
+  const h = (await getCurrentConditions())[id];
+  return elevations.map((elevation) => ({ elevation, ...readingAt(h, elevation) }));
 }

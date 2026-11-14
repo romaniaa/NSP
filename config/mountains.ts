@@ -1,3 +1,5 @@
+import type { RegionId } from "@/config/regions";
+
 export type MountainId = "cypress" | "grouse" | "seymour";
 
 export interface Landmark {
@@ -15,6 +17,7 @@ export interface MountainConfig {
   name: string;
   fullName: string; // the name people search for, e.g. "Cypress Mountain"
   locality: string; // municipality the ski area is in
+  region: RegionId; // where its freezing-level history and forecast come from
   website: string; // the resort's own site
   color: string; // accent colour used for this mountain across the page
   lat: number;
@@ -36,6 +39,7 @@ export const MOUNTAINS: MountainConfig[] = [
     name: "Cypress",
     fullName: "Cypress Mountain",
     locality: "West Vancouver",
+    region: "north-shore",
     website: "https://www.cypressmountain.com",
     color: "#8aa583",
     lat: 49.396,
@@ -58,6 +62,7 @@ export const MOUNTAINS: MountainConfig[] = [
     name: "Grouse",
     fullName: "Grouse Mountain",
     locality: "North Vancouver",
+    region: "north-shore",
     website: "https://www.grousemountain.com",
     color: "#c4764f",
     lat: 49.379,
@@ -80,6 +85,7 @@ export const MOUNTAINS: MountainConfig[] = [
     name: "Seymour",
     fullName: "Mount Seymour",
     locality: "North Vancouver",
+    region: "north-shore",
     website: "https://mtseymour.ca",
     color: "#cfae6b",
     lat: 49.367,
