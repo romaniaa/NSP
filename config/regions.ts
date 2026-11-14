@@ -2,6 +2,8 @@ export type RegionId =
   | "north-shore"
   | "sea-to-sky"
   | "fraser-valley"
+  | "duffey"
+  | "coquihalla"
   | "manning"
   | "baker";
 
@@ -21,8 +23,12 @@ export const REGIONS: RegionConfig[] = [
   { id: "north-shore", name: "North Shore", lat: 49.38, lon: -123.08 },
   // Between Whistler and Blackcomb mountains.
   { id: "sea-to-sky", name: "Sea to Sky", lat: 50.08, lon: -122.93 },
+  // Cayoosh Pass, Duffey Lake Road.
+  { id: "duffey", name: "Duffey Lake", lat: 50.38, lon: -122.47 },
   // Hemlock Valley, above Harrison.
   { id: "fraser-valley", name: "Fraser Valley", lat: 49.385, lon: -121.94 },
+  // Coquihalla summit, Highway 5.
+  { id: "coquihalla", name: "Coquihalla", lat: 49.6, lon: -121.1 },
   // Gibson Pass, Manning Park.
   { id: "manning", name: "Manning Park", lat: 49.075, lon: -120.915 },
   // Heather Meadows, Mt. Baker Ski Area.

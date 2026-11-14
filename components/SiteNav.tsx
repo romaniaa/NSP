@@ -6,8 +6,8 @@ import MountainIcon from "@/components/MountainIcon";
 import { NAV_BACK, NAV_FORWARD } from "@/components/Transitions";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
 
-// The North Shore hills get their own tabs; every other hill is reached
-// through "All hills", which stays highlighted on those hills' pages.
+// The North Shore hills get their own tabs; every other hill and the backcountry
+// zones are reached through "All hills", which stays highlighted on their pages.
 const TABS = MOUNTAINS.filter((m) => m.region === "north-shore");
 
 type ItemId = "home" | "hills" | MountainId;
@@ -18,7 +18,7 @@ export default function SiteNav() {
   const active: ItemId | null =
     pathname === "/"
       ? "home"
-      : pathname === "/hills"
+      : pathname === "/hills" || pathname.startsWith("/backcountry/")
         ? "hills"
         : hill
           ? TABS.some((t) => t.id === hill.id)
@@ -35,7 +35,7 @@ export default function SiteNav() {
       color: m.color,
       icon: m.id,
     })),
-    { id: "hills", href: "/hills", label: "All hills", color: "#e6edf3" },
+    { id: "hills", href: "/hills", label: "All hills & backcountry", color: "#e6edf3" },
   ];
 
   return (

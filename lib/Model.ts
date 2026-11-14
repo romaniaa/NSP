@@ -1,6 +1,7 @@
 import { cacheLife } from "next/cache";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
 import { REGIONS, type RegionId } from "@/config/regions";
+import { ZONES, type ZoneId } from "@/config/zones";
 
 // Raw weather-model data from Open-Meteo, fetched at most once an hour and shared
 // by every page through the remote cache. On Vercel that cache is shared between
@@ -9,7 +10,8 @@ import { REGIONS, type RegionId } from "@/config/regions";
 //
 // Free tier: 10,000 calls a day. Open-Meteo weights a request by its locations,
 // variables (per 10) and days (per 14), so these two requests come to roughly
-// 2.7 calls per hill and 2.4 per region, each hour.
+// 2.7 calls per place (hill or backcountry zone) and 2.4 per region, each hour.
+// With 7 hills, 5 zones and 7 regions that is about 1,200 calls a day.
 
 const API = "https://api.open-meteo.com/v1/forecast";
 
@@ -149,13 +151,17 @@ export interface ModelHour {
   dir: number; // degrees the wind comes from
 }
 
+// Everywhere the site shows current weather: every hill and backcountry zone.
+export type PlaceId = MountainId | ZoneId;
+const PLACES: { id: PlaceId; lat: number; lon: number }[] = [...MOUNTAINS, ...ZONES];
+
 export interface Snapshot {
   model: string;
   fetched: string; // ISO
-  hills: Record<MountainId, ModelHour[]>;
+  places: Record<PlaceId, ModelHour[]>;
 }
 
-// The hours around now for every hill, from one request.
+// The hours around now for every place, from one request.
 export async function fetchSnapshot(): Promise<Snapshot> {
   "use cache: remote";
   // The model runs a few times a day, so hourly is plenty. The window below covers
@@ -163,7 +169,7 @@ export async function fetchSnapshot(): Promise<Snapshot> {
   cacheLife({ stale: 300, revalidate: 3600, expire: 6 * 3600 });
 
   const { model, data } = await fetchPoints(
-    MOUNTAINS,
+    PLACES,
     {
       hourly: [...PROFILE_VARS, ...SURFACE_VARS].join(","),
       past_hours: "2",
@@ -179,7 +185,7 @@ export async function fetchSnapshot(): Promise<Snapshot> {
           const gust = value(h, "wind_gusts_10m", i);
           const dir = value(h, "wind_direction_10m", i);
           if (!profile || rh == null || wind == null || gust == null || dir == null) {
-            throw new Error(`gap at ${MOUNTAINS[loc].id} ${time}`);
+            throw new Error(`gap at ${PLACES[loc].id} ${time}`);
           }
           return {
             time: `${time}Z`, // Open-Meteo gives "YYYY-MM-DDTHH:MM" in GMT
@@ -199,8 +205,8 @@ export async function fetchSnapshot(): Promise<Snapshot> {
   return {
     model,
     fetched: new Date().toISOString(),
-    hills: Object.fromEntries(MOUNTAINS.map((m, i) => [m.id, data[i]])) as Record<
-      MountainId,
+    places: Object.fromEntries(PLACES.map((p, i) => [p.id, data[i]])) as Record<
+      PlaceId,
       ModelHour[]
     >,
   };
