@@ -9,6 +9,7 @@ interface Props {
   cloud: number | null;
   // Tighter type and spacing, for sitting beside another card.
   compact?: boolean;
+  title?: string;
 }
 
 const round10 = (n: number) => Math.round(n / 10) * 10;
@@ -19,6 +20,7 @@ export default function Summary({
   gusts,
   cloud,
   compact = false,
+  title = "North Shore summary",
 }: Props) {
   const fl = freezing.current;
   const wet = precip.filter((p) => p.precipitation > 0.1);
@@ -79,9 +81,7 @@ export default function Summary({
 
   return (
     <Card className={compact ? "h-full p-4!" : ""}>
-      <h2 className="text-sm font-medium text-[#9aa7b5]">
-        North Shore summary
-      </h2>
+      <h2 className="text-sm font-medium text-[#9aa7b5]">{title}</h2>
       <div
         className={`grid md:auto-cols-fr md:grid-flow-col md:gap-0 md:divide-x md:divide-[#2f3840] ${
           compact ? "mt-3 gap-3" : "mt-4 gap-5"

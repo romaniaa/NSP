@@ -11,6 +11,6 @@ export default function Image() {
     eyebrow: SITE_NAME,
     title: "North Shore ski conditions",
     subtitle: "Cypress · Grouse · Seymour: snow depth, webcams, rain or snow",
-    mountains: MOUNTAINS,
+    mountains: MOUNTAINS.filter((m) => m.region === "north-shore"),
   });
 }

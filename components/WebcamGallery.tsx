@@ -1,3 +1,4 @@
+import { Card } from "@/components/Ui";
 import type { MountainWebcams } from "@/config/webcams";
 
 // Each cam is the resort's own embed, loaded lazily so cams below the fold
@@ -9,6 +10,25 @@ export default function WebcamGallery({
   name: string;
   webcams: MountainWebcams;
 }) {
+  if (webcams.cams.length === 0) {
+    return (
+      <Card>
+        <p className="text-sm text-[#c9d3dd]">
+          {name} doesn&apos;t offer its webcams for embedding.{" "}
+          <a
+            href={webcams.page}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-white"
+          >
+            See them on the resort&apos;s webcam page
+          </a>
+          .
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-3">

@@ -92,8 +92,8 @@ function structuredData(m: MountainConfig) {
         address: {
           "@type": "PostalAddress",
           addressLocality: m.locality,
-          addressRegion: "BC",
-          addressCountry: "CA",
+          addressRegion: m.province,
+          addressCountry: m.country,
         },
       },
       {
@@ -174,10 +174,12 @@ function Intro({
           .join(" and ")}.`
       : null;
 
+  const cams = (WEBCAMS[config.id]?.cams.length ?? 0) > 0;
+
   return (
     <p className="mt-3 max-w-3xl text-[#c9d3dd]">
       {[now, depth].filter(Boolean).join(" ")}{" "}
-      Below: live webcams and rain or snow at each lift on this{" "}
+      Below: {cams ? "live webcams and " : ""}rain or snow at each lift on this{" "}
       {config.locality} ski area, updated hourly.
     </p>
   );
@@ -199,6 +201,7 @@ function Loading() {
 async function MountainContent({ config }: { config: MountainConfig }) {
   const lifts = LIFTS[config.id];
   const region = regionById(config.region);
+  const webcams = WEBCAMS[config.id];
 
   const [weatherRes, stationsRes, freezingRes, snowRes] =
     await Promise.allSettled([
@@ -266,6 +269,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
               {freezing && weather && topStation ? (
                 <Summary
                   compact
+                  title={`${config.name} summary`}
                   freezing={freezing}
                   precip={[
                     { name: config.name, precipitation: weather.precipitation },
@@ -288,8 +292,12 @@ async function MountainContent({ config }: { config: MountainConfig }) {
             )}
           </div>
 
-          <SectionLabel>Webcams</SectionLabel>
-          <WebcamGallery name={config.name} webcams={WEBCAMS[config.id]} />
+          {webcams && (
+            <>
+              <SectionLabel>Webcams</SectionLabel>
+              <WebcamGallery name={config.name} webcams={webcams} />
+            </>
+          )}
 
           <SectionLabel>Rain and snow line, and lifts</SectionLabel>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

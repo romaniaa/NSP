@@ -9,13 +9,17 @@ export interface Webcam {
 
 export interface MountainWebcams {
   page: string; // the resort's webcam page, linked for when an embed is down
+  // Empty when the resort publishes no embeddable cams; the page then links out.
   cams: Webcam[];
 }
 
 // Taken from each resort's webcam page on 2026-11-05. If a cam goes blank, re-check
 // that page: resorts swap providers and stream IDs between seasons.
 // Grouse's wildlife-refuge bear cams are left out because they don't show the slopes.
-export const WEBCAMS: Record<MountainId, MountainWebcams> = {
+// Whistler, Sasquatch and Manning show still images loaded by script on their own
+// pages, with no embed code, so we link to those pages rather than hotlink the
+// images. Mt. Baker's site has no webcam page we could find (checked 2026-11-14).
+export const WEBCAMS: Partial<Record<MountainId, MountainWebcams>> = {
   cypress: {
     page: "https://www.cypressmountain.com/webcams",
     cams: [
@@ -43,4 +47,10 @@ export const WEBCAMS: Record<MountainId, MountainWebcams> = {
       { name: "Stoke-O-Meter snow stake", src: "https://www.youtube-nocookie.com/embed/yQdKq9NuEa0?autoplay=1&mute=1&playsinline=1" },
     ],
   },
+  whistler: {
+    page: "https://www.whistlerblackcomb.com/the-mountain/mountain-conditions/mountain-cams.aspx",
+    cams: [],
+  },
+  sasquatch: { page: "https://sasquatchmountain.ca/webcams/", cams: [] },
+  manning: { page: "https://manningpark.com/webcams/", cams: [] },
 };

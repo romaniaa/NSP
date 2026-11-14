@@ -48,6 +48,7 @@ const POINTS = MOUNTAINS.flatMap((m) => [
     mountain: m.name,
     color: m.color,
     hill: m.id,
+    region: m.region,
     elevation: m.lifts.top.elevation,
   },
   {
@@ -56,6 +57,7 @@ const POINTS = MOUNTAINS.flatMap((m) => [
     mountain: m.name,
     color: m.color,
     hill: m.id,
+    region: m.region,
     elevation: m.lifts.bottom.elevation,
   },
 ]).sort((a, b) => b.elevation - a.elevation);
@@ -76,9 +78,10 @@ function readingAt(h: HillNow, elevation: number) {
   };
 }
 
-export async function getPointReadings(): Promise<PointReading[]> {
+// Top and bottom lift readings for every hill in a region, highest first.
+export async function getPointReadings(region: RegionId): Promise<PointReading[]> {
   const now = await getCurrentConditions();
-  return POINTS.map((p) => ({
+  return POINTS.filter((p) => p.region === region).map((p) => ({
     id: p.id,
     label: p.label,
     mountain: p.mountain,

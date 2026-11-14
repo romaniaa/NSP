@@ -16,6 +16,9 @@ import {
 } from "@/components/Transitions";
 import { SectionLabel, Unavailable } from "@/components/Ui";
 import { MOUNTAINS } from "@/config/mountains";
+
+// The overview covers the North Shore; other hills are on their own pages and /hills.
+const HILLS = MOUNTAINS.filter((m) => m.region === "north-shore");
 import { tallestId } from "@/lib/Conditions";
 import { getFreezingSeries, getPointReadings } from "@/lib/Forecast";
 import { trendDetail, trendWord } from "@/lib/Trend";
@@ -51,8 +54,8 @@ const STRUCTURED_DATA = {
 
 export default async function Home() {
   const [mountainResults, readingsResult, freezingResult] = await Promise.all([
-    Promise.allSettled(MOUNTAINS.map((m) => getMountainWeather(m))),
-    Promise.allSettled([getPointReadings()]).then((r) => r[0]),
+    Promise.allSettled(HILLS.map((m) => getMountainWeather(m))),
+    Promise.allSettled([getPointReadings("north-shore")]).then((r) => r[0]),
     Promise.allSettled([getFreezingSeries("north-shore")]).then((r) => r[0]),
   ]);
 
@@ -65,14 +68,14 @@ export default async function Home() {
   const freezing =
     freezingResult.status === "fulfilled" ? freezingResult.value : null;
 
-  const rows = MOUNTAINS.map((config, i) => {
+  const rows = HILLS.map((config, i) => {
     const r = mountainResults[i];
     return { config, weather: r.status === "fulfilled" ? r.value : null };
   });
-  const tallest = tallestId(MOUNTAINS);
+  const tallest = tallestId(HILLS);
 
   const tops = readings
-    ? MOUNTAINS.map((m) => ({
+    ? HILLS.map((m) => ({
         name: m.name,
         mountain: m.id,
         color: m.color,
@@ -108,7 +111,7 @@ export default async function Home() {
                   Updated hourly.
                 </p>
                 <ul className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[#c9d3dd]">
-                  {MOUNTAINS.map((m) => (
+                  {HILLS.map((m) => (
                     <li key={m.id}>
                       <Link
                         href={`/${m.id}`}

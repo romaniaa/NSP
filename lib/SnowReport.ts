@@ -34,6 +34,10 @@ export const REPORT_PAGES: Record<MountainId, string> = {
   cypress: "https://www.cypressmountain.com/mountain-report",
   grouse: "https://www.grousemountain.com/current_conditions",
   seymour: "https://mtseymour.ca/the-mountain/todays-conditions-hours",
+  whistler: "https://www.whistlerblackcomb.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx",
+  sasquatch: "https://sasquatchmountain.ca/snow-report/",
+  manning: "https://manningpark.com/weather-webcams-trail-stats/",
+  baker: "https://www.mtbaker.us/snow-report/",
 };
 
 export function isSnowSeason(now: Date) {
@@ -155,6 +159,11 @@ const READERS: Record<MountainId, () => Promise<SnowReport>> = {
   cypress: async () => ({ status: "unsupported", url: REPORT_PAGES.cypress }),
   grouse,
   seymour,
+  // No readers yet; link to each resort's report.
+  whistler: async () => ({ status: "unsupported", url: REPORT_PAGES.whistler }),
+  sasquatch: async () => ({ status: "unsupported", url: REPORT_PAGES.sasquatch }),
+  manning: async () => ({ status: "unsupported", url: REPORT_PAGES.manning }),
+  baker: async () => ({ status: "unsupported", url: REPORT_PAGES.baker }),
 };
 
 // The resort's own snow report, or null outside the snow season (without

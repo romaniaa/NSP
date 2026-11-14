@@ -4,22 +4,38 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MountainIcon from "@/components/MountainIcon";
 import { NAV_BACK, NAV_FORWARD } from "@/components/Transitions";
-import { MOUNTAINS } from "@/config/mountains";
+import { MOUNTAINS, type MountainId } from "@/config/mountains";
+
+// The North Shore hills get their own tabs; every other hill is reached
+// through "All hills", which stays highlighted on those hills' pages.
+const TABS = MOUNTAINS.filter((m) => m.region === "north-shore");
+
+type ItemId = "home" | "hills" | MountainId;
 
 export default function SiteNav() {
   const pathname = usePathname();
-  const active =
-    MOUNTAINS.find((m) => pathname === `/${m.id}`)?.id ??
-    (pathname === "/" ? "home" : null);
+  const hill = MOUNTAINS.find((m) => pathname === `/${m.id}`);
+  const active: ItemId | null =
+    pathname === "/"
+      ? "home"
+      : pathname === "/hills"
+        ? "hills"
+        : hill
+          ? TABS.some((t) => t.id === hill.id)
+            ? hill.id
+            : "hills"
+          : null;
 
-  const items = [
-    { id: "home" as const, href: "/", label: "Overview", color: "#e6edf3" },
-    ...MOUNTAINS.map((m) => ({
+  const items: { id: ItemId; href: string; label: string; color: string; icon?: MountainId }[] = [
+    { id: "home", href: "/", label: "Overview", color: "#e6edf3" },
+    ...TABS.map((m) => ({
       id: m.id,
       href: `/${m.id}`,
       label: m.name,
       color: m.color,
+      icon: m.id,
     })),
+    { id: "hills", href: "/hills", label: "All hills", color: "#e6edf3" },
   ];
 
   return (
@@ -53,8 +69,8 @@ export default function SiteNav() {
               }`}
               style={isActive ? { borderBottomColor: item.color } : undefined}
             >
-              {item.id !== "home" && (
-                <MountainIcon id={item.id} color={item.color} className="h-3 w-4" />
+              {item.icon && (
+                <MountainIcon id={item.icon} color={item.color} className="h-3 w-4" />
               )}
               {item.label}
             </Link>

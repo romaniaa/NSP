@@ -1,4 +1,5 @@
 import type { MountainConfig } from "@/config/mountains";
+import { WEBCAMS } from "@/config/webcams";
 
 export const SITE_NAME = "North Shore Peaks";
 
@@ -24,11 +25,18 @@ export const HOME_TITLE = "North Shore Ski Conditions: Cypress, Grouse & Seymour
 export const HOME_DESCRIPTION =
   "Live ski conditions for Vancouver's North Shore: snow depth, webcams, freezing level and the rain-or-snow line for Cypress Mountain, Grouse Mountain and Mount Seymour.";
 
+// Only claim webcams where the page embeds them.
+const hasCams = (m: MountainConfig) => (WEBCAMS[m.id]?.cams.length ?? 0) > 0;
+
 export const mountainTitle = (m: MountainConfig) =>
-  `${m.fullName} Snow Report, Webcams & Conditions`;
+  hasCams(m)
+    ? `${m.fullName} Snow Report, Webcams & Conditions`
+    : `${m.fullName} Conditions: Rain or Snow & Freezing Level`;
 
 export const mountainDescription = (m: MountainConfig) =>
-  `${m.fullName} conditions today: snow depth, live webcams, freezing level, and whether it's raining or snowing at each lift. Updated hourly.`;
+  hasCams(m)
+    ? `${m.fullName} conditions today: snow depth, live webcams, freezing level, and whether it's raining or snowing at each lift. Updated hourly.`
+    : `${m.fullName} conditions today: freezing level, temperature and whether it's raining or snowing at each lift, plus a link to the resort's snow report. Updated hourly.`;
 
 // JSON-LD for a <script type="application/ld+json">, with "<" escaped so
 // nothing in it can close the script tag.

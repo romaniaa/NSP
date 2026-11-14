@@ -4,6 +4,8 @@ import type { Lift } from "@/config/lifts";
 import type { MountainId } from "@/config/mountains";
 import type { StationReading } from "@/lib/Forecast";
 
+const MAX_LIFTS_BOTH_ENDS = 8;
+
 export default function LiftTemperatureChart({
   lifts,
   stations,
@@ -15,10 +17,15 @@ export default function LiftTemperatureChart({
   color: string;
   mountain: MountainId;
 }) {
+  // A big lift network (Whistler has 22) would make a very tall chart, so chart
+  // only the top stations there. The lift table still lists both ends.
+  const topsOnly = lifts.length > MAX_LIFTS_BOTH_ENDS;
   const rows = lifts
     .flatMap((l) => [
       l.top != null ? { label: `${l.short} top`, elevation: l.top } : null,
-      l.bottom != null ? { label: `${l.short} bottom`, elevation: l.bottom } : null,
+      l.bottom != null && !topsOnly
+        ? { label: `${l.short} bottom`, elevation: l.bottom }
+        : null,
     ])
     .filter((r): r is { label: string; elevation: number } => r != null)
     .sort((a, b) => b.elevation - a.elevation)
@@ -39,7 +46,8 @@ export default function LiftTemperatureChart({
     <Card>
       <h3 className="font-semibold text-white">Temperature by station</h3>
       <p className="mb-5 mt-1 text-xs text-[#9aa7b5]">
-        Model estimates at each lift station, highest first
+        Model estimates at {topsOnly ? "the top of each lift" : "each lift station"},
+        highest first
       </p>
       <BubbleChart
         rows={rows}
