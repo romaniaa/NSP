@@ -10,10 +10,12 @@ import { PageTransition } from "@/components/Transitions";
 import { compass } from "@/components/WindCard";
 import ZoneDiagram from "@/components/ZoneDiagram";
 import ZoneTemperatureChart from "@/components/ZoneTemperatureChart";
+import ZoneStations from "@/components/ZoneStations";
 import ZoneWindCard from "@/components/ZoneWindCard";
 import { Card, SectionLabel, Unavailable } from "@/components/Ui";
 import { ZONES, type ZoneConfig } from "@/config/zones";
 import { getAvalancheForecast } from "@/lib/Avalanche";
+import { getZoneStations } from "@/lib/Stations";
 import { CONDITION, conditionAt, fmt } from "@/lib/Conditions";
 import { getFreezingSeries } from "@/lib/Forecast";
 import { tempAt, windAloft } from "@/lib/Model";
@@ -147,17 +149,19 @@ function ElevationTable({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
 }
 
 async function ZoneContent({ zone }: { zone: ZoneConfig }) {
-  const [avyRes, nowRes, freezingRes] = await Promise.allSettled([
+  const [avyRes, nowRes, freezingRes, stationsRes] = await Promise.allSettled([
     getAvalancheForecast(zone.id),
     getCurrentConditions().then((c) => c[zone.id]),
     getFreezingSeries([zone.id]),
+    getZoneStations(zone.id),
   ]);
-  for (const r of [avyRes, nowRes, freezingRes]) {
+  for (const r of [avyRes, nowRes, freezingRes, stationsRes]) {
     if (r.status === "rejected") console.error("Fetch failure:", r.reason);
   }
   const forecast = avyRes.status === "fulfilled" ? avyRes.value : null;
   const now = nowRes.status === "fulfilled" ? nowRes.value : null;
   const freezing = freezingRes.status === "fulfilled" ? freezingRes.value : null;
+  const stations = stationsRes.status === "fulfilled" ? stationsRes.value : null;
 
   return (
     <>
@@ -215,6 +219,17 @@ async function ZoneContent({ zone }: { zone: ZoneConfig }) {
         </div>
       ) : (
         <Unavailable title="Temperature and wind" />
+      )}
+
+      {zone.stations.length > 0 && (
+        <>
+          <SectionLabel>Weather stations</SectionLabel>
+          {stations ? (
+            <ZoneStations stations={stations} now={now} />
+          ) : (
+            <Unavailable title="Weather stations" />
+          )}
+        </>
       )}
 
       <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">

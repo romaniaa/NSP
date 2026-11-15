@@ -22,6 +22,8 @@ export interface ZoneConfig {
   // from below treeline into the alpine. Round numbers, not exact band limits;
   // Avalanche Canada's elevation bands vary by region and aren't in its API.
   heights: number[];
+  // Avalanche Canada weather stations to show measurements from (config/stations.ts).
+  stations: number[];
 }
 
 export const ZONES: ZoneConfig[] = [
@@ -36,6 +38,7 @@ export const ZONES: ZoneConfig[] = [
     lat: 49.4,
     lon: -123.08,
     heights: [1600, 1300, 1000],
+    stations: [11, 10],
   },
   {
     id: "spearhead",
@@ -47,6 +50,8 @@ export const ZONES: ZoneConfig[] = [
     lat: 50.07,
     lon: -122.86,
     heights: [2300, 1900, 1500],
+    // No public station nearby; Brandywine (496 m, 18 km) is too far and too low.
+    stations: [],
   },
   {
     id: "brandywine",
@@ -58,6 +63,7 @@ export const ZONES: ZoneConfig[] = [
     lat: 50.08,
     lon: -123.12,
     heights: [2000, 1600, 1200],
+    stations: [71],
   },
   {
     id: "duffey",
@@ -70,6 +76,7 @@ export const ZONES: ZoneConfig[] = [
     lat: 50.38,
     lon: -122.47,
     heights: [2300, 1800, 1300],
+    stations: [19, 20, 74],
   },
   {
     id: "coquihalla",
@@ -81,5 +88,6 @@ export const ZONES: ZoneConfig[] = [
     lat: 49.6,
     lon: -121.1,
     heights: [2000, 1600, 1200],
+    stations: [16, 17, 15],
   },
 ];
