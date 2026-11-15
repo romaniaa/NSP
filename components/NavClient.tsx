@@ -14,7 +14,8 @@ import { DANGER_STYLE } from "@/lib/DangerStyle";
 import type { NavStatus } from "@/lib/Places";
 
 // The North Shore hills get their own tabs; every other hill and the backcountry
-// zones are reached through "All hills", which stays highlighted on their pages.
+// zones are reached through "More hills", which stays highlighted on their pages.
+// "My hills" sits next to Overview once a dashboard is saved.
 const TABS = MOUNTAINS.filter((m) => m.region === "north-shore");
 
 type ItemId = "home" | "hills" | "dashboard" | MountainId;
@@ -151,14 +152,6 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
     count?: number;
   }[] = [
     { id: "home", href: "/", label: "Overview", color: "#e6edf3" },
-    ...TABS.map((m) => ({
-      id: m.id,
-      href: `/${m.id}`,
-      label: m.name,
-      color: m.color,
-      icon: m.id,
-    })),
-    { id: "hills", href: "/hills", label: "All hills & backcountry", color: "#e6edf3" },
     ...(saved.length > 0 || active === "dashboard"
       ? [
           {
@@ -170,6 +163,14 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
           },
         ]
       : []),
+    ...TABS.map((m) => ({
+      id: m.id,
+      href: `/${m.id}`,
+      label: m.name,
+      color: m.color,
+      icon: m.id,
+    })),
+    { id: "hills", href: "/hills", label: "More hills & backcountry", color: "#e6edf3" },
   ];
 
   const savedPlaces = saved
@@ -305,7 +306,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                 aria-current={pathname === "/hills" ? "page" : undefined}
                 className={quick}
               >
-                All hills
+                More hills
               </Link>
             </div>
 
