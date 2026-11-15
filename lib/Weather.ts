@@ -45,7 +45,11 @@ export async function getCurrentConditions(): Promise<Record<PlaceId, HillNow>> 
 }
 
 export async function getMountainWeather(m: MountainConfig): Promise<MountainWeather> {
-  const h = (await getCurrentConditions())[m.id];
+  return weatherFrom((await getCurrentConditions())[m.id]);
+}
+
+// The summary a hill card needs, from a place's current conditions.
+export function weatherFrom(h: HillNow): MountainWeather {
   return {
     freezingLevel: h.freezingLevel,
     precipitation: h.precipitation,

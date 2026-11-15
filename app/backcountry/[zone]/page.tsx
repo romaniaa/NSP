@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import AvalancheCard from "@/components/AvalancheCard";
-import { ElevationDiagram } from "@/components/ElevationVisualizer";
 import FreezingChart from "@/components/FreezingChart";
 import PinButton from "@/components/PinButton";
 import RangeIcon from "@/components/RangeIcon";
 import SiteNav from "@/components/SiteNav";
 import { PageTransition } from "@/components/Transitions";
+import ZoneDiagram from "@/components/ZoneDiagram";
 import { Card, SectionLabel, Unavailable } from "@/components/Ui";
 import { ZONES, type ZoneConfig } from "@/config/zones";
 import { getAvalancheForecast } from "@/lib/Avalanche";
@@ -133,59 +133,6 @@ function ElevationTable({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
         </div>
       </dl>
     </Card>
-  );
-}
-
-// A generic range outline: zones span many peaks, so no single ridge is drawn as
-// a likeness. Its heights are scaled to the zone's terrain, so the snow line and
-// the labelled heights sit at the right levels against it.
-const GENERIC_RIDGE: [number, number][] = [
-  [0, 0.25], [12, 0.5], [22, 0.85], [30, 0.62], [42, 1], [52, 0.7],
-  [60, 0.78], [72, 0.45], [84, 0.66], [100, 0.35],
-];
-const BANDS = ["Upper", "Middle", "Lower"];
-
-function ZoneDiagram({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
-  const heights = [...zone.heights].sort((a, b) => b - a);
-  const top = heights[0];
-  const bottom = heights[heights.length - 1];
-  const lo = bottom - 250;
-  const hi = top + 120;
-  return (
-    <section
-      className="border border-[#232a31] bg-[#13181d] p-5"
-      style={{ borderTop: `3px solid ${zone.color}` }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-2xl font-bold text-white">{zone.name}</h3>
-          <p className="text-xs tabular-nums text-[#8f8f8f]">
-            {fmt(bottom)}–{fmt(top)} m terrain
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="font-display text-4xl font-bold tabular-nums text-white">
-            {fmt(now.freezingLevel)}
-            <span className="ml-0.5 text-sm font-normal text-[#8f8f8f]">m</span>
-          </p>
-          <p className="text-xs text-[#8f8f8f]">Freezing level</p>
-        </div>
-      </div>
-      <ElevationDiagram
-        id={zone.id}
-        name={zone.fullName}
-        min={bottom - 400}
-        max={top + 250}
-        profile={GENERIC_RIDGE.map(([x, f]) => [x, Math.round(lo + f * (hi - lo))])}
-        landmarks={heights.map((h, i) => ({ name: BANDS[i] ?? "", elevation: h }))}
-        color={zone.color}
-        freezingLevel={now.freezingLevel}
-        sky={{ precipitation: now.precipitation, cloud: now.cloud, code: now.code }}
-      />
-      <p className="mt-1 text-xs text-[#7d8da1]">
-        Heights are to scale; the ridge is a generic outline.
-      </p>
-    </section>
   );
 }
 

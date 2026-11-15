@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
+import type { CSSProperties, ReactNode } from "react";
 import CardActions from "@/components/CardActions";
 import DashboardControls, { type PickerGroup } from "@/components/DashboardControls";
 import Link from "next/link";
-import HillCard from "@/components/HillCard";
+import ElevationVisualizer from "@/components/ElevationVisualizer";
 import SiteNav from "@/components/SiteNav";
-import { PageTransition } from "@/components/Transitions";
-import ZoneCard from "@/components/ZoneCard";
+import { NAV_FORWARD, PageTransition, SharedTransition } from "@/components/Transitions";
+import ZoneDiagram from "@/components/ZoneDiagram";
 import { MOUNTAINS } from "@/config/mountains";
 import { REGIONS } from "@/config/regions";
 import { ZONES } from "@/config/zones";
 import { DASHBOARD_CSS, INLINE_SCRIPT } from "@/lib/Dashboard";
 import { getPlacesNow } from "@/lib/Places";
+import { weatherFrom } from "@/lib/Weather";
 
 // Personal, and the same cards as /hills, so kept out of search results.
 export const metadata: Metadata = {
@@ -37,6 +39,20 @@ const GROUPS: PickerGroup[] = REGIONS.map((r) => ({
     })),
   ],
 })).filter((g) => g.places.length > 0);
+
+// The whole card is a link to the place's page, with the overview's hover.
+function CardLink({ href, color, children }: { href: string; color: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      transitionTypes={NAV_FORWARD}
+      className="group block flex-1 transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+      style={{ "--accent": color } as CSSProperties}
+    >
+      {children}
+    </Link>
+  );
+}
 
 // Every card is rendered into this static page and the visitor's picks decide
 // which show (lib/Dashboard.ts), so a visit costs no server work or API calls.
@@ -72,20 +88,31 @@ export default async function DashboardPage() {
               or any hill&apos;s page. They&apos;ll be here whenever you come back.
             </p>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {MOUNTAINS.map((m) => (
-                <div key={m.id} data-place={m.id} className="flex flex-col">
-                  <div className="flex-1">
-                    <HillCard config={m} now={now?.[m.id] ?? null} />
+            {/* The same rain-and-snow-line cards as the overview, each linking to
+                its page. Zones get the generic-ridge version with avalanche danger. */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {MOUNTAINS.map((m) => {
+                const h = now?.[m.id];
+                return (
+                  <div key={m.id} data-place={m.id} className="flex flex-col">
+                    <CardLink href={`/${m.id}`} color={m.color}>
+                      <SharedTransition name={`resort-${m.id}`}>
+                        <ElevationVisualizer config={m} weather={h ? weatherFrom(h) : null} />
+                      </SharedTransition>
+                    </CardLink>
+                    <CardActions id={m.id} name={m.fullName} />
                   </div>
-                  <CardActions id={m.id} name={m.fullName} />
-                </div>
-              ))}
+                );
+              })}
               {ZONES.map((z) => (
                 <div key={z.id} data-place={z.id} className="flex flex-col">
-                  <div className="flex-1">
-                    <ZoneCard zone={z} now={now?.[z.id] ?? null} forecast={avalanche[z.id] ?? null} />
-                  </div>
+                  <CardLink href={`/backcountry/${z.id}`} color={z.color}>
+                    <ZoneDiagram
+                      zone={z}
+                      now={now?.[z.id] ?? null}
+                      forecast={avalanche[z.id] ?? null}
+                    />
+                  </CardLink>
                   <CardActions id={z.id} name={z.fullName} />
                 </div>
               ))}
