@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import AvalancheCard from "@/components/AvalancheCard";
 import FreezingChart from "@/components/FreezingChart";
@@ -52,6 +51,14 @@ export async function generateMetadata({
   };
 }
 
+// Navigations into this page wait for it rather than showing a loading skeleton
+// first. The page is static and served from the CDN, so the wait is short, and
+// the whole page then arrives in one commit: the card-to-page morph (the shared
+// <ViewTransition> names) only forms when the destination's content is there in
+// the same commit as the navigation. Opting out also tells Next's instant-
+// navigation check that reading params outside <Suspense> here is deliberate.
+export const instant = false;
+
 export default async function ZonePage({ params }: { params: Promise<{ zone: string }> }) {
   const { zone: id } = await params;
   const zone = ZONES.find((z) => z.id === id);
@@ -74,9 +81,7 @@ export default async function ZonePage({ params }: { params: Promise<{ zone: str
                 <PinButton id={zone.id} name={zone.fullName} color={zone.color} size="large" />
               </div>
             </header>
-            <Suspense fallback={<div className="h-96 animate-pulse bg-[#13181d]" aria-busy="true" />}>
-              <ZoneContent zone={zone} />
-            </Suspense>
+            <ZoneContent zone={zone} />
           </div>
         </main>
       </PageTransition>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import ElevationVisualizer from "@/components/ElevationVisualizer";
 import FreezingChart from "@/components/FreezingChart";
@@ -108,11 +107,16 @@ function structuredData(m: MountainConfig) {
   };
 }
 
-// The hill is looked up before the page content renders. An unknown URL shows
-// the not-found page with a noindex tag, so search engines skip it, although the
-// status can still be 200 because the page shell has already started streaming.
-// generateStaticParams makes the param known at build time, which lets this
-// await sit outside <Suspense> under cacheComponents.
+// Navigations into this page wait for it rather than showing a loading skeleton
+// first. The page is static and served from the CDN, so the wait is short, and
+// the whole page then arrives in one commit: the card-to-page morph (the shared
+// <ViewTransition> names) only forms when the destination's content is there in
+// the same commit as the navigation. Opting out also tells Next's instant-
+// navigation check that reading params outside <Suspense> here is deliberate.
+export const instant = false;
+
+// The hill is looked up before anything renders, so an unknown URL shows the
+// not-found page with a noindex tag.
 export default async function MountainPage({
   params,
 }: {
@@ -132,9 +136,7 @@ export default async function MountainPage({
       <PageTransition>
         <main className="min-h-screen px-4 py-8 text-white md:px-10">
           <div className="mx-auto max-w-8xl space-y-5">
-            <Suspense fallback={<Loading />}>
-              <MountainContent config={config} />
-            </Suspense>
+            <MountainContent config={config} />
           </div>
         </main>
       </PageTransition>
@@ -182,19 +184,6 @@ function Intro({
       Below: {cams ? "live webcams and " : ""}rain or snow at each lift on this{" "}
       {config.locality} ski area, updated hourly.
     </p>
-  );
-}
-
-function Loading() {
-  return (
-    <div className="space-y-5" aria-busy="true" aria-label="Loading">
-      <div className="h-14 w-64 animate-pulse bg-[#13181d]" />
-      <div className="h-36 animate-pulse bg-[#13181d]" />
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="h-[34rem] animate-pulse bg-[#13181d]" />
-        <div className="h-[34rem] animate-pulse bg-[#13181d] lg:col-span-2" />
-      </div>
-    </div>
   );
 }
 
