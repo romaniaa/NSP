@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NAV_FORWARD } from "@/components/Transitions";
 import type { ReactNode } from "react";
 
 export function Card({
@@ -61,11 +62,13 @@ export function PillLink({
   children,
   filled = false,
   className = "",
+  transitionTypes = NAV_FORWARD,
 }: {
   href: string;
   children: ReactNode;
   filled?: boolean;
   className?: string;
+  transitionTypes?: string[];
 }) {
   const external = /^https?:/.test(href);
   const cls = `orb-pill orb-pill-sm whitespace-nowrap ${className}`;
@@ -82,7 +85,7 @@ export function PillLink({
       <span className="sr-only">(opens in a new tab)</span>
     </a>
   ) : (
-    <Link href={href} className={cls} data-on={filled || undefined}>
+    <Link href={href} className={cls} data-on={filled || undefined} transitionTypes={transitionTypes}>
       {children}
     </Link>
   );

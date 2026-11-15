@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef } from "react";
 import MountainIcon from "@/components/MountainIcon";
 import RangeIcon from "@/components/RangeIcon";
-import { NAV_BACK, NAV_FORWARD } from "@/components/Transitions";
+import { NAV_BACK, NAV_FADE, NAV_FORWARD } from "@/components/Transitions";
 import { useDashboard } from "@/components/useDashboard";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
 import { REGIONS } from "@/config/regions";
@@ -80,6 +80,7 @@ function PlaceRow({
     <li>
       <Link
         href={place.href}
+        transitionTypes={NAV_FORWARD}
         onClick={onNavigate}
         aria-current={current ? "page" : undefined}
         className={`flex items-center gap-3 border-l-2 px-3 py-2.5 ${
@@ -190,12 +191,17 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
       <div className="flex items-center gap-2 py-2 md:hidden">
         <Link
           href="/"
+          transitionTypes={NAV_BACK}
           className="mr-auto whitespace-nowrap py-1 font-display text-lg font-bold uppercase tracking-widest text-white"
         >
           North Shore Peaks
         </Link>
         {saved.length > 0 && active !== "dashboard" && (
-          <Link href="/dashboard" className="orb-pill min-h-[30px] !px-3.5 whitespace-nowrap">
+          <Link
+            href="/dashboard"
+            transitionTypes={NAV_FORWARD}
+            className="orb-pill min-h-[30px] !px-3.5 whitespace-nowrap"
+          >
             My hills
             <span className="orb-badge" aria-label={`${saved.length} saved`}>
               {saved.length}
@@ -230,7 +236,11 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
               key={item.id}
               href={item.href}
               transitionTypes={
-                item.id === "home" ? NAV_BACK : active === "home" ? NAV_FORWARD : undefined
+                item.id === "home"
+                  ? NAV_BACK
+                  : TABS.some((t) => t.id === item.id) && TABS.some((t) => t.id === active)
+                    ? NAV_FADE // hill tab to hill tab: siblings
+                    : NAV_FORWARD
               }
               aria-current={isActive ? "page" : undefined}
               className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-sm ${
@@ -294,6 +304,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
             <div className="grid grid-cols-2 gap-2 px-4 py-4">
               <Link
                 href="/"
+                transitionTypes={NAV_BACK}
                 onClick={close}
                 aria-current={active === "home" ? "page" : undefined}
                 className={quick}
@@ -302,6 +313,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
               </Link>
               <Link
                 href="/hills"
+                transitionTypes={NAV_FORWARD}
                 onClick={close}
                 aria-current={pathname === "/hills" ? "page" : undefined}
                 className={quick}
@@ -315,7 +327,12 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                 <h2 id="drawer-mine" className="text-sm text-[#9aa7b5]">
                   My hills
                 </h2>
-                <Link href="/dashboard" onClick={close} className="orb-pill orb-pill-sm">
+                <Link
+                  href="/dashboard"
+                  transitionTypes={NAV_FORWARD}
+                  onClick={close}
+                  className="orb-pill orb-pill-sm"
+                >
                   {savedPlaces.length ? "Open dashboard" : "Build one"}
                 </Link>
               </div>

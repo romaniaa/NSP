@@ -309,6 +309,23 @@
     400ms ease-in-out both vt-slide;
 }
 
+::view-transition-old(.nav-fade) {
+  animation: 120ms ease-in both vt-fade reverse;
+}
+::view-transition-new(.nav-fade) {
+  animation: 180ms ease-out 60ms both vt-fade;
+}
+
+/* People who ask for less motion get instant page changes: no slides, fades or
+   morphs. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 /* The nav stays fixed as the anchor while content moves beneath it. */
 ::view-transition-group(site-nav) {
   animation: none;

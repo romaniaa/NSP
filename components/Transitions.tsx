@@ -1,14 +1,17 @@
 import { ViewTransition, type ReactNode } from "react";
 
-// Transition types set on links. "Forward" goes from the overview into a resort,
-// "back" returns to the overview. Navigations without a type (browser back,
-// resort to resort) skip the slide.
+// Transition types set on links. "Forward" goes deeper (into a hill, a zone, the
+// dashboard or the list of hills), "back" returns to the overview, and "fade" is
+// a short crossfade for moving sideways between siblings (hill tab to hill tab).
+// Navigations without a type (browser back and forward, refreshes) don't animate.
 export const NAV_FORWARD = ["nav-forward"];
 export const NAV_BACK = ["nav-back"];
+export const NAV_FADE = ["nav-fade"];
 
 const DIRECTIONAL = {
   "nav-forward": "nav-forward",
   "nav-back": "nav-back",
+  "nav-fade": "nav-fade",
   default: "none",
 };
 

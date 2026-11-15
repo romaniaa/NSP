@@ -124,7 +124,7 @@ export default async function Home() {
                     </li>
                   ))}
                   <li>
-                    <Link href="/hills" className="hover:text-white hover:underline">
+                    <Link href="/hills" transitionTypes={NAV_FORWARD} className="hover:text-white hover:underline">
                       More hills and backcountry
                     </Link>
                   </li>

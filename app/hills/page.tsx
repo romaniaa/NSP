@@ -3,7 +3,7 @@ import HillCard from "@/components/HillCard";
 import PinButton from "@/components/PinButton";
 import ZoneCard from "@/components/ZoneCard";
 import SiteNav from "@/components/SiteNav";
-import { PageTransition } from "@/components/Transitions";
+import { NAV_FORWARD, PageTransition } from "@/components/Transitions";
 import { SectionLabel } from "@/components/Ui";
 import { MOUNTAINS } from "@/config/mountains";
 import { REGIONS } from "@/config/regions";
@@ -43,7 +43,7 @@ export default async function HillsPage() {
                 Current conditions at every ski area and backcountry zone we cover,
                 grouped by region. Open one for its freezing-level forecast, and lifts
                 or avalanche danger.{" "}
-                <Link href="/dashboard" className="underline hover:text-white">
+                <Link href="/dashboard" transitionTypes={NAV_FORWARD} className="underline hover:text-white">
                   Pick your favourites for a dashboard
                 </Link>
                 .

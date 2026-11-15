@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLayoutEffect, useState } from "react";
 import MountainIcon from "@/components/MountainIcon";
+import { NAV_FADE } from "@/components/Transitions";
 import RangeIcon from "@/components/RangeIcon";
 import { useDashboard } from "@/components/useDashboard";
 import type { MountainId } from "@/config/mountains";
@@ -112,7 +113,7 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
           <p className="text-sm text-[#c9d3dd]">
             Tick what you want on your dashboard, then use the controls under each
             card to reorder or remove it. You can also add hills from{" "}
-            <Link href="/hills" className="underline hover:text-white">
+            <Link href="/hills" transitionTypes={NAV_FADE} className="underline hover:text-white">
               All hills
             </Link>{" "}
             or any hill&apos;s page.

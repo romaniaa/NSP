@@ -5,7 +5,12 @@ import DashboardControls, { type PickerGroup } from "@/components/DashboardContr
 import Link from "next/link";
 import ElevationVisualizer from "@/components/ElevationVisualizer";
 import SiteNav from "@/components/SiteNav";
-import { NAV_FORWARD, PageTransition, SharedTransition } from "@/components/Transitions";
+import {
+  NAV_FADE,
+  NAV_FORWARD,
+  PageTransition,
+  SharedTransition,
+} from "@/components/Transitions";
 import ZoneDiagram from "@/components/ZoneDiagram";
 import { MOUNTAINS } from "@/config/mountains";
 import { REGIONS } from "@/config/regions";
@@ -82,7 +87,7 @@ export default async function DashboardPage() {
             <p className="dash-empty border border-dashed border-[#2f3840] p-6 text-[#c9d3dd]">
               Nothing picked yet. Tick hills and backcountry zones above, or use{" "}
               <span className="whitespace-nowrap text-white">+ Add to My hills</span> on{" "}
-              <Link href="/hills" className="underline hover:text-white">
+              <Link href="/hills" transitionTypes={NAV_FADE} className="underline hover:text-white">
                 All hills
               </Link>{" "}
               or any hill&apos;s page. They&apos;ll be here whenever you come back.
