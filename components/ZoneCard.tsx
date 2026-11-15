@@ -6,7 +6,8 @@ import { NAV_FORWARD } from "@/components/Transitions";
 import type { ZoneConfig } from "@/config/zones";
 import { highestDanger, type AvalancheForecast } from "@/lib/Avalanche";
 import { CONDITION, conditionAt, fmt } from "@/lib/Conditions";
-import { tempAt } from "@/lib/Model";
+import { tempAt, windAloft } from "@/lib/Model";
+import { compass } from "@/components/WindCard";
 import type { HillNow } from "@/lib/Weather";
 
 // Compact backcountry conditions for one zone: today's highest avalanche danger
@@ -25,6 +26,7 @@ export default function ZoneCard({
   const today = forecast?.status === "ok" ? forecast.days[0] : undefined;
   const level = today ? highestDanger(today) : null;
   const sky = now && { precipitation: now.precipitation, cloud: now.cloud, code: now.code };
+  const ridge = now ? windAloft(now.aloft, top) : null;
 
   return (
     <Link
@@ -88,10 +90,10 @@ export default function ZoneCard({
               );
             })}
             <div>
-              <dt className="text-[#9aa7b5]">Wind</dt>
+              <dt className="text-[#9aa7b5]">Ridgetop wind</dt>
               <dd className="mt-1 tabular-nums text-white">
-                {Math.round(now.wind)} km/h
-                <span className="text-[#8f8f8f]"> · gusts {Math.round(now.gust)}</span>
+                {ridge?.speed} km/h
+                <span className="text-[#8f8f8f]"> {ridge && compass(ridge.dir)}</span>
               </dd>
             </div>
           </dl>

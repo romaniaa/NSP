@@ -97,7 +97,7 @@ export default async function DashboardPage() {
                   <div key={m.id} data-place={m.id} className="flex flex-col">
                     <CardLink href={`/${m.id}`} color={m.color}>
                       <SharedTransition name={`resort-${m.id}`}>
-                        <ElevationVisualizer config={m} weather={h ? weatherFrom(h) : null} />
+                        <ElevationVisualizer config={m} weather={h ? weatherFrom(h, m) : null} />
                       </SharedTransition>
                     </CardLink>
                     <CardActions id={m.id} name={m.fullName} />

@@ -2,7 +2,9 @@ import { ElevationDiagram } from "@/components/ElevationVisualizer";
 import RangeIcon from "@/components/RangeIcon";
 import type { ZoneConfig } from "@/config/zones";
 import { highestDanger, type AvalancheForecast } from "@/lib/Avalanche";
-import { SNOW_LINE_OFFSET, fmt } from "@/lib/Conditions";
+import { CONDITION, SNOW_LINE_OFFSET, conditionAt, fmt } from "@/lib/Conditions";
+import { tempAt, windAloft } from "@/lib/Model";
+import { compass } from "@/components/WindCard";
 import { DANGER_STYLE } from "@/lib/DangerStyle";
 import type { HillNow } from "@/lib/Weather";
 
@@ -33,6 +35,8 @@ export default function ZoneDiagram({
   const lo = bottom - 250;
   const hi = top + 120;
   const details = forecast !== undefined;
+  const sky = now && { precipitation: now.precipitation, cloud: now.cloud, code: now.code };
+  const ridge = now ? windAloft(now.aloft, top) : null;
 
   const today = forecast?.status === "ok" ? forecast.days[0] : undefined;
   const level = today && forecast?.status === "ok" && forecast.note == null ? highestDanger(today) : null;
@@ -96,8 +100,10 @@ export default function ZoneDiagram({
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-[#8f8f8f]">Wind</dt>
-                <dd className="tabular-nums text-white">{Math.round(now.wind)} km/h</dd>
+                <dt className="text-xs text-[#8f8f8f]">Ridgetop wind</dt>
+                <dd className="tabular-nums text-white">
+                  {ridge?.speed} km/h {ridge && compass(ridge.dir)}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-[#8f8f8f]">Snow line (est.)</dt>
@@ -106,6 +112,32 @@ export default function ZoneDiagram({
                 </dd>
               </div>
             </dl>
+          )}
+          {now && (
+            <div className="mt-4 space-y-3 border-t border-[#2f3840] pt-4 text-sm">
+              {[
+                ["Upper", top],
+                ["Lower", bottom],
+              ].map(([label, h]) => {
+                const z = h as number;
+                const c = conditionAt(z, now.freezingLevel, sky!);
+                return (
+                  <div key={label} className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-[#8f8f8f]">{label} slopes</p>
+                      <p className="text-white">{zone.name}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="tabular-nums text-[#8f8f8f]">~{fmt(z)} m</span>
+                      <span className="w-12 text-right tabular-nums text-white">
+                        {Math.round(tempAt(now.profile, z) * 10) / 10}°
+                      </span>
+                      <span className={`chip ${CONDITION[c].chip}`}>{CONDITION[c].label}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
           <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#2f3840] pt-4 text-sm">
             <div>

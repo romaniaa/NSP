@@ -1,6 +1,6 @@
 import { cacheLife } from "next/cache";
 import type { MountainConfig } from "@/config/mountains";
-import { fetchSnapshot, freezingLevel, type ModelHour, type PlaceId } from "@/lib/Model";
+import { fetchSnapshot, freezingLevel, tempAt, type ModelHour, type PlaceId } from "@/lib/Model";
 
 export interface HillNow extends ModelHour {
   freezingLevel: number; // metres
@@ -13,6 +13,8 @@ export interface MountainWeather {
   cloud: number | null; // % total cloud cover
   code: number | null; // WMO weather code
   time: string; // ISO, UTC, the model hour shown
+  // Air temperature (°C) at the top and bottom lift stations.
+  temps: { top: number; bottom: number };
 }
 
 // Older than this and the data is treated as unavailable rather than shown as current.
@@ -45,12 +47,14 @@ export async function getCurrentConditions(): Promise<Record<PlaceId, HillNow>> 
 }
 
 export async function getMountainWeather(m: MountainConfig): Promise<MountainWeather> {
-  return weatherFrom((await getCurrentConditions())[m.id]);
+  return weatherFrom((await getCurrentConditions())[m.id], m);
 }
 
 // The summary a hill card needs, from a place's current conditions.
-export function weatherFrom(h: HillNow): MountainWeather {
+export function weatherFrom(h: HillNow, m: MountainConfig): MountainWeather {
+  const t = (z: number) => Math.round(tempAt(h.profile, z) * 10) / 10;
   return {
+    temps: { top: t(m.lifts.top.elevation), bottom: t(m.lifts.bottom.elevation) },
     freezingLevel: h.freezingLevel,
     precipitation: h.precipitation,
     wind: Math.round(h.wind),

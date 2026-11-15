@@ -412,10 +412,10 @@ export default function ElevationVisualizer({
       <div className="mt-4 space-y-3 border-t border-[#2f3840] pt-4 text-sm">
         {(
           [
-            ["Top lift", config.lifts.top],
-            ["Lowest lift", config.lifts.bottom],
+            ["Top lift", config.lifts.top, weather.temps.top],
+            ["Lowest lift", config.lifts.bottom, weather.temps.bottom],
           ] as const
-        ).map(([title, lift]) => {
+        ).map(([title, lift, temp]) => {
           const p = conditionAt(lift.elevation, fl, sky);
           return (
             <div
@@ -427,9 +427,10 @@ export default function ElevationVisualizer({
                 <p className="text-white">{lift.label}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="tabular-nums text-white">
+                <span className="tabular-nums text-[#8f8f8f]">
                   ~{lift.elevation.toLocaleString("en-CA")} m
                 </span>
+                <span className="w-12 text-right tabular-nums text-white">{temp}°</span>
                 <span
                   className={`chip ${CONDITION[p].chip}`}
                 >

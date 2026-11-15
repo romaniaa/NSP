@@ -7,13 +7,16 @@ import PinButton from "@/components/PinButton";
 import RangeIcon from "@/components/RangeIcon";
 import SiteNav from "@/components/SiteNav";
 import { PageTransition } from "@/components/Transitions";
+import { compass } from "@/components/WindCard";
 import ZoneDiagram from "@/components/ZoneDiagram";
+import ZoneTemperatureChart from "@/components/ZoneTemperatureChart";
+import ZoneWindCard from "@/components/ZoneWindCard";
 import { Card, SectionLabel, Unavailable } from "@/components/Ui";
 import { ZONES, type ZoneConfig } from "@/config/zones";
 import { getAvalancheForecast } from "@/lib/Avalanche";
 import { CONDITION, conditionAt, fmt } from "@/lib/Conditions";
 import { getFreezingSeries } from "@/lib/Forecast";
-import { tempAt } from "@/lib/Model";
+import { tempAt, windAloft } from "@/lib/Model";
 import { OPEN_GRAPH, SITE_NAME } from "@/lib/Site";
 import { trendDetail, trendWord } from "@/lib/Trend";
 import { getCurrentConditions, type HillNow } from "@/lib/Weather";
@@ -81,6 +84,7 @@ export default async function ZonePage({ params }: { params: Promise<{ zone: str
 
 function ElevationTable({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
   const sky = { precipitation: now.precipitation, cloud: now.cloud, code: now.code };
+  const ridge = windAloft(now.aloft, Math.max(...zone.heights));
   return (
     <Card>
       <h3 className="font-semibold text-white">Conditions by elevation</h3>
@@ -114,7 +118,7 @@ function ElevationTable({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
             })}
         </tbody>
       </table>
-      <dl className="mt-4 grid grid-cols-3 gap-3 text-xs">
+      <dl className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
         <div>
           <dt className="text-[#9aa7b5]">Freezing level</dt>
           <dd className="mt-1 tabular-nums text-white">{fmt(now.freezingLevel)} m</dd>
@@ -126,7 +130,13 @@ function ElevationTable({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
           </dd>
         </div>
         <div>
-          <dt className="text-[#9aa7b5]">Wind</dt>
+          <dt className="text-[#9aa7b5]">Ridgetop wind</dt>
+          <dd className="mt-1 tabular-nums text-white">
+            {ridge.speed} km/h {compass(ridge.dir)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[#9aa7b5]">Near-surface wind</dt>
           <dd className="mt-1 tabular-nums text-white">
             {Math.round(now.wind)} km/h · gusts {Math.round(now.gust)}
           </dd>
@@ -195,6 +205,16 @@ async function ZoneContent({ zone }: { zone: ZoneConfig }) {
         </div>
       ) : (
         <Unavailable title="Freezing level" />
+      )}
+
+      <SectionLabel>Temperature and wind</SectionLabel>
+      {now ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <ZoneTemperatureChart zone={zone} now={now} />
+          <ZoneWindCard zone={zone} now={now} />
+        </div>
+      ) : (
+        <Unavailable title="Temperature and wind" />
       )}
 
       <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">

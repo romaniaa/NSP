@@ -8,9 +8,9 @@ import { ZONES, type ZoneId } from "@/config/zones";
 // dashboard. Pages pick the current hour from it (see lib/Weather.ts).
 //
 // Free tier: 10,000 calls a day. Open-Meteo weights a request by its locations,
-// variables (per 10) and days (per 14): 27 variables over 17 days is about 3.3
+// variables (per 10) and days (per 14): 35 variables over 17 days is about 4.25
 // calls per place (hill or backcountry zone), each hour. With 7 hills and 5 zones
-// that is about 950 calls a day.
+// that is about 1,225 calls a day.
 
 const API = "https://api.open-meteo.com/v1/forecast";
 
@@ -29,6 +29,15 @@ const PROFILE_VARS = LEVELS.flatMap((p) => [
   `temperature_${p}hPa`,
   `geopotential_height_${p}hPa`,
 ]);
+
+// Wind at the upper pressure levels, about 1,400 to 3,000 m. Checked against the
+// same mountain stations (Nov 2026): on exposed peaks and ridges the 10 m surface
+// wind read far too low (Blowdown Peak, 2,320 m: 8 km/h against 32 observed) and
+// this free-air wind was much closer (42); on sheltered slopes and passes the
+// surface wind was closer. So both are shown: this as "ridgetop wind", the
+// surface wind as the wind near the ground.
+const WIND_LEVELS = [850, 800, 750, 700];
+const WIND_VARS = WIND_LEVELS.flatMap((p) => [`wind_speed_${p}hPa`, `wind_direction_${p}hPa`]);
 
 // Model-surface values. They don't vary with height at one point, so every lift
 // on a hill shares them.
@@ -96,6 +105,43 @@ function profileAt(h: Hourly, i: number): Profile | null {
   return { z: pts.map((p) => p[0]), t: pts.map((p) => p[1]) };
 }
 
+function windProfileAt(h: Hourly, i: number): WindProfile | null {
+  const pts: [number, number, number][] = [];
+  for (const p of WIND_LEVELS) {
+    const z = value(h, `geopotential_height_${p}hPa`, i);
+    const speed = value(h, `wind_speed_${p}hPa`, i);
+    const dir = value(h, `wind_direction_${p}hPa`, i);
+    if (z == null || speed == null || dir == null) return null;
+    // Meteorological direction is where the wind comes from.
+    const r = (dir * Math.PI) / 180;
+    pts.push([Math.round(z), -speed * Math.sin(r), -speed * Math.cos(r)]);
+  }
+  pts.sort((a, b) => a[0] - b[0]);
+  return {
+    z: pts.map((p) => p[0]),
+    u: pts.map((p) => Math.round(p[1] * 10) / 10),
+    v: pts.map((p) => Math.round(p[2] * 10) / 10),
+  };
+}
+
+// Free-air wind at a height: interpolated between levels and held at the end
+// levels beyond them (no extrapolation, which would exaggerate).
+export function windAloft(w: WindProfile, height: number): { speed: number; dir: number } {
+  const at = (vals: number[]) => {
+    if (height <= w.z[0]) return vals[0];
+    for (let i = 1; i < w.z.length; i++) {
+      if (height <= w.z[i]) {
+        return vals[i - 1] + ((vals[i] - vals[i - 1]) * (height - w.z[i - 1])) / (w.z[i] - w.z[i - 1]);
+      }
+    }
+    return vals[vals.length - 1];
+  };
+  const u = at(w.u);
+  const v = at(w.v);
+  const dir = ((Math.atan2(-u, -v) * 180) / Math.PI + 360) % 360;
+  return { speed: Math.round(Math.hypot(u, v)), dir: Math.round(dir) };
+}
+
 // One request for many points. The GEM model first, then Open-Meteo's default
 // model only if GEM fails or has gaps, so a normal refresh is a single call.
 async function fetchPoints<T>(
@@ -138,9 +184,18 @@ async function fetchPoints<T>(
   throw lastError;
 }
 
+// Free-air wind by height, lowest first, as east (u) and north (v) components in
+// km/h so direction interpolates correctly.
+export interface WindProfile {
+  z: number[];
+  u: number[];
+  v: number[];
+}
+
 export interface ModelHour {
   time: string; // ISO, UTC, start of the hour
   profile: Profile;
+  aloft: WindProfile;
   rh: number; // %
   precipitation: number; // mm in the hour
   cloud: number | null; // % total cloud cover
@@ -188,7 +243,7 @@ export async function fetchSnapshot(): Promise<Snapshot> {
   const { model, data } = await fetchPoints(
     PLACES,
     {
-      hourly: [...PROFILE_VARS, ...SURFACE_VARS].join(","),
+      hourly: [...PROFILE_VARS, ...WIND_VARS, ...SURFACE_VARS].join(","),
       past_days: "10",
       forecast_days: "7",
       timezone: "GMT",
@@ -207,16 +262,18 @@ export async function fetchSnapshot(): Promise<Snapshot> {
           const offset = (Date.parse(t) - now) / 3600_000;
           if (offset < -DETAIL_BEFORE_H || offset > DETAIL_AFTER_H) return;
           const profile = profiles[i];
+          const aloft = windProfileAt(h, i);
           const rh = value(h, "relative_humidity_2m", i);
           const wind = value(h, "wind_speed_10m", i);
           const gust = value(h, "wind_gusts_10m", i);
           const dir = value(h, "wind_direction_10m", i);
-          if (!profile || rh == null || wind == null || gust == null || dir == null) {
+          if (!profile || !aloft || rh == null || wind == null || gust == null || dir == null) {
             throw new Error(`gap at ${PLACES[loc].id} ${t}`);
           }
           hours.push({
             time: t,
             profile,
+            aloft,
             rh,
             precipitation: value(h, "precipitation", i) ?? 0,
             cloud: value(h, "cloud_cover", i),

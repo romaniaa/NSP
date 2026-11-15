@@ -5,7 +5,55 @@ const POINTS = [
   "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
   "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
 ];
-const compass = (deg: number) => POINTS[Math.round(deg / 22.5) % 16];
+export const compass = (deg: number) => POINTS[Math.round(deg / 22.5) % 16];
+
+// A compass with an arrow pointing where the wind blows to, and its source below.
+export function Compass({ dir, color }: { dir: number; color: string }) {
+  return (
+    <div className="text-center">
+      <div
+        className="relative h-28 w-28 rounded-full border border-[#2f3840]"
+        role="img"
+        aria-label={`Wind from the ${compass(dir)}`}
+      >
+        <svg
+          viewBox="0 0 100 100"
+          className="absolute inset-0 h-full w-full"
+          aria-hidden="true"
+        >
+          {POINTS.map((p, i) => (
+            <line
+              key={p}
+              x1="50"
+              x2="50"
+              y1="1"
+              y2={i % 4 === 0 ? 8 : 5}
+              stroke="#5f6e7b"
+              transform={`rotate(${i * 22.5} 50 50)`}
+            />
+          ))}
+        </svg>
+        <span className="absolute left-1/2 top-2.5 -translate-x-1/2 text-[10px] text-[#7d8da1]">
+          N
+        </span>
+        {/* The arrow points the way the wind is blowing toward */}
+        <svg
+          viewBox="0 0 100 100"
+          className="absolute inset-0 h-full w-full"
+          style={{ transform: `rotate(${dir + 180}deg)` }}
+          aria-hidden="true"
+        >
+          <line x1="50" y1="78" x2="50" y2="26" stroke={color} strokeWidth="3" strokeLinecap="round" />
+          <polygon points="50,18 40,34 60,34" fill={color} />
+        </svg>
+      </div>
+      <p className="mt-2 text-sm text-[#c9d3dd]">
+        From the {compass(dir)}
+      </p>
+    </div>
+  );
+}
+
 
 export default function WindCard({
   station,
@@ -43,47 +91,7 @@ export default function WindCard({
           </div>
         </div>
 
-        <div className="text-center">
-          <div
-            className="relative h-28 w-28 rounded-full border border-[#2f3840]"
-            role="img"
-            aria-label={`Wind from the ${compass(station.dir)}`}
-          >
-            <svg
-              viewBox="0 0 100 100"
-              className="absolute inset-0 h-full w-full"
-              aria-hidden="true"
-            >
-              {POINTS.map((p, i) => (
-                <line
-                  key={p}
-                  x1="50"
-                  x2="50"
-                  y1="1"
-                  y2={i % 4 === 0 ? 8 : 5}
-                  stroke="#5f6e7b"
-                  transform={`rotate(${i * 22.5} 50 50)`}
-                />
-              ))}
-            </svg>
-            <span className="absolute left-1/2 top-2.5 -translate-x-1/2 text-[10px] text-[#7d8da1]">
-              N
-            </span>
-            {/* The arrow points the way the wind is blowing toward */}
-            <svg
-              viewBox="0 0 100 100"
-              className="absolute inset-0 h-full w-full"
-              style={{ transform: `rotate(${station.dir + 180}deg)` }}
-              aria-hidden="true"
-            >
-              <line x1="50" y1="78" x2="50" y2="26" stroke={color} strokeWidth="3" strokeLinecap="round" />
-              <polygon points="50,18 40,34 60,34" fill={color} />
-            </svg>
-          </div>
-          <p className="mt-2 text-sm text-[#c9d3dd]">
-            From the {compass(station.dir)}
-          </p>
-        </div>
+        <Compass dir={station.dir} color={color} />
       </div>
 
       <p className="mt-5 text-sm text-[#9aa7b5]">
