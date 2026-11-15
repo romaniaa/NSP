@@ -333,7 +333,7 @@ export default function ElevationVisualizer({
   if (!weather) {
     return (
       <section
-      className="border border-[#232a31] bg-[#13181d] p-5"
+      className="h-full border border-[#232a31] bg-[#13181d] p-5"
       style={{ borderTop: `3px solid ${config.color}` }}
     >
         <h2 className="text-lg font-semibold text-white">{name}</h2>
@@ -354,7 +354,7 @@ export default function ElevationVisualizer({
 
   return (
     <section
-      className="border border-[#232a31] bg-[#13181d] p-5"
+      className="h-full border border-[#232a31] bg-[#13181d] p-5"
       style={{ borderTop: `3px solid ${config.color}` }}
     >
       <div className="flex items-start justify-between gap-4">
