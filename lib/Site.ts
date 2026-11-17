@@ -4,13 +4,12 @@ import { WEBCAMS } from "@/config/webcams";
 export const SITE_NAME = "OpenPeaks";
 
 // Absolute site URL for canonical links, the sitemap and social previews.
-// Set NEXT_PUBLIC_SITE_URL once you have a custom domain. Until then, Vercel's
-// production domain is used, which Vercel provides automatically on every build.
+// Every Vercel build (previews too) points at openpeaks.ca, the one canonical
+// host; next.config.ts redirects every other domain there. Vercel's own
+// "production domain" can't be trusted for this: it picked the old domain.
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : "http://localhost:3000")
+  (process.env.VERCEL ? "https://openpeaks.ca" : "http://localhost:3000")
 ).replace(/\/$/, "");
 
 // A page's openGraph replaces the layout's rather than merging with it, so
