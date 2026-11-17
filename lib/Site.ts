@@ -1,7 +1,7 @@
 import type { MountainConfig } from "@/config/mountains";
 import { WEBCAMS } from "@/config/webcams";
 
-export const SITE_NAME = "North Shore Peaks";
+export const SITE_NAME = "OpenPeaks";
 
 // Absolute site URL for canonical links, the sitemap and social previews.
 // Set NEXT_PUBLIC_SITE_URL once you have a custom domain. Until then, Vercel's

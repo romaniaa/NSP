@@ -7,7 +7,7 @@ import type { MountainId } from "@/config/mountains";
 // expects throws, and the page shows the report as unavailable.
 
 const TZ = "America/Vancouver";
-const USER_AGENT = "NorthShorePeaks/1.0 (snow report reader)";
+const USER_AGENT = "OpenPeaks/1.0 (snow report reader)";
 
 // Months (1–12, Vancouver time) when the snow report is shown.
 export const SNOW_SEASON_MONTHS = [11, 12, 1, 2, 3, 4];

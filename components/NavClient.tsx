@@ -171,7 +171,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
           transitionTypes={NAV_BACK}
           className="mr-auto whitespace-nowrap py-1 font-display text-lg font-bold uppercase tracking-widest text-white"
         >
-          North Shore Peaks
+          OpenPeaks
         </Link>
         <button
           type="button"
@@ -196,7 +196,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
           transitionTypes={NAV_BACK}
           className="mr-4 whitespace-nowrap py-3 font-display text-lg font-bold uppercase tracking-widest text-white"
         >
-          North Shore Peaks
+          OpenPeaks
         </Link>
         {items.map((item) => {
           const isActive = item.id === active;
@@ -239,7 +239,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
           <div className="flex items-center justify-between gap-3 border-b border-[#2f3840] px-4 py-3">
             <div>
               <p className="font-display text-lg font-bold uppercase tracking-widest">
-                North Shore Peaks
+                OpenPeaks
               </p>
               <p className="text-xs text-[#7d8da1]">
                 {status?.asOf
