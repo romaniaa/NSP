@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
   redirects() {
     return [{ source: "/dashboard", destination: "/", permanent: true }];
   },
+  experimental: {
+    agentUpgrade: "security",
+  },
 };
 
 export default nextConfig;
