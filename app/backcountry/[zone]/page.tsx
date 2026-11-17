@@ -171,7 +171,7 @@ async function ZoneContent({ zone }: { zone: ZoneConfig }) {
   return (
     <>
       {forecast ? (
-        <AvalancheCard name={zone.fullName} forecast={forecast} />
+        <AvalancheCard name={zone.fullName} forecast={forecast} timeZone={zone.timeZone} />
       ) : (
         <Unavailable title={`${zone.fullName} avalanche danger`} />
       )}
@@ -230,7 +230,7 @@ async function ZoneContent({ zone }: { zone: ZoneConfig }) {
         <>
           <SectionLabel>Weather stations</SectionLabel>
           {stations ? (
-            <ZoneStations stations={stations} now={now} />
+            <ZoneStations stations={stations} now={now} timeZone={zone.timeZone} />
           ) : (
             <Unavailable title="Weather stations" />
           )}

@@ -8,9 +8,10 @@ import { ZONES, type ZoneId } from "@/config/zones";
 // dashboard. Pages pick the current hour from it (see lib/Weather.ts).
 //
 // Free tier: 10,000 calls a day. Open-Meteo weights a request by its locations,
-// variables (per 10) and days (per 14): 35 variables over 17 days is about 4.25
-// calls per place (hill or backcountry zone), each hour. With 7 hills and 5 zones
-// that is about 1,225 calls a day.
+// variables (per 10) and days (per 14): 36 variables over 17 days is about 4.4
+// calls per place (hill or backcountry zone), each hour. With 26 hills and 8 zones
+// that is about 3,570 calls a day, or twice that on an hour GEM fails and the
+// fallback model is fetched too.
 
 const API = "https://api.open-meteo.com/v1/forecast";
 
@@ -42,6 +43,7 @@ const WIND_VARS = WIND_LEVELS.flatMap((p) => [`wind_speed_${p}hPa`, `wind_direct
 // Model-surface values. They don't vary with height at one point, so every lift
 // on a hill shares them.
 const SURFACE_VARS = [
+  "surface_pressure", // to find where the model's ground is (see freezingLevel)
   "relative_humidity_2m",
   "precipitation",
   "cloud_cover",
@@ -55,6 +57,9 @@ const SURFACE_VARS = [
 export interface Profile {
   z: number[];
   t: number[];
+  // Height (m) of the model's ground at this point. Pressure levels below it are
+  // filled in by the model, not real air. Absent if the model didn't give one.
+  ground?: number;
 }
 
 // Temperature at a height: linear between pressure levels, extended from the end
@@ -69,8 +74,29 @@ export function tempAt(p: Profile, height: number): number {
 // Height (m) of the 0 °C level: the lowest point where the air turns from above to
 // below freezing going up, the same definition Open-Meteo uses. A second crossing
 // above a warm layer aloft is ignored.
+//
+// Where the air at the model's ground is above freezing, crossings below the
+// ground are skipped: those levels are filled in by the model, and in the
+// Interior and the Rockies they can cross 0 °C hundreds of metres below a valley
+// that is above freezing (Rogers Pass, Nov 2026: 548 m against +0.6 °C at the
+// 1,315 m pass; the crossing above the ground was near 1,370 m). Over a week of
+// hours at the zones this changed the level only in hours like that one.
+// Temperatures are unaffected.
 export function freezingLevel(p: Profile): number {
   const { z, t } = p;
+  if (p.ground != null && p.ground > z[0] && p.ground < z[z.length - 1]) {
+    const tg = tempAt(p, p.ground);
+    if (tg >= 0) {
+      const above = z.findIndex((h) => h > p.ground!);
+      const zs = [p.ground, ...z.slice(above)];
+      const ts = [tg, ...t.slice(above)];
+      for (let i = 1; i < zs.length; i++) {
+        if (ts[i - 1] >= 0 && ts[i] < 0) {
+          return Math.round(zs[i - 1] + ((zs[i] - zs[i - 1]) * ts[i - 1]) / (ts[i - 1] - ts[i]));
+        }
+      }
+    }
+  }
   for (let i = 1; i < z.length; i++) {
     if (t[i - 1] >= 0 && t[i] < 0) {
       return Math.round(z[i - 1] + ((z[i] - z[i - 1]) * t[i - 1]) / (t[i - 1] - t[i]));
@@ -94,15 +120,31 @@ function value(h: Hourly, key: string, i: number): number | null {
 }
 
 function profileAt(h: Hourly, i: number): Profile | null {
-  const pts: [number, number][] = [];
+  const pts: [number, number, number][] = [];
   for (const p of LEVELS) {
     const z = value(h, `geopotential_height_${p}hPa`, i);
     const t = value(h, `temperature_${p}hPa`, i);
     if (z == null || t == null) return null;
-    pts.push([Math.round(z), t]);
+    pts.push([Math.round(z), t, p]);
   }
   pts.sort((a, b) => a[0] - b[0]);
-  return { z: pts.map((p) => p[0]), t: pts.map((p) => p[1]) };
+  const z = pts.map((p) => p[0]);
+  const sp = value(h, "surface_pressure", i);
+  return {
+    z,
+    t: pts.map((p) => p[1]),
+    ...(sp == null ? {} : { ground: groundHeight(z, pts.map((p) => p[2]), sp) }),
+  };
+}
+
+// Height of the surface pressure among the levels: pressure falls off
+// exponentially with height, so interpolate in log pressure.
+function groundHeight(z: number[], hPa: number[], surface: number): number {
+  const x = Math.log(surface);
+  let i = 1;
+  while (i < z.length - 1 && Math.log(hPa[i]) > x) i++;
+  const [a, b] = [Math.log(hPa[i - 1]), Math.log(hPa[i])];
+  return Math.round(z[i - 1] + ((z[i] - z[i - 1]) * (x - a)) / (b - a));
 }
 
 function windProfileAt(h: Hourly, i: number): WindProfile | null {
@@ -207,21 +249,27 @@ export interface ModelHour {
 
 // Everywhere the site shows current weather: every hill and backcountry zone.
 export type PlaceId = MountainId | ZoneId;
-const PLACES: { id: PlaceId; lat: number; lon: number }[] = [...MOUNTAINS, ...ZONES];
+const PLACES: { id: PlaceId; lat: number; lon: number; timeZone: string }[] = [
+  ...MOUNTAINS,
+  ...ZONES,
+];
 
-export interface PlaceLevels {
-  time: string[]; // ISO, UTC, every hour from 10 days ago to 7 days ahead
-  level: (number | null)[]; // freezing level, m; null where the model has a gap
-}
+// The local time zone of a hill or zone, for days and times shown for it.
+export const timeZoneOf = (id: PlaceId) =>
+  PLACES.find((p) => p.id === id)?.timeZone ?? "America/Vancouver";
 
 export interface PlaceData {
   hours: ModelHour[]; // full detail for the hours around the fetch
-  levels: PlaceLevels; // freezing level for the whole period
+  // Freezing level (m) at each of the snapshot's times; null where the model has a gap.
+  levels: (number | null)[];
 }
 
 export interface Snapshot {
   model: string;
   fetched: string; // ISO
+  // ISO, UTC, every hour from 10 days ago to 7 days ahead. Every place shares
+  // them, so they're stored once rather than per place.
+  times: string[];
   places: Record<PlaceId, PlaceData>;
 }
 
@@ -249,7 +297,7 @@ export async function fetchSnapshot(): Promise<Snapshot> {
       timezone: "GMT",
     },
     (hourly) =>
-      hourly.map((h, loc): PlaceData => {
+      hourly.map((h, loc): PlaceData & { time: string[] } => {
         const time = h.time.map((t) => `${t}Z`); // Open-Meteo gives "YYYY-MM-DDTHH:MM" in GMT
         const profiles = time.map((_, i) => profileAt(h, i));
         const level = profiles.map((p) => (p ? freezingLevel(p) : null));
@@ -284,16 +332,21 @@ export async function fetchSnapshot(): Promise<Snapshot> {
           });
         });
 
-        return { hours, levels: { time, level } };
+        return { hours, levels: level, time };
       })
   );
 
+  // One request, so every location comes back on the same hours.
+  const times = data[0].time;
+  if (data.some((d) => d.time.length !== times.length || d.time[0] !== times[0])) {
+    throw new Error("open-meteo: locations on different hours");
+  }
   return {
     model,
     fetched: new Date().toISOString(),
-    places: Object.fromEntries(PLACES.map((p, i) => [p.id, data[i]])) as Record<
-      PlaceId,
-      PlaceData
-    >,
+    times,
+    places: Object.fromEntries(
+      PLACES.map((p, i) => [p.id, { hours: data[i].hours, levels: data[i].levels }])
+    ) as Record<PlaceId, PlaceData>,
   };
 }

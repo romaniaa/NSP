@@ -5,13 +5,13 @@ import { tempAt } from "@/lib/Model";
 import type { ZoneStation } from "@/lib/Stations";
 import type { HillNow } from "@/lib/Weather";
 
-const TZ = "America/Vancouver";
-const time = (iso: string, withDay: boolean) =>
+const time = (iso: string, withDay: boolean, timeZone: string) =>
   new Date(iso).toLocaleString("en-CA", {
-    timeZone: TZ,
+    timeZone,
     ...(withDay ? { month: "short", day: "numeric" } : {}),
     hour: "numeric",
     minute: "2-digit",
+    timeZoneName: "short",
   });
 
 const dash = <span className="text-[#7d8da1]">—</span>;
@@ -22,10 +22,13 @@ const dash = <span className="text-[#7d8da1]">—</span>;
 export default function ZoneStations({
   stations,
   now,
+  timeZone,
 }: {
   stations: ZoneStation[];
   now: HillNow | null;
+  timeZone: string; // the zone's, for report times
 }) {
+  const sources = [...new Set(stations.map((s) => s.source))];
   return (
     <Card className="overflow-x-auto">
       <h3 className="font-semibold text-white">Weather stations</h3>
@@ -90,7 +93,9 @@ export default function ZoneStations({
                       )}
                     </td>
                     <td className="py-2.5 text-xs text-[#9aa7b5]">
-                      {s.stale ? `Last report ${time(r.time, true)}` : time(r.time, false)}
+                      {s.stale
+                        ? `Last report ${time(r.time, true, timeZone)}`
+                        : time(r.time, false, timeZone)}
                     </td>
                   </>
                 )}
@@ -100,7 +105,7 @@ export default function ZoneStations({
         </tbody>
       </table>
       <p className="mt-3 text-xs text-[#7d8da1]">
-        BC Ministry of Transportation and Infrastructure stations, via{" "}
+        {sources.join(" and ")} stations, via{" "}
         <a href="https://avalanche.ca" className="underline hover:text-white">
           Avalanche Canada
         </a>

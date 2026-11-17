@@ -13,15 +13,15 @@ export function dangerLabel(d: Danger) {
   return isRated(d) ? DANGER_STYLE[d.value].label : d.display;
 }
 
-const TZ = "America/Vancouver";
-const when = (iso: string) =>
+const when = (iso: string, timeZone: string) =>
   new Date(iso).toLocaleString("en-CA", {
-    timeZone: TZ,
+    timeZone,
     weekday: "short",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZoneName: "short",
   });
 
 const BANDS = [
@@ -81,9 +81,11 @@ function Disclaimer() {
 export default function AvalancheCard({
   name,
   forecast,
+  timeZone,
 }: {
   name: string;
   forecast: AvalancheForecast;
+  timeZone: string; // the zone's, for issue and expiry times
 }) {
   if (forecast.status === "none") {
     return (
@@ -113,7 +115,8 @@ export default function AvalancheCard({
         <div>
           <h3 className="font-semibold text-white">{name} avalanche danger</h3>
           <p className="mt-1 text-xs text-[#9aa7b5]">
-            Issued {when(forecast.issued)} · valid until {when(forecast.validUntil)}
+            Issued {when(forecast.issued, timeZone)} · valid until{" "}
+            {when(forecast.validUntil, timeZone)}
           </p>
         </div>
         <span className="chip bg-white/10 text-[#c9d3dd]">{forecast.owner}</span>

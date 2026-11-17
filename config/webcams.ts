@@ -19,6 +19,10 @@ export interface MountainWebcams {
 // Whistler, Sasquatch and Manning show still images loaded by script on their own
 // pages, with no embed code, so we link to those pages rather than hotlink the
 // images. Mt. Baker's site has no webcam page we could find (checked 2026-11-14).
+// The hills added in the Interior, the Rockies and on Vancouver Island link to their
+// own webcam pages (checked 2026-11-16) rather than embedding them. Apex blocks
+// automated checks and Marmot Basin and Mt. Cain list no webcam page, so those
+// three have none.
 export const WEBCAMS: Partial<Record<MountainId, MountainWebcams>> = {
   cypress: {
     page: "https://www.cypressmountain.com/webcams",
@@ -53,4 +57,20 @@ export const WEBCAMS: Partial<Record<MountainId, MountainWebcams>> = {
   },
   sasquatch: { page: "https://sasquatchmountain.ca/webcams/", cams: [] },
   manning: { page: "https://manningpark.com/webcams/", cams: [] },
+  "mt-washington": { page: "https://www.mountwashington.ca/webcams/", cams: [] },
+  "big-white": { page: "https://www.bigwhite.com/mountain-conditions/webcams", cams: [] },
+  "silver-star": { page: "https://www.skisilverstar.com/the-mountain/webcams/", cams: [] },
+  "sun-peaks": { page: "https://www.sunpeaksresort.com/ski-ride/weather-conditions-cams/webcams", cams: [] },
+  revelstoke: { page: "https://www.revelstokemountainresort.com/mountain/conditions/webcams/", cams: [] },
+  "kicking-horse": { page: "https://kickinghorseresort.com/conditions/mountain-cam/", cams: [] },
+  red: { page: "https://www.redresort.com/report/?cams", cams: [] },
+  whitewater: { page: "https://whitewatermountainresort.com/webcams/", cams: [] },
+  panorama: { page: "https://www.panoramaresort.com/panorama-today/mountain-webcams", cams: [] },
+  kimberley: { page: "https://skikimberley.com/conditions/mountain-cam/", cams: [] },
+  fernie: { page: "https://skifernie.com/conditions/mountain-cam/", cams: [] },
+  castle: { page: "https://www.skicastle.ca/webcams/", cams: [] },
+  nakiska: { page: "https://skinakiska.com/conditions/mountain-cam/", cams: [] },
+  sunshine: { page: "https://www.skibanff.com/webcams", cams: [] },
+  norquay: { page: "https://banffnorquay.com/webcam/", cams: [] },
+  "lake-louise": { page: "https://www.skilouise.com/mountain-cam/", cams: [] },
 };

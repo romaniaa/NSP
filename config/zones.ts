@@ -5,7 +5,10 @@ export type ZoneId =
   | "spearhead"
   | "brandywine"
   | "duffey"
-  | "coquihalla";
+  | "coquihalla"
+  | "rogers-pass"
+  | "kananaskis"
+  | "icefields-parkway";
 
 export interface ZoneConfig {
   id: ZoneId; // URL slug under /backcountry
@@ -13,6 +16,7 @@ export interface ZoneConfig {
   fullName: string;
   description: string; // the terrain it covers, in one sentence
   region: RegionId; // the group it is listed under on the site
+  timeZone: string; // IANA zone for days and times shown for this zone
   color: string;
   // Used both to look up the avalanche forecast and as the weather model point,
   // so it sits in the middle of the terrain people tour.
@@ -34,6 +38,7 @@ export const ZONES: ZoneConfig[] = [
     description:
       "Hollyburn, Mt. Strachan, the Seymour backcountry and the peaks above Vancouver.",
     region: "north-shore",
+    timeZone: "America/Vancouver",
     color: "#8fb3a8",
     lat: 49.4,
     lon: -123.08,
@@ -46,6 +51,7 @@ export const ZONES: ZoneConfig[] = [
     fullName: "Spearhead Range",
     description: "The Spearhead Traverse and the Blackcomb backcountry, east of Whistler.",
     region: "sea-to-sky",
+    timeZone: "America/Vancouver",
     color: "#8aa9d6",
     lat: 50.07,
     lon: -122.86,
@@ -59,6 +65,7 @@ export const ZONES: ZoneConfig[] = [
     fullName: "Brandywine and Callaghan",
     description: "Brandywine Meadows and the Callaghan Valley, southwest of Whistler.",
     region: "sea-to-sky",
+    timeZone: "America/Vancouver",
     color: "#b5a3d6",
     lat: 50.08,
     lon: -123.12,
@@ -72,6 +79,7 @@ export const ZONES: ZoneConfig[] = [
     description:
       "Roadside touring off Highway 99 between Pemberton and Lillooet: Joffre, Cayoosh and Rohr.",
     region: "duffey",
+    timeZone: "America/Vancouver",
     color: "#d6b48a",
     lat: 50.38,
     lon: -122.47,
@@ -84,10 +92,53 @@ export const ZONES: ZoneConfig[] = [
     fullName: "Coquihalla Pass",
     description: "Zupjok, Thar and Yak peaks along Highway 5 near the Coquihalla summit.",
     region: "coquihalla",
+    timeZone: "America/Vancouver",
     color: "#d69a8a",
     lat: 49.6,
     lon: -121.1,
     heights: [2000, 1600, 1200],
     stations: [16, 17, 15],
+  },
+  {
+    id: "rogers-pass",
+    name: "Rogers Pass",
+    fullName: "Rogers Pass",
+    description:
+      "Glacier National Park off Highway 1: the Asulkan, Connaught and Hermit areas. Parks Canada requires a winter permit.",
+    region: "kootenays",
+    timeZone: "America/Vancouver",
+    color: "#d6a0b8",
+    lat: 51.3,
+    lon: -117.52,
+    heights: [2500, 2000, 1500],
+    stations: [91, 96, 95, 93, 98],
+  },
+  {
+    id: "kananaskis",
+    name: "Kananaskis",
+    fullName: "Kananaskis Country",
+    description:
+      "Burstall Pass, Chester Lake and the peaks along the Smith-Dorrien Trail and Highwood Pass.",
+    region: "rockies",
+    timeZone: "America/Edmonton",
+    color: "#9cc29a",
+    lat: 50.77,
+    lon: -115.35,
+    heights: [2700, 2300, 1900],
+    stations: [1, 5, 3],
+  },
+  {
+    id: "icefields-parkway",
+    name: "Icefields Parkway",
+    fullName: "Icefields Parkway",
+    description:
+      "Bow Summit, Observation Peak and the Wapta Icefield approaches along Highway 93 North.",
+    region: "rockies",
+    timeZone: "America/Edmonton",
+    color: "#8cc6e6",
+    lat: 51.68,
+    lon: -116.47,
+    heights: [2900, 2400, 1900],
+    stations: [113, 112],
   },
 ];

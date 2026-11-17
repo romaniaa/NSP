@@ -5,7 +5,11 @@ export type RegionId =
   | "duffey"
   | "coquihalla"
   | "manning"
-  | "baker";
+  | "baker"
+  | "vancouver-island"
+  | "okanagan"
+  | "kootenays"
+  | "rockies";
 
 // Regions group hills and backcountry zones on the site (the nav drawer, /hills,
 // the dashboard picker). Weather is fetched per place, not per region.
@@ -23,4 +27,8 @@ export const REGIONS: RegionConfig[] = [
   { id: "coquihalla", name: "Coquihalla" },
   { id: "manning", name: "Manning Park" },
   { id: "baker", name: "Mt. Baker" },
+  { id: "vancouver-island", name: "Vancouver Island" },
+  { id: "okanagan", name: "Thompson Okanagan" },
+  { id: "kootenays", name: "Kootenays" },
+  { id: "rockies", name: "Canadian Rockies" },
 ];

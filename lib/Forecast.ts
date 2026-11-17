@@ -2,10 +2,8 @@ import { cacheLife } from "next/cache";
 import { LIFTS } from "@/config/lifts";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
 import type { RegionId } from "@/config/regions";
-import { fetchSnapshot, tempAt, type PlaceId } from "@/lib/Model";
+import { fetchSnapshot, tempAt, timeZoneOf, type PlaceId } from "@/lib/Model";
 import { getCurrentConditions, type HillNow } from "@/lib/Weather";
-
-const TZ = "America/Vancouver";
 
 export interface PointReading {
   id: string;
@@ -92,19 +90,21 @@ export async function getPointReadings(region: RegionId): Promise<PointReading[]
 }
 
 // Freezing-level history and forecast for one place, or the average of several
-// (the North Shore overview). "Now" is the same model hour and value that current
+// (the North Shore overview). Days run midnight to midnight in the first place's
+// time zone. "Now" is the same model hour and value that current
 // conditions use, so a page shows one freezing level throughout.
 export async function getFreezingSeries(ids: PlaceId[]): Promise<FreezingSeries> {
   "use cache";
   cacheLife({ stale: 300, revalidate: 900, expire: 3600 });
 
   const [snapshot, now] = await Promise.all([fetchSnapshot(), getCurrentConditions()]);
+  const TZ = timeZoneOf(ids[0]);
   const series = ids.map((id) => snapshot.places[id].levels);
-  const times = series[0].time;
+  const times = snapshot.times;
 
   // Hourly mean across the places, skipping any gaps.
   const vals = times.map((_, i) => {
-    const vs = series.map((s) => s.level[i]).filter((v): v is number => v != null);
+    const vs = series.map((s) => s[i]).filter((v): v is number => v != null);
     return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
   });
 
@@ -117,7 +117,6 @@ export async function getFreezingSeries(ids: PlaceId[]): Promise<FreezingSeries>
   const next = at(idx + 24);
   const past = at(idx - 25);
 
-  // Days run midnight to midnight in Vancouver.
   const dayOf = new Intl.DateTimeFormat("en-CA", {
     timeZone: TZ,
     year: "numeric",
@@ -160,6 +159,7 @@ export async function getFreezingSeries(ids: PlaceId[]): Promise<FreezingSeries>
       year: "numeric",
       hour: "numeric",
       minute: "2-digit",
+      timeZoneName: "short",
     }),
   };
 }

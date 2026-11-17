@@ -20,6 +20,10 @@ function contour(cx: number, cy: number, radius: number, seed: number) {
   return `M${points.join("L")}Z`;
 }
 
+// Only the first few hills fit across the 1,500-unit-wide map; the rest would be
+// drawn off its right edge, so they're left out.
+const SUMMITS = MOUNTAINS.slice(0, 4);
+
 // Decorative contour map behind the page, with one summit per mountain from west to east.
 export default function Topo() {
   return (
@@ -29,7 +33,7 @@ export default function Topo() {
       className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] w-full [mask-image:linear-gradient(to_bottom,black_30%,transparent)]"
       aria-hidden="true"
     >
-      {MOUNTAINS.map((m, i) => (
+      {SUMMITS.map((m, i) => (
         <g key={m.id} fill="none" stroke={m.color} strokeOpacity="0.16">
           {Array.from({ length: LEVELS }, (_, level) => (
             <path

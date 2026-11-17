@@ -38,6 +38,27 @@ export const REPORT_PAGES: Record<MountainId, string> = {
   sasquatch: "https://sasquatchmountain.ca/snow-report/",
   manning: "https://manningpark.com/weather-webcams-trail-stats/",
   baker: "https://www.mtbaker.us/snow-report/",
+  // Mt. Cain has no report page, and Apex blocks automated checks, so both link to
+  // the resort's home page.
+  "mt-washington": "https://www.mountwashington.ca/the-mountain/snow-report/",
+  "mt-cain": "https://www.mountcain.com",
+  "big-white": "https://www.bigwhite.com/daily-snow-report",
+  "silver-star": "https://www.skisilverstar.com/the-mountain/weather-conditions/snow-report-forecast/",
+  "sun-peaks": "https://www.sunpeaksresort.com/ski-ride/weather-conditions-cams/weather-snow-report",
+  apex: "https://www.apexresort.com",
+  revelstoke: "https://www.revelstokemountainresort.com/mountain/conditions/snow-report/",
+  "kicking-horse": "https://kickinghorseresort.com/conditions/snow-report/",
+  red: "https://www.redresort.com/report/?snowreport",
+  whitewater: "https://whitewatermountainresort.com/conditions/",
+  panorama: "https://www.panoramaresort.com/panorama-today/daily-snow-report",
+  kimberley: "https://skikimberley.com/conditions/snow-report/",
+  fernie: "https://skifernie.com/conditions/snow-report/",
+  castle: "https://www.skicastle.ca/snowreport/",
+  nakiska: "https://skinakiska.com/conditions/snow-report/",
+  sunshine: "https://www.skibanff.com/the-mountain/mountain-report/current-conditions",
+  norquay: "https://banffnorquay.com/conditions/",
+  "lake-louise": "https://www.skilouise.com/snow-conditions/",
+  marmot: "https://www.skimarmot.com/news-snow-report/",
 };
 
 export function isSnowSeason(now: Date) {
@@ -153,7 +174,117 @@ async function grouse(): Promise<SnowReport> {
   };
 }
 
-const READERS: Record<MountainId, () => Promise<SnowReport>> = {
+// The first number captured by `re` in `text`, or null.
+const num = (text: string, re: RegExp) => {
+  const m = text.match(re);
+  return m ? Number(m[1]) : null;
+};
+const stats = (pairs: [string, number | null][]): Stat[] =>
+  pairs.flatMap(([label, cm]) => (cm == null ? [] : [{ label, cm }]));
+
+// A report this old is last season's, left up until the resort posts again.
+const STALE_REPORT_MS = 14 * 24 * 3600 * 1000;
+
+// Sunshine lists an upper and a mid-mountain report, label first:
+// "Upper Mountain Snow Report Overnight 16 cm 6 in 24hr 16 cm … Base 45 cm …
+// Mid Mountain Snow Report … Settled Base 29 cm".
+async function sunshine(): Promise<SnowReport> {
+  const url = REPORT_PAGES.sunshine;
+  const text = pageText(await getPage(url));
+  const upperAt = text.indexOf("Upper Mountain Snow Report");
+  const midAt = text.indexOf("Mid Mountain Snow Report");
+  if (upperAt === -1) throw new Error("snow report sunshine: report block not found");
+  const upper = text.slice(upperAt, midAt > upperAt ? midAt : undefined);
+  const mid = midAt === -1 ? "" : text.slice(midAt, midAt + 400);
+
+  const depths = stats([
+    ["Upper mountain", num(upper, /\bBase (\d+) cm/)],
+    ["Mid mountain", num(mid, /Settled Base (\d+) cm/)],
+  ]);
+  if (depths.length === 0) return { status: "not-posted", url };
+  return {
+    status: "ok",
+    depths,
+    snowfall: stats([
+      ["Overnight", num(upper, /Overnight (\d+) cm/)],
+      ["24 hours", num(upper, /24hr (\d+) cm/)],
+      ["7 days", num(upper, /7 Day (\d+) cm/)],
+    ]),
+    updated: text.match(/Current Conditions Updated: (.+?\d{1,2}:\d{2} [AP]M)/)?.[1] ?? null,
+    url,
+  };
+}
+
+// Whitewater lists the figures from its 1,950 m summit plot value first:
+// "0 CM 24hr 11 CM 48hr 12 CM 3 Days 18 CM 7 Days 57 CM Total Snowfall 25 CM Current Base".
+async function whitewater(): Promise<SnowReport> {
+  const url = REPORT_PAGES.whitewater;
+  const text = pageText(await getPage(url));
+  const base = num(text, /(\d+) CM Current Base/);
+  if (base == null) throw new Error("snow report whitewater: no base depth on the page");
+  return {
+    status: "ok",
+    depths: [{ label: "Summit plot", cm: base }],
+    snowfall: stats([
+      ["24 hours", num(text, /(\d+) CM 24hr/)],
+      ["48 hours", num(text, /(\d+) CM 48hr/)],
+      ["7 days", num(text, /(\d+) CM 7 Days/)],
+    ]),
+    updated: text.match(/Updated on (.+? at \d{2}:\d{2})/)?.[1] ?? null,
+    url,
+  };
+}
+
+// Norquay puts each figure above its label: "35cm Upper Mountain" under the heading
+// "Snow Base - Upper Mountain", and "2cm Last 24 Hours".
+async function norquay(): Promise<SnowReport> {
+  const url = REPORT_PAGES.norquay;
+  const text = pageText(await getPage(url));
+  const depths = stats([
+    ["Upper mountain", num(text, /Snow Base - Upper Mountain (\d+) ?cm Upper Mountain/i)],
+    ["Lower mountain", num(text, /Snow Base - Lower Mountain (\d+) ?cm Lower Mountain/i)],
+  ]);
+  if (depths.length === 0) throw new Error("snow report norquay: no base depths on the page");
+  return {
+    status: "ok",
+    depths,
+    snowfall: stats([
+      ["Overnight", num(text, /(\d+) ?cm Overnight/i)],
+      ["24 hours", num(text, /(\d+) ?cm Last 24 Hours/i)],
+      ["7 days", num(text, /(\d+) ?cm Last 7 Days/i)],
+    ]),
+    updated: null, // Norquay doesn't timestamp its report
+    url,
+  };
+}
+
+// Castle lists value first ("12 cm Fresh Snow (24 hrs)", "80 cm Snow Base") and
+// dates its report "Last updated: 2026-04-26 - 07:57 MT". It leaves the last
+// report of the season up until the next, so an old date means none yet.
+async function castle(): Promise<SnowReport> {
+  const url = REPORT_PAGES.castle;
+  const text = pageText(await getPage(url));
+  const date = text.match(/Last updated: (\d{4}-\d{2}-\d{2}) - (\d{1,2}:\d{2}) ?MT/);
+  if (!date) throw new Error("snow report castle: no update date on the page");
+  if (Date.now() - Date.parse(`${date[1]}T12:00:00-07:00`) > STALE_REPORT_MS) {
+    return { status: "not-posted", url };
+  }
+  const base = num(text, /(\d+) cm Snow Base/);
+  if (base == null) throw new Error("snow report castle: no base depth on the page");
+  return {
+    status: "ok",
+    depths: [{ label: "Base", cm: base }],
+    snowfall: stats([
+      ["24 hours", num(text, /(\d+) cm Fresh Snow \(24 hrs\)/)],
+      ["7 days", num(text, /(\d+) cm Last 7 days/)],
+    ]),
+    updated: `${date[1]} ${date[2]} MT`,
+    url,
+  };
+}
+
+// Hills without a reader link to their resort's report instead.
+const READERS: Partial<Record<MountainId, () => Promise<SnowReport>>> = {
   // Cypress loads its numbers in the browser from a feed behind its site, so
   // they aren't in the page HTML. Link to its report until there's a reader.
   cypress: async () => ({ status: "unsupported", url: REPORT_PAGES.cypress }),
@@ -164,6 +295,10 @@ const READERS: Record<MountainId, () => Promise<SnowReport>> = {
   sasquatch: async () => ({ status: "unsupported", url: REPORT_PAGES.sasquatch }),
   manning: async () => ({ status: "unsupported", url: REPORT_PAGES.manning }),
   baker: async () => ({ status: "unsupported", url: REPORT_PAGES.baker }),
+  sunshine,
+  whitewater,
+  norquay,
+  castle,
 };
 
 // The resort's own snow report, or null outside the snow season (without
@@ -174,5 +309,6 @@ export async function getSnowReport(id: MountainId): Promise<SnowReport | null> 
   cacheLife({ stale: 300, revalidate: 1800, expire: 3 * 3600 });
 
   if (!isSnowSeason(new Date())) return null;
-  return READERS[id]();
+  const read = READERS[id];
+  return read ? read() : { status: "unsupported", url: REPORT_PAGES[id] };
 }
