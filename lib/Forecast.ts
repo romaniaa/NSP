@@ -3,6 +3,7 @@ import { LIFTS } from "@/config/lifts";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
 import type { RegionId } from "@/config/regions";
 import { fetchSnapshot, tempAt, timeZoneOf, type PlaceId } from "@/lib/Model";
+import type { DayForecast } from "@/lib/Daily";
 import { getCurrentConditions, type HillNow } from "@/lib/Weather";
 
 export interface PointReading {
@@ -190,4 +191,27 @@ export async function getMountainReadings(
 
   const h = (await getCurrentConditions())[id];
   return elevations.map((elevation) => ({ elevation, ...readingAt(h, elevation) }));
+}
+
+// The daily forecast for one hill or zone, from today in its time zone. The
+// snapshot is made hourly, so days that have ended since are dropped here.
+export async function getDailyForecast(
+  id: PlaceId
+): Promise<{ days: DayForecast[]; updated: string; timeZone: string }> {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 900, expire: 3600 });
+
+  const snapshot = await fetchSnapshot();
+  const timeZone = timeZoneOf(id);
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  return {
+    days: snapshot.places[id].daily.filter((d) => d.date >= today),
+    updated: snapshot.fetched,
+    timeZone,
+  };
 }

@@ -1,6 +1,7 @@
 import { cacheLife } from "next/cache";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
 import { ZONES, type ZoneId } from "@/config/zones";
+import { summariseDays, type DayForecast } from "@/lib/Daily";
 import { freezingLevel, type Profile, type WindProfile } from "@/lib/Profile";
 
 // The pure profile maths lives in lib/Profile.ts, safe to use in the browser.
@@ -168,9 +169,22 @@ export interface ModelHour {
 
 // Everywhere the site shows current weather: every hill and backcountry zone.
 export type PlaceId = MountainId | ZoneId;
-const PLACES: { id: PlaceId; lat: number; lon: number; timeZone: string }[] = [
-  ...MOUNTAINS,
-  ...ZONES,
+// Each with the heights its forecast is summarised at: a hill's top and bottom
+// lift, a zone's highest and lowest height.
+const PLACES: {
+  id: PlaceId;
+  lat: number;
+  lon: number;
+  timeZone: string;
+  top: number;
+  bottom: number;
+}[] = [
+  ...MOUNTAINS.map((m) => ({
+    ...m,
+    top: m.lifts.top.elevation,
+    bottom: m.lifts.bottom.elevation,
+  })),
+  ...ZONES.map((z) => ({ ...z, top: Math.max(...z.heights), bottom: Math.min(...z.heights) })),
 ];
 
 // The local time zone of a hill or zone, for days and times shown for it.
@@ -181,6 +195,7 @@ export interface PlaceData {
   hours: ModelHour[]; // full detail for the hours around the fetch
   // Freezing level (m) at each of the snapshot's times; null where the model has a gap.
   levels: (number | null)[];
+  daily: DayForecast[]; // today and the next six days, at the place's top and bottom
 }
 
 export interface Snapshot {
@@ -198,7 +213,7 @@ const DETAIL_BEFORE_H = 3;
 const DETAIL_AFTER_H = 9;
 
 // Everything weather for every place, from one request: the hours around now in
-// full, and the freezing level for the past 10 days and next 7. Current conditions
+// full, the freezing level for the past 10 days and next 7, and a daily forecast. Current conditions
 // and the freezing-level charts come from the same data, so a page never shows
 // two different freezing levels for one place.
 export async function fetchSnapshot(): Promise<Snapshot> {
@@ -251,7 +266,23 @@ export async function fetchSnapshot(): Promise<Snapshot> {
           });
         });
 
-        return { hours, levels: level, time };
+        const place = PLACES[loc];
+        const daily = summariseDays(
+          time.map((t, i) => ({
+            time: t,
+            profile: profiles[i],
+            aloft: windProfileAt(h, i),
+            level: level[i],
+            precipitation: value(h, "precipitation", i),
+            cloud: value(h, "cloud_cover", i),
+            code: value(h, "weather_code", i),
+            gust: value(h, "wind_gusts_10m", i),
+          })),
+          place,
+          now
+        );
+
+        return { hours, levels: level, daily, time };
       })
   );
 
@@ -265,7 +296,10 @@ export async function fetchSnapshot(): Promise<Snapshot> {
     fetched: new Date().toISOString(),
     times,
     places: Object.fromEntries(
-      PLACES.map((p, i) => [p.id, { hours: data[i].hours, levels: data[i].levels }])
+      PLACES.map((p, i) => [
+        p.id,
+        { hours: data[i].hours, levels: data[i].levels, daily: data[i].daily },
+      ])
     ) as Record<PlaceId, PlaceData>,
   };
 }

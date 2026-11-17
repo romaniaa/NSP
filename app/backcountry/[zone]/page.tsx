@@ -16,7 +16,8 @@ import { ZONES, type ZoneConfig } from "@/config/zones";
 import { getAvalancheForecast } from "@/lib/Avalanche";
 import { getZoneStations } from "@/lib/Stations";
 import { CONDITION, conditionAt, fmt } from "@/lib/Conditions";
-import { getFreezingSeries } from "@/lib/Forecast";
+import DailyForecast from "@/components/DailyForecast";
+import { getDailyForecast, getFreezingSeries } from "@/lib/Forecast";
 import { tempAt, windAloft } from "@/lib/Model";
 import { OPEN_GRAPH, SITE_NAME } from "@/lib/Site";
 import { trendDetail, trendWord } from "@/lib/Trend";
@@ -154,19 +155,21 @@ function ElevationTable({ zone, now }: { zone: ZoneConfig; now: HillNow }) {
 }
 
 async function ZoneContent({ zone }: { zone: ZoneConfig }) {
-  const [avyRes, nowRes, freezingRes, stationsRes] = await Promise.allSettled([
+  const [avyRes, nowRes, freezingRes, stationsRes, dailyRes] = await Promise.allSettled([
     getAvalancheForecast(zone.id),
     getCurrentConditions().then((c) => c[zone.id]),
     getFreezingSeries([zone.id]),
     getZoneStations(zone.id),
+    getDailyForecast(zone.id),
   ]);
-  for (const r of [avyRes, nowRes, freezingRes, stationsRes]) {
+  for (const r of [avyRes, nowRes, freezingRes, stationsRes, dailyRes]) {
     if (r.status === "rejected") console.error("Fetch failure:", r.reason);
   }
   const forecast = avyRes.status === "fulfilled" ? avyRes.value : null;
   const now = nowRes.status === "fulfilled" ? nowRes.value : null;
   const freezing = freezingRes.status === "fulfilled" ? freezingRes.value : null;
   const stations = stationsRes.status === "fulfilled" ? stationsRes.value : null;
+  const daily = dailyRes.status === "fulfilled" ? dailyRes.value : null;
 
   return (
     <>
@@ -186,6 +189,18 @@ async function ZoneContent({ zone }: { zone: ZoneConfig }) {
         </div>
       ) : (
         <Unavailable title="Conditions by elevation" />
+      )}
+
+      <SectionLabel>Forecast</SectionLabel>
+      {daily && daily.days.length > 0 ? (
+        <DailyForecast
+          days={daily.days}
+          top={{ label: "Upper", elevation: Math.max(...zone.heights) }}
+          bottom={{ label: "Lower", elevation: Math.min(...zone.heights) }}
+          color={zone.color}
+        />
+      ) : (
+        <Unavailable title="Forecast" />
       )}
 
       <SectionLabel>Freezing level</SectionLabel>

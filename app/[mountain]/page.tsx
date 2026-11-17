@@ -18,7 +18,8 @@ import { MOUNTAINS, type MountainConfig } from "@/config/mountains";
 import { regionById } from "@/config/regions";
 import { WEBCAMS } from "@/config/webcams";
 import { extremes, fmt, verdict, vertical } from "@/lib/Conditions";
-import { getFreezingSeries, getMountainReadings } from "@/lib/Forecast";
+import DailyForecast from "@/components/DailyForecast";
+import { getDailyForecast, getFreezingSeries, getMountainReadings } from "@/lib/Forecast";
 import {
   HOME_TITLE,
   OPEN_GRAPH,
@@ -189,8 +190,8 @@ function Intro({
   return (
     <p className="mt-3 max-w-3xl text-[#c9d3dd]">
       {[now, depth].filter(Boolean).join(" ")}{" "}
-      Below: {cams ? "live webcams and " : ""}rain or snow at each lift on this{" "}
-      {config.locality} ski area, updated hourly.
+      Below: a 7-day forecast, {cams ? "live webcams, " : ""}and rain or snow at each
+      lift on this {config.locality} ski area, updated hourly.
     </p>
   );
 }
@@ -199,14 +200,15 @@ async function MountainContent({ config }: { config: MountainConfig }) {
   const lifts = LIFTS[config.id];
   const webcams = WEBCAMS[config.id];
 
-  const [weatherRes, stationsRes, freezingRes, snowRes] =
+  const [weatherRes, stationsRes, freezingRes, snowRes, dailyRes] =
     await Promise.allSettled([
       getMountainWeather(config),
       getMountainReadings(config.id),
       getFreezingSeries([config.id]),
       getSnowReport(config.id),
+      getDailyForecast(config.id),
     ]);
-  for (const r of [weatherRes, stationsRes, freezingRes, snowRes]) {
+  for (const r of [weatherRes, stationsRes, freezingRes, snowRes, dailyRes]) {
     if (r.status === "rejected") console.error("Fetch failure:", r.reason);
   }
 
@@ -216,6 +218,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
   // null when fulfilled means it's outside the snow season, so the section is hidden.
   const snowFailed = snowRes.status === "rejected";
   const snow = snowRes.status === "fulfilled" ? snowRes.value : null;
+  const daily = dailyRes.status === "fulfilled" ? dailyRes.value : null;
 
   const freezingLevel = weather?.freezingLevel ?? freezing?.current ?? null;
   const { low, high } = extremes(config);
@@ -290,6 +293,18 @@ async function MountainContent({ config }: { config: MountainConfig }) {
               </div>
             )}
           </div>
+
+          <SectionLabel>Forecast</SectionLabel>
+          {daily && daily.days.length > 0 ? (
+            <DailyForecast
+              days={daily.days}
+              top={{ label: "Top", elevation: config.lifts.top.elevation }}
+              bottom={{ label: "Base", elevation: config.lifts.bottom.elevation }}
+              color={config.color}
+            />
+          ) : (
+            <Unavailable title="Forecast" />
+          )}
 
           {webcams && (
             <>
