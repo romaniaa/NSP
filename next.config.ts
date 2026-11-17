@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  allowedDevOrigins: ["nsp.test"],
+  allowedDevOrigins: ["opn.test"],
   redirects() {
     return [
       // openpeaks.ca is the one canonical host. The old North Shore Peaks
