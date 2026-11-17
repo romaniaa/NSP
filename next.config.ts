@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     },
   },
   allowedDevOrigins: ["nsp.test"],
+  experimental: {
+    agentUpgrade: "security",
+  },
 };
 
 export default nextConfig;
