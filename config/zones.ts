@@ -1,4 +1,4 @@
-import type { RegionId } from "@/config/regions";
+import { regionOf, type AreaId, type RegionId } from "@/config/regions";
 
 export type ZoneId =
   | "north-shore-backcountry"
@@ -15,7 +15,8 @@ export interface ZoneConfig {
   name: string; // short, for cards and the nav
   fullName: string;
   description: string; // the terrain it covers, in one sentence
-  region: RegionId; // the group it is listed under on the site
+  area: AreaId; // the group it is listed under on its region's page and in menus
+  region: RegionId; // derived from the area
   timeZone: string; // IANA zone for days and times shown for this zone
   color: string;
   // Used both to look up the avalanche forecast and as the weather model point,
@@ -30,14 +31,14 @@ export interface ZoneConfig {
   stations: number[];
 }
 
-export const ZONES: ZoneConfig[] = [
+const LIST: Omit<ZoneConfig, "region">[] = [
   {
     id: "north-shore-backcountry",
     name: "North Shore",
     fullName: "North Shore backcountry",
     description:
       "Hollyburn, Mt. Strachan, the Seymour backcountry and the peaks above Vancouver.",
-    region: "north-shore",
+    area: "north-shore",
     timeZone: "America/Vancouver",
     color: "#8fb3a8",
     lat: 49.4,
@@ -50,7 +51,7 @@ export const ZONES: ZoneConfig[] = [
     name: "Spearhead",
     fullName: "Spearhead Range",
     description: "The Spearhead Traverse and the Blackcomb backcountry, east of Whistler.",
-    region: "sea-to-sky",
+    area: "sea-to-sky",
     timeZone: "America/Vancouver",
     color: "#8aa9d6",
     lat: 50.07,
@@ -64,7 +65,7 @@ export const ZONES: ZoneConfig[] = [
     name: "Brandywine",
     fullName: "Brandywine and Callaghan",
     description: "Brandywine Meadows and the Callaghan Valley, southwest of Whistler.",
-    region: "sea-to-sky",
+    area: "sea-to-sky",
     timeZone: "America/Vancouver",
     color: "#b5a3d6",
     lat: 50.08,
@@ -78,7 +79,7 @@ export const ZONES: ZoneConfig[] = [
     fullName: "Duffey Lake Road",
     description:
       "Roadside touring off Highway 99 between Pemberton and Lillooet: Joffre, Cayoosh and Rohr.",
-    region: "duffey",
+    area: "duffey",
     timeZone: "America/Vancouver",
     color: "#d6b48a",
     lat: 50.38,
@@ -91,7 +92,7 @@ export const ZONES: ZoneConfig[] = [
     name: "Coquihalla",
     fullName: "Coquihalla Pass",
     description: "Zupjok, Thar and Yak peaks along Highway 5 near the Coquihalla summit.",
-    region: "coquihalla",
+    area: "coquihalla",
     timeZone: "America/Vancouver",
     color: "#d69a8a",
     lat: 49.6,
@@ -105,7 +106,7 @@ export const ZONES: ZoneConfig[] = [
     fullName: "Rogers Pass",
     description:
       "Glacier National Park off Highway 1: the Asulkan, Connaught and Hermit areas. Parks Canada requires a winter permit.",
-    region: "kootenays",
+    area: "kootenays",
     timeZone: "America/Vancouver",
     color: "#d6a0b8",
     lat: 51.3,
@@ -119,7 +120,7 @@ export const ZONES: ZoneConfig[] = [
     fullName: "Kananaskis Country",
     description:
       "Burstall Pass, Chester Lake and the peaks along the Smith-Dorrien Trail and Highwood Pass.",
-    region: "rockies",
+    area: "rockies",
     timeZone: "America/Edmonton",
     color: "#9cc29a",
     lat: 50.77,
@@ -133,7 +134,7 @@ export const ZONES: ZoneConfig[] = [
     fullName: "Icefields Parkway",
     description:
       "Bow Summit, Observation Peak and the Wapta Icefield approaches along Highway 93 North.",
-    region: "rockies",
+    area: "rockies",
     timeZone: "America/Edmonton",
     color: "#8cc6e6",
     lat: 51.68,
@@ -142,3 +143,5 @@ export const ZONES: ZoneConfig[] = [
     stations: [113, 112],
   },
 ];
+
+export const ZONES: ZoneConfig[] = LIST.map((z) => ({ ...z, region: regionOf(z.area) }));

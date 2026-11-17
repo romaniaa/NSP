@@ -20,7 +20,7 @@ export interface PlacesNow {
 }
 
 // Current weather for every hill and zone, every zone's avalanche forecast and
-// snow depths, for the pages that list them all (/hills and /dashboard). All come
+// snow depths, for the pages that list them all (/hills, the region pages, /backcountry and My hills). All come
 // from the shared caches, so this costs no extra API calls.
 export async function getPlacesNow(): Promise<PlacesNow> {
   const [nowRes, avyRes, snowRes] = await Promise.allSettled([

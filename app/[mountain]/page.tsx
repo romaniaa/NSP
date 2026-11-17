@@ -15,6 +15,7 @@ import { PageTransition, SharedTransition } from "@/components/Transitions";
 import { SectionLabel, Unavailable } from "@/components/Ui";
 import { LIFTS } from "@/config/lifts";
 import { MOUNTAINS, type MountainConfig } from "@/config/mountains";
+import { regionById } from "@/config/regions";
 import { WEBCAMS } from "@/config/webcams";
 import { extremes, fmt, verdict, vertical } from "@/lib/Conditions";
 import { getFreezingSeries, getMountainReadings } from "@/lib/Forecast";
@@ -101,7 +102,13 @@ function structuredData(m: MountainConfig) {
         "@id": `${url}#breadcrumb`,
         itemListElement: [
           { "@type": "ListItem", position: 1, name: HOME_TITLE, item: `${SITE_URL}/` },
-          { "@type": "ListItem", position: 2, name: m.fullName, item: url },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: `${regionById(m.region).name} ski conditions`,
+            item: `${SITE_URL}/${m.region}`,
+          },
+          { "@type": "ListItem", position: 3, name: m.fullName, item: url },
         ],
       },
     ],

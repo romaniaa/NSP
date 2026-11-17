@@ -43,8 +43,8 @@ export default async function HillsPage() {
                 Current conditions at every ski area and backcountry zone we cover,
                 grouped by region. Open one for its freezing-level forecast, and lifts
                 or avalanche danger.{" "}
-                <Link href="/dashboard" transitionTypes={NAV_FORWARD} className="underline hover:text-white">
-                  Pick your favourites for a dashboard
+                <Link href="/" transitionTypes={NAV_FORWARD} className="underline hover:text-white">
+                  Pick your favourites for My hills
                 </Link>
                 .
               </p>

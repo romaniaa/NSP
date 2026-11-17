@@ -1,29 +1,23 @@
-import type { CSSProperties } from "react";
 import type { Metadata } from "next";
+import type { CSSProperties, ReactNode } from "react";
+import CardActions from "@/components/CardActions";
+import DashboardControls, { type PickerGroup } from "@/components/DashboardControls";
 import Link from "next/link";
 import ElevationVisualizer from "@/components/ElevationVisualizer";
-import FreezingChart from "@/components/FreezingChart";
-import MountainIcon from "@/components/MountainIcon";
 import SiteNav from "@/components/SiteNav";
-import StationTable from "@/components/StationTable";
-import Summary from "@/components/Summary";
-import TemperatureChart from "@/components/TemperatureChart";
-import WindChart from "@/components/WindChart";
 import {
+  NAV_FADE,
   NAV_FORWARD,
   PageTransition,
   SharedTransition,
 } from "@/components/Transitions";
-import { PillLink, SectionLabel, Unavailable } from "@/components/Ui";
+import { PillLink } from "@/components/Ui";
+import ZoneDiagram from "@/components/ZoneDiagram";
 import { MOUNTAINS } from "@/config/mountains";
-
-// The overview covers the North Shore; other hills are on their own pages and /hills.
-const HILLS = MOUNTAINS.filter((m) => m.region === "north-shore");
-import { tallestId } from "@/lib/Conditions";
-import { snowFromReport } from "@/lib/SnowNow";
-import { getSnowReport } from "@/lib/SnowReport";
-import { getFreezingSeries, getPointReadings } from "@/lib/Forecast";
-import { trendDetail, trendWord } from "@/lib/Trend";
+import { REGIONS } from "@/config/regions";
+import { ZONES } from "@/config/zones";
+import { DASHBOARD_CSS, INLINE_SCRIPT } from "@/lib/Dashboard";
+import { getPlacesNow } from "@/lib/Places";
 import {
   HOME_DESCRIPTION,
   HOME_TITLE,
@@ -32,7 +26,7 @@ import {
   SITE_URL,
   jsonLd,
 } from "@/lib/Site";
-import { getMountainWeather } from "@/lib/Weather";
+import { weatherFrom } from "@/lib/Weather";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -54,49 +48,44 @@ const STRUCTURED_DATA = {
   inLanguage: "en-CA",
 };
 
+const GROUPS: PickerGroup[] = REGIONS.map((r) => ({
+  region: r.name,
+  places: [
+    ...MOUNTAINS.filter((m) => m.region === r.id).map((m) => ({
+      id: m.id,
+      name: m.fullName,
+      color: m.color,
+      kind: "Resort" as const,
+    })),
+    ...ZONES.filter((z) => z.region === r.id).map((z) => ({
+      id: z.id,
+      name: z.fullName,
+      color: z.color,
+      kind: "Backcountry" as const,
+    })),
+  ],
+})).filter((g) => g.places.length > 0);
+
+// The whole card is a link to the place's page, with the overview's hover.
+function CardLink({ href, color, children }: { href: string; color: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      transitionTypes={NAV_FORWARD}
+      className="group block flex-1 transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+      style={{ "--accent": color } as CSSProperties}
+    >
+      {children}
+    </Link>
+  );
+}
+
+// The home page is the visitor's own dashboard, My hills: the North Shore hills
+// until they pick their own. Every card is rendered into this static page and the
+// visitor's picks decide which show (lib/Dashboard.ts), so a visit costs no
+// server work or API calls. Without JavaScript every card shows.
 export default async function Home() {
-  const [mountainResults, snowResults, readingsResult, freezingResult] = await Promise.all([
-    Promise.allSettled(HILLS.map((m) => getMountainWeather(m))),
-    Promise.allSettled(HILLS.map((m) => getSnowReport(m.id))),
-    Promise.allSettled([getPointReadings("north-shore")]).then((r) => r[0]),
-    Promise.allSettled([getFreezingSeries(HILLS.map((m) => m.id))]).then((r) => r[0]),
-  ]);
-
-  for (const r of [...mountainResults, ...snowResults, readingsResult, freezingResult]) {
-    if (r.status === "rejected") console.error("Fetch failure:", r.reason);
-  }
-
-  const readings =
-    readingsResult.status === "fulfilled" ? readingsResult.value : null;
-  const freezing =
-    freezingResult.status === "fulfilled" ? freezingResult.value : null;
-
-  const rows = HILLS.map((config, i) => {
-    const r = mountainResults[i];
-    const s = snowResults[i];
-    return {
-      config,
-      weather: r.status === "fulfilled" ? r.value : null,
-      snow: s.status === "fulfilled" ? snowFromReport(s.value) : undefined,
-    };
-  });
-  const tallest = tallestId(HILLS);
-
-  const tops = readings
-    ? HILLS.map((m) => ({
-        name: m.name,
-        mountain: m.id,
-        color: m.color,
-        reading: readings.find((r) => r.id === `${m.id}-top`),
-      })).filter((x) => x.reading)
-    : [];
-
-  const clouds = tops
-    .map((t) => t.reading!.cloud)
-    .filter((c): c is number => c != null);
-  const cloud = clouds.length
-    ? clouds.reduce((a, b) => a + b, 0) / clouds.length
-    : null;
+  const { now, avalanche, snow } = await getPlacesNow();
 
   return (
     <>
@@ -107,165 +96,83 @@ export default async function Home() {
       <SiteNav />
       <PageTransition>
         <main className="min-h-screen px-4 py-8 text-white md:px-10">
-          <div className="mx-auto max-w-8xl space-y-5">
-            <header className="flex flex-wrap items-end justify-between gap-3 pb-2">
-              <div>
-                <h1 className="text-6xl font-bold">North Shore ski conditions</h1>
-                <p className="mt-2 max-w-3xl text-[#c9d3dd]">
-                  Rain or snow on Cypress Mountain, Grouse Mountain and Mount
-                  Seymour, the three ski areas on Vancouver&apos;s North Shore.
-                  Freezing level, wind and temperature at every lift, plus each
-                  hill&apos;s snow report and live webcams on its own page.
-                  Updated hourly.
-                </p>
-                <ul className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[#c9d3dd]">
-                  {HILLS.map((m) => (
-                    <li key={m.id}>
-                      <Link
-                        href={`/${m.id}`}
-                        transitionTypes={NAV_FORWARD}
-                        className="flex items-center gap-1.5 hover:text-white hover:underline"
-                      >
-                        <MountainIcon id={m.id} color={m.color} className="h-3 w-4" />
-                        {m.fullName} conditions
-                      </Link>
-                    </li>
-                  ))}
-                  <li>
-                    <Link href="/hills" transitionTypes={NAV_FORWARD} className="hover:text-white hover:underline">
-                      More hills and backcountry
-                    </Link>
+          {/* data-dash is set by the inline script before React hydrates. */}
+          <div id="dashboard" className="mx-auto max-w-8xl space-y-5" suppressHydrationWarning>
+            <script dangerouslySetInnerHTML={{ __html: INLINE_SCRIPT }} />
+            <style>{DASHBOARD_CSS}</style>
+
+            <header className="pb-2">
+              <h1 className="text-6xl font-bold">My hills</h1>
+              <p className="mt-2 max-w-3xl text-[#c9d3dd]">
+                Ski conditions for the hills and backcountry you care about, on one page:
+                temperature, snow depth, rain or snow and avalanche danger, updated hourly.
+                It starts with the North Shore; pick your own from any region.
+              </p>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {REGIONS.map((r) => (
+                  <li key={r.id}>
+                    <PillLink href={`/${r.id}`}>{r.name}</PillLink>
                   </li>
-                  <li>
-                    <PillLink href="/dashboard">+ Build your own dashboard</PillLink>
-                  </li>
-                </ul>
-              </div>
-              {freezing && (
-                <p className="text-xs text-[#7d8da1]">
-                  Model data · updated {freezing.updated}
-                </p>
-              )}
+                ))}
+                <li>
+                  <PillLink href="/backcountry">Backcountry</PillLink>
+                </li>
+              </ul>
             </header>
 
-            {freezing && readings && tops.length > 0 ? (
-              <Summary
-                freezing={freezing}
-                precip={rows
-                  .filter((r) => r.weather)
-                  .map((r) => ({
-                    name: r.config.name,
-                    precipitation: r.weather!.precipitation,
-                  }))}
-                cloud={cloud}
-                gusts={tops.map((t) => ({
-                  name: t.name,
-                  gust: t.reading!.gust,
-                }))}
-              />
-            ) : (
-              <Unavailable title="North Shore summary" />
-            )}
+            <DashboardControls groups={GROUPS} />
 
-            <SectionLabel>Rain and snow line</SectionLabel>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              {rows.map(({ config, weather, snow }) => (
-                <Link
-                  key={config.id}
-                  href={`/${config.id}`}
-                  transitionTypes={NAV_FORWARD}
-                  className="group block transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-                  style={{ "--accent": config.color } as CSSProperties}
-                >
-                  <SharedTransition name={`resort-${config.id}`}>
-                    <ElevationVisualizer
-                      config={config}
-                      weather={weather}
-                      isTallest={config.id === tallest}
-                      snow={snow}
+            <p className="dash-empty border border-dashed border-[#2f3840] p-6 text-[#c9d3dd]">
+              Nothing picked yet. Tick hills and backcountry zones above, or use{" "}
+              <span className="whitespace-nowrap text-white">+ Add to My hills</span> on{" "}
+              <Link href="/hills" transitionTypes={NAV_FADE} className="underline hover:text-white">
+                All hills
+              </Link>{" "}
+              or any hill&apos;s page. They&apos;ll be here whenever you come back.
+            </p>
+
+            {/* The same rain-and-snow-line cards as the overview, each linking to
+                its page. Zones get the generic-ridge version with avalanche danger. */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {MOUNTAINS.map((m) => {
+                const h = now?.[m.id];
+                return (
+                  <div key={m.id} data-place={m.id} className="flex flex-col">
+                    <CardLink href={`/${m.id}`} color={m.color}>
+                      <SharedTransition name={`resort-${m.id}`}>
+                        <ElevationVisualizer
+                          config={m}
+                          weather={h ? weatherFrom(h, m) : null}
+                          snow={snow[m.id]}
+                        />
+                      </SharedTransition>
+                    </CardLink>
+                    <CardActions id={m.id} name={m.fullName} />
+                  </div>
+                );
+              })}
+              {ZONES.map((z) => (
+                <div key={z.id} data-place={z.id} className="flex flex-col">
+                  <CardLink href={`/backcountry/${z.id}`} color={z.color}>
+                    <ZoneDiagram
+                      zone={z}
+                      now={now?.[z.id] ?? null}
+                      forecast={avalanche[z.id] ?? null}
+                      snow={snow[z.id]}
                     />
-                  </SharedTransition>
-                </Link>
+                  </CardLink>
+                  <CardActions id={z.id} name={z.fullName} />
+                </div>
               ))}
             </div>
 
-            <SectionLabel>Freezing level</SectionLabel>
-            {freezing ? (
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SharedTransition name="freezing-forecast">
-                  <FreezingChart
-                    title="Freezing level forecast"
-                    badge="6-day forecast"
-                    current={freezing.current}
-                    trend={trendWord(
-                      freezing.deltaNext24,
-                      "Expected to rise",
-                      "Expected to fall",
-                      "Holding steady"
-                    )}
-                    detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
-                    days={freezing.forecast}
-                    updated={freezing.updated}
-                    note="Daily low–high range · average of Cypress, Grouse and Seymour · Open-Meteo model"
-                  />
-                </SharedTransition>
-                <SharedTransition name="freezing-history">
-                  <FreezingChart
-                    title="Freezing level history"
-                    badge="10-day history"
-                    current={freezing.current}
-                    trend={trendWord(
-                      freezing.deltaPast25,
-                      "Rising",
-                      "Falling",
-                      "Steady"
-                    )}
-                    detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
-                    days={freezing.history}
-                    updated={freezing.updated}
-                    note="Daily low–high range · average of Cypress, Grouse and Seymour · Open-Meteo model"
-                  />
-                </SharedTransition>
-              </div>
-            ) : (
-              <Unavailable title="Freezing level" />
-            )}
-
-            <SectionLabel>Temperature and wind</SectionLabel>
-            {readings ? (
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <TemperatureChart readings={readings} />
-                <WindChart
-                  rows={tops.map((t) => ({
-                    label: t.name,
-                    mountain: t.mountain,
-                    color: t.color,
-                    avg: t.reading!.wind,
-                    gust: t.reading!.gust,
-                  }))}
-                />
-              </div>
-            ) : (
-              <Unavailable title="Temperature and wind" />
-            )}
-
-            <SectionLabel>Conditions by elevation</SectionLabel>
-            {readings && freezing ? (
-              <StationTable
-                readings={readings}
-                freezingLevel={freezing.current}
-              />
-            ) : (
-              <Unavailable title="Conditions by elevation" />
-            )}
-
             <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
-              Model estimates, not station observations. Snow line is estimated at
-              150 m below the freezing level. Weather data by{" "}
-              <a
-                href="https://open-meteo.com"
-                className="underline hover:text-white"
-              >
+              Avalanche danger from{" "}
+              <a href="https://avalanche.ca" className="underline hover:text-white">
+                Avalanche Canada
+              </a>
+              . Weather is model estimates, not station observations. Weather data by{" "}
+              <a href="https://open-meteo.com" className="underline hover:text-white">
                 Open-Meteo.com
               </a>
               .

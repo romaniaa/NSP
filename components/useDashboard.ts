@@ -1,7 +1,13 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { DASHBOARD_EVENT, DASHBOARD_KEY, parseSelection, writeSaved } from "@/lib/Dashboard";
+import {
+  DASHBOARD_EVENT,
+  DASHBOARD_KEY,
+  DEFAULT_IDS,
+  parseSelection,
+  writeSaved,
+} from "@/lib/Dashboard";
 
 function subscribe(onChange: () => void) {
   window.addEventListener("storage", onChange); // other tabs
@@ -14,11 +20,12 @@ function subscribe(onChange: () => void) {
   };
 }
 
+// null when nothing has been stored: the visitor hasn't chosen yet.
 const savedSnapshot = () => {
   try {
-    return localStorage.getItem(DASHBOARD_KEY) ?? "";
+    return localStorage.getItem(DASHBOARD_KEY);
   } catch {
-    return "";
+    return null;
   }
 };
 const hashSnapshot = () => {
@@ -33,12 +40,18 @@ const hashSnapshot = () => {
 // buttons, the picker, the card controls and the nav. A share link's hash, when
 // present, is what the dashboard shows until it is saved or dismissed.
 export function useDashboard() {
-  // null on the server and during hydration, so the first render matches the HTML.
-  const savedRaw = useSyncExternalStore(subscribe, savedSnapshot, () => null);
+  // undefined on the server and during hydration, so the first render matches the HTML.
+  const savedRaw = useSyncExternalStore<string | null | undefined>(
+    subscribe,
+    savedSnapshot,
+    () => undefined
+  );
   const hashRaw = useSyncExternalStore(subscribe, hashSnapshot, () => null);
-  const hydrated = savedRaw !== null;
+  const hydrated = savedRaw !== undefined;
+  // The North Shore hills until the visitor stores a choice of their own.
+  const chosen = savedRaw != null;
 
-  const saved = parseSelection(savedRaw);
+  const saved = chosen ? parseSelection(savedRaw) : DEFAULT_IDS;
   const fromHash = parseSelection(hashRaw);
   const ids = fromHash.length ? fromHash : saved; // what the dashboard shows
   const shared = fromHash.length > 0 && fromHash.join() !== saved.join();
@@ -51,6 +64,7 @@ export function useDashboard() {
 
   return {
     hydrated,
+    chosen,
     saved,
     ids,
     shared,

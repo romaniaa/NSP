@@ -68,7 +68,7 @@ export default function PinButton({
         </span>
       </button>
       {on && size === "large" && (
-        <PillLink href="/dashboard">View dashboard</PillLink>
+        <PillLink href="/">View My hills</PillLink>
       )}
     </span>
   );

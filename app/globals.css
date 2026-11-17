@@ -181,6 +181,77 @@
     opacity: 0;
   }
 
+  /* A checkbox row in the same style: the whole row is the tap target (44 px
+     tall), and the box fills with --orb and shows a check when ticked, like an
+     .orb turning on. The real checkbox sits underneath, visually hidden, so
+     keyboards and screen readers work as usual. */
+  .check-row {
+    --orb: #7dd3fc;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.75rem;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .check-row:hover {
+    background: rgb(255 255 255 / 0.04);
+  }
+  .check-box {
+    position: relative;
+    isolation: isolate;
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    color: #0a0d10;
+    background: #1a2026;
+    border: 1px solid #3a4550;
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+  .check-box::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--orb);
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path 0.25s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .check-box svg {
+    transform: scale(0.5);
+    opacity: 0;
+    transition:
+      transform 0.2s ease,
+      opacity 0.15s ease;
+  }
+  .check-row:hover .check-box {
+    border-color: var(--orb);
+  }
+  .check-row:active .check-box {
+    transform: scale(0.92);
+  }
+  .check-row:has(input:checked) .check-box {
+    border-color: var(--orb);
+  }
+  .check-row:has(input:checked) .check-box::before {
+    clip-path: inset(0);
+  }
+  .check-row:has(input:checked) .check-box svg {
+    transform: none;
+    opacity: 1;
+  }
+  .check-row:has(input:focus-visible) .check-box {
+    outline: 2px solid var(--orb);
+    outline-offset: 2px;
+  }
+
   /* A pill of the same style, for buttons with words in them. */
   .orb-pill {
     --orb: #7dd3fc;

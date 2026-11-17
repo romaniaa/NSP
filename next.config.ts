@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
     },
   },
   allowedDevOrigins: ["nsp.test"],
+  // My hills moved from /dashboard to the home page. Share links keep their
+  // #hash, since browsers carry it across a redirect.
+  redirects() {
+    return [{ source: "/dashboard", destination: "/", permanent: true }];
+  },
 };
 
 export default nextConfig;

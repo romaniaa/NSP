@@ -21,9 +21,9 @@ export const OPEN_GRAPH = {
   locale: "en_CA",
 } as const;
 
-export const HOME_TITLE = "North Shore Ski Conditions: Cypress, Grouse & Seymour";
+export const HOME_TITLE = "Ski Conditions in BC & the Rockies";
 export const HOME_DESCRIPTION =
-  "Live ski conditions for Vancouver's North Shore: snow depth, webcams, freezing level and the rain-or-snow line for Cypress Mountain, Grouse Mountain and Mount Seymour.";
+  "Live ski conditions for 26 hills and 8 backcountry zones in BC and the Rockies, from the North Shore and Whistler to the Okanagan, Kootenays and Banff: temperature, snow depth, freezing level, the rain-or-snow line and avalanche danger. Updated hourly.";
 
 // Only claim webcams where the page embeds them.
 const hasCams = (m: MountainConfig) => (WEBCAMS[m.id]?.cams.length ?? 0) > 0;

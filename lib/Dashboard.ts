@@ -12,6 +12,12 @@ export const DASHBOARD_EVENT = "nsp:dashboard-change";
 
 export const PLACE_IDS: string[] = [...MOUNTAINS.map((m) => m.id), ...ZONES.map((z) => z.id)];
 
+// What My hills shows until the visitor picks their own: the North Shore hills.
+// Once they change anything, their choice is stored, even an empty one.
+export const DEFAULT_IDS: string[] = MOUNTAINS.filter((m) => m.area === "north-shore").map(
+  (m) => m.id
+);
+
 // Known ids only, in the visitor's order, without duplicates. Anything else is
 // dropped, so a hand-edited hash or stored value can't inject anything.
 export function parseSelection(raw: string | null | undefined): string[] {
@@ -31,10 +37,10 @@ export function applyToDashboard(el: HTMLElement, ids: string[]) {
 
 // Storage can be unavailable (private windows, blocked site data), so every access
 // is guarded (here and in components/useDashboard.ts) and pages work without it.
+// An empty selection is stored as "", so it isn't mistaken for "never chosen".
 export function writeSaved(ids: string[]) {
   try {
-    if (ids.length) localStorage.setItem(DASHBOARD_KEY, ids.join(","));
-    else localStorage.removeItem(DASHBOARD_KEY);
+    localStorage.setItem(DASHBOARD_KEY, ids.join(","));
   } catch {
     // Not saved; the current page still shows the selection.
   }
@@ -42,11 +48,12 @@ export function writeSaved(ids: string[]) {
 }
 
 // Runs inline before the cards are painted, doing what applyToDashboard does: picks
-// the selection from the share hash or storage, records it on the wrapper as
+// the selection from the share hash, storage, or the defaults if nothing has been
+// stored, records it on the wrapper as
 // data-dash, and sets each card's position as a --o-<id> custom property. The CSS
 // below turns those into which cards show and in what order. Without JavaScript
 // nothing is set and every card shows in config order.
-export const INLINE_SCRIPT = `(function(){var ok=${JSON.stringify(PLACE_IDS)},src="",ids=[];try{src=decodeURIComponent(location.hash.slice(1))}catch(e){}if(!src){try{src=localStorage.getItem(${JSON.stringify(DASHBOARD_KEY)})||""}catch(e){}}src.split(/[,\\s]+/).forEach(function(id){if(ok.indexOf(id)>=0&&ids.indexOf(id)<0)ids.push(id)});var el=document.currentScript.parentElement;el.setAttribute("data-dash",ids.join(" "));ids.forEach(function(id,i){el.style.setProperty("--o-"+id,i)})})()`;
+export const INLINE_SCRIPT = `(function(){var ok=${JSON.stringify(PLACE_IDS)},src="",ids=[],s=null;try{src=decodeURIComponent(location.hash.slice(1))}catch(e){}if(!src){try{s=localStorage.getItem(${JSON.stringify(DASHBOARD_KEY)})}catch(e){}src=s===null?${JSON.stringify(DEFAULT_IDS.join(","))}:s}src.split(/[,\\s]+/).forEach(function(id){if(ok.indexOf(id)>=0&&ids.indexOf(id)<0)ids.push(id)});var el=document.currentScript.parentElement;el.setAttribute("data-dash",ids.join(" "));ids.forEach(function(id,i){el.style.setProperty("--o-"+id,i)})})()`;
 
 // Show only selected cards once data-dash is set, and the empty state when it's
 // set but empty. Generated per known id, so no selector comes from user input.

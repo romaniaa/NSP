@@ -8,17 +8,14 @@ import RangeIcon from "@/components/RangeIcon";
 import { NAV_BACK, NAV_FADE, NAV_FORWARD } from "@/components/Transitions";
 import { useDashboard } from "@/components/useDashboard";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
-import { REGIONS } from "@/config/regions";
+import { REGIONS, type RegionId } from "@/config/regions";
 import { ZONES } from "@/config/zones";
 import { DANGER_STYLE } from "@/lib/DangerStyle";
 import type { NavStatus } from "@/lib/Places";
 
-// The North Shore hills get their own tabs; every other hill and the backcountry
-// zones are reached through "More hills", which stays highlighted on their pages.
-// "My hills" sits next to Overview once a dashboard is saved.
-const TABS = MOUNTAINS.filter((m) => m.region === "north-shore");
-
-type ItemId = "home" | "hills" | "dashboard" | MountainId;
+// Tabs: My hills (the home page), one per region, and Backcountry. A hill's page
+// highlights its region; a zone's page highlights Backcountry.
+type ItemId = "mine" | "backcountry" | RegionId;
 
 interface Place {
   id: string;
@@ -27,6 +24,7 @@ interface Place {
   color: string;
   icon?: MountainId; // hills have their silhouette; zones the generic range
   backcountry: boolean;
+  region: RegionId;
 }
 
 const PLACES: Place[] = [
@@ -37,6 +35,7 @@ const PLACES: Place[] = [
     color: m.color,
     icon: m.id,
     backcountry: false,
+    region: m.region,
   })),
   ...ZONES.map((z) => ({
     id: z.id,
@@ -44,24 +43,24 @@ const PLACES: Place[] = [
     name: z.fullName,
     color: z.color,
     backcountry: true,
+    region: z.region,
   })),
 ];
 
+// The drawer lists each region's hills, then its backcountry zones.
 const GROUPS = REGIONS.map((r) => ({
-  region: r.name,
-  places: PLACES.filter(
-    (p) =>
-      (MOUNTAINS.find((m) => m.id === p.id) ?? ZONES.find((z) => z.id === p.id))?.region === r.id
-  ),
-})).filter((g) => g.places.length > 0);
+  region: r,
+  places: PLACES.filter((p) => p.region === r.id),
+}));
+
+const isRegion = (id: ItemId | null) => REGIONS.some((r) => r.id === id);
 
 function activeItem(pathname: string): ItemId | null {
-  if (pathname === "/") return "home";
-  if (pathname === "/dashboard") return "dashboard";
-  if (pathname === "/hills" || pathname.startsWith("/backcountry/")) return "hills";
-  const hill = MOUNTAINS.find((m) => pathname === `/${m.id}`);
-  if (!hill) return null;
-  return TABS.some((t) => t.id === hill.id) ? hill.id : "hills";
+  if (pathname === "/") return "mine";
+  if (pathname === "/backcountry" || pathname.startsWith("/backcountry/")) return "backcountry";
+  const region = REGIONS.find((r) => pathname === `/${r.id}`);
+  if (region) return region.id;
+  return MOUNTAINS.find((m) => pathname === `/${m.id}`)?.region ?? null;
 }
 
 // One hill or zone in the drawer: name, live status and freezing level.
@@ -129,9 +128,8 @@ function PlaceRow({
 export default function NavClient({ status }: { status: NavStatus | null }) {
   const pathname = usePathname();
   const active = activeItem(pathname);
-  // "My hills" shows once a dashboard is saved in this browser, with its count.
-  // Unknown on the server, so it appears after hydration.
-  const { saved } = useDashboard();
+  // My hills' count is unknown on the server, so it appears after hydration.
+  const { hydrated, saved } = useDashboard();
 
   const drawer = useRef<HTMLDialogElement>(null);
   // Next keeps recently visited pages mounted but hidden for instant back and
@@ -144,35 +142,14 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
     drawer.current?.close();
   }, [pathname]);
 
-  const items: {
-    id: ItemId;
-    href: string;
-    label: string;
-    color: string;
-    icon?: MountainId;
-    count?: number;
-  }[] = [
-    { id: "home", href: "/", label: "Overview", color: "#e6edf3" },
-    ...(saved.length > 0 || active === "dashboard"
-      ? [
-          {
-            id: "dashboard" as const,
-            href: "/dashboard",
-            label: "My hills",
-            count: saved.length,
-            color: "#e6edf3",
-          },
-        ]
-      : []),
-    ...TABS.map((m) => ({
-      id: m.id,
-      href: `/${m.id}`,
-      label: m.name,
-      color: m.color,
-      icon: m.id,
-    })),
-    { id: "hills", href: "/hills", label: "More hills & backcountry", color: "#e6edf3" },
+  const items: { id: ItemId; href: string; label: string; count?: number }[] = [
+    { id: "mine", href: "/", label: "My hills", count: hydrated ? saved.length : undefined },
+    ...REGIONS.map((r) => ({ id: r.id, href: `/${r.id}`, label: r.name })),
+    { id: "backcountry", href: "/backcountry", label: "Backcountry" },
   ];
+  // Region to region is a sideways move; My hills is home.
+  const transitionTo = (id: ItemId) =>
+    id === "mine" ? NAV_BACK : isRegion(id) && isRegion(active) ? NAV_FADE : NAV_FORWARD;
 
   const savedPlaces = saved
     .map((id) => PLACES.find((p) => p.id === id))
@@ -187,7 +164,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
       style={{ viewTransitionName: "site-nav" }}
       className="border-b border-[#2f3840] bg-[#0a0d10]/70 px-4 md:px-10"
     >
-      {/* Phones: brand, a shortcut to the dashboard, and the menu. */}
+      {/* Phones: brand (linking to My hills) and the menu. */}
       <div className="flex items-center gap-2 py-2 md:hidden">
         <Link
           href="/"
@@ -196,18 +173,6 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
         >
           North Shore Peaks
         </Link>
-        {saved.length > 0 && active !== "dashboard" && (
-          <Link
-            href="/dashboard"
-            transitionTypes={NAV_FORWARD}
-            className="orb-pill min-h-[30px] !px-3.5 whitespace-nowrap"
-          >
-            My hills
-            <span className="orb-badge" aria-label={`${saved.length} saved`}>
-              {saved.length}
-            </span>
-          </Link>
-        )}
         <button
           type="button"
           aria-haspopup="dialog"
@@ -226,29 +191,26 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
 
       {/* Larger screens: the tab row. */}
       <div className="mx-auto hidden max-w-8xl items-center gap-1 overflow-x-auto md:flex">
-        <span className="mr-4 whitespace-nowrap py-3 font-display text-lg font-bold uppercase tracking-widest text-white">
+        <Link
+          href="/"
+          transitionTypes={NAV_BACK}
+          className="mr-4 whitespace-nowrap py-3 font-display text-lg font-bold uppercase tracking-widest text-white"
+        >
           North Shore Peaks
-        </span>
+        </Link>
         {items.map((item) => {
           const isActive = item.id === active;
           return (
             <Link
               key={item.id}
               href={item.href}
-              transitionTypes={
-                item.id === "home"
-                  ? NAV_BACK
-                  : TABS.some((t) => t.id === item.id) && TABS.some((t) => t.id === active)
-                    ? NAV_FADE // hill tab to hill tab: siblings
-                    : NAV_FORWARD
-              }
+              transitionTypes={transitionTo(item.id)}
               aria-current={isActive ? "page" : undefined}
               className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-sm ${
                 isActive ? "text-white" : "border-transparent text-[#9aa7b5] hover:text-white"
               }`}
-              style={isActive ? { borderBottomColor: item.color } : undefined}
+              style={isActive ? { borderBottomColor: "#e6edf3" } : undefined}
             >
-              {item.icon && <MountainIcon id={item.icon} color={item.color} className="h-3 w-4" />}
               {item.label}
               {item.count ? (
                 <span className="orb-badge" aria-label={`${item.count} saved`}>
@@ -303,13 +265,13 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
           <div className="flex-1 overflow-y-auto overscroll-contain pb-6">
             <div className="grid grid-cols-2 gap-2 px-4 py-4">
               <Link
-                href="/"
-                transitionTypes={NAV_BACK}
+                href="/backcountry"
+                transitionTypes={NAV_FORWARD}
                 onClick={close}
-                aria-current={active === "home" ? "page" : undefined}
+                aria-current={pathname === "/backcountry" ? "page" : undefined}
                 className={quick}
               >
-                Overview
+                Backcountry
               </Link>
               <Link
                 href="/hills"
@@ -318,7 +280,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                 aria-current={pathname === "/hills" ? "page" : undefined}
                 className={quick}
               >
-                More hills
+                All hills
               </Link>
             </div>
 
@@ -328,12 +290,13 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                   My hills
                 </h2>
                 <Link
-                  href="/dashboard"
-                  transitionTypes={NAV_FORWARD}
+                  href="/"
+                  transitionTypes={NAV_BACK}
                   onClick={close}
+                  aria-current={active === "mine" ? "page" : undefined}
                   className="orb-pill orb-pill-sm"
                 >
-                  {savedPlaces.length ? "Open dashboard" : "Build one"}
+                  {savedPlaces.length ? "Open" : "Pick some"}
                 </Link>
               </div>
               {savedPlaces.length ? (
@@ -358,8 +321,19 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
             </section>
 
             {GROUPS.map((g) => (
-              <section key={g.region} aria-label={g.region} className="mt-4 px-1">
-                <h2 className="px-3 pb-1 text-sm text-[#9aa7b5]">{g.region}</h2>
+              <section key={g.region.id} aria-label={g.region.name} className="mt-4 px-1">
+                <div className="flex items-baseline justify-between px-3 pb-1">
+                  <h2 className="text-sm text-[#9aa7b5]">{g.region.name}</h2>
+                  <Link
+                    href={`/${g.region.id}`}
+                    transitionTypes={NAV_FORWARD}
+                    onClick={close}
+                    aria-current={pathname === `/${g.region.id}` ? "page" : undefined}
+                    className="orb-pill orb-pill-sm"
+                  >
+                    Region page
+                  </Link>
+                </div>
                 <ul>
                   {g.places.map((p) => (
                     <PlaceRow

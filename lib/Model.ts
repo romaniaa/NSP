@@ -71,37 +71,39 @@ export function tempAt(p: Profile, height: number): number {
   return t[i - 1] + ((t[i] - t[i - 1]) * (height - z[i - 1])) / (z[i] - z[i - 1]);
 }
 
-// Height (m) of the 0 °C level: the lowest point where the air turns from above to
-// below freezing going up, the same definition Open-Meteo uses. A second crossing
-// above a warm layer aloft is ignored.
+// Height (m) of the 0 °C level: where the air turns from above to below freezing
+// going up, interpolated between levels. Normally the lowest such crossing, the
+// same definition Open-Meteo uses; a second crossing above a warm layer aloft is
+// ignored.
 //
-// Where the air at the model's ground is above freezing, crossings below the
-// ground are skipped: those levels are filled in by the model, and in the
-// Interior and the Rockies they can cross 0 °C hundreds of metres below a valley
-// that is above freezing (Rogers Pass, Nov 2026: 548 m against +0.6 °C at the
-// 1,315 m pass; the crossing above the ground was near 1,370 m). Over a week of
-// hours at the zones this changed the level only in hours like that one.
-// Temperatures are unaffected.
+// Pressure levels below the model's ground are filled in by the model, not real
+// air, and in the Interior and the Rockies they can cross 0 °C far from the
+// crossing that matters, so the ground decides which crossing counts:
+// - air at the ground above freezing: the lowest crossing above the ground.
+//   (Rogers Pass, Nov 2026: a crossing at 548 m below the ground had been taken,
+//   against +0.6 °C at the 1,315 m pass; the one above the ground was ~1,340 m.)
+// - air at the ground below freezing: the highest crossing below it, nearest
+//   the valleys. (Kicking Horse: the ground at ~1,710 m was below freezing over
+//   a warm layer at 1,000–1,460 m around the 1,190 m base, with another crossing
+//   at 390 m under that; the level is ~1,600 m, matching the +2.4 °C at the base.)
+// Either way the level agrees with tempAt at every height near the terrain.
 export function freezingLevel(p: Profile): number {
   const { z, t } = p;
-  if (p.ground != null && p.ground > z[0] && p.ground < z[z.length - 1]) {
-    const tg = tempAt(p, p.ground);
-    if (tg >= 0) {
-      const above = z.findIndex((h) => h > p.ground!);
-      const zs = [p.ground, ...z.slice(above)];
-      const ts = [tg, ...t.slice(above)];
-      for (let i = 1; i < zs.length; i++) {
-        if (ts[i - 1] >= 0 && ts[i] < 0) {
-          return Math.round(zs[i - 1] + ((zs[i] - zs[i - 1]) * ts[i - 1]) / (ts[i - 1] - ts[i]));
-        }
-      }
-    }
-  }
+  const crossings: number[] = [];
   for (let i = 1; i < z.length; i++) {
     if (t[i - 1] >= 0 && t[i] < 0) {
-      return Math.round(z[i - 1] + ((z[i] - z[i - 1]) * t[i - 1]) / (t[i - 1] - t[i]));
+      crossings.push(Math.round(z[i - 1] + ((z[i] - z[i - 1]) * t[i - 1]) / (t[i - 1] - t[i])));
     }
   }
+  const g = p.ground;
+  if (g != null && g > z[0] && g < z[z.length - 1]) {
+    const pick =
+      tempAt(p, g) >= 0
+        ? crossings.find((c) => c >= g)
+        : crossings.filter((c) => c <= g).at(-1);
+    if (pick != null) return pick;
+  }
+  if (crossings.length) return crossings[0];
   // No crossing between levels. Below freezing at the lowest level means the 0 °C
   // level is lower still; otherwise the air is above freezing all the way up.
   // Either way, extend the nearest end segment.

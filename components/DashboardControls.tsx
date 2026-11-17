@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState, type CSSProperties } from "react";
 import MountainIcon from "@/components/MountainIcon";
 import { NAV_FADE } from "@/components/Transitions";
 import RangeIcon from "@/components/RangeIcon";
@@ -19,7 +19,8 @@ export interface PickerGroup {
 // server-rendered; this only sets which show and in what order, through
 // attributes on #dashboard that the CSS in lib/Dashboard.ts reads.
 export default function DashboardControls({ groups }: { groups: PickerGroup[] }) {
-  const { hydrated, ids, shared, fromHash, save, toggle, dismissShared } = useDashboard();
+  const { hydrated, chosen, ids, shared, fromHash, save, toggle, dismissShared } =
+    useDashboard();
 
   const [editPref, setEditing] = useState<boolean | null>(null);
   // Starts in edit mode when there's nothing to show yet.
@@ -88,7 +89,7 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
           >
             {editing ? <path d="M3 8.5 6.5 12 13 4.5" /> : <path d="M3 13h3l7-7-3-3-7 7v3Z" />}
           </svg>
-          {editing ? "Done" : "Edit dashboard"}
+          {editing ? "Done" : "Edit My hills"}
         </button>
         {ids.length > 0 && !editing && (
           <button type="button" onClick={copyLink} className="orb-pill orb-pill-sm">
@@ -101,7 +102,10 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
           </button>
         )}
         <span className="text-xs text-[#7d8da1]">
-          {hydrated && `${ids.length} picked · `}Saved in this browser only.
+          {hydrated &&
+            (chosen || shared
+              ? `${ids.length} picked · Saved in this browser only.`
+              : "Showing the North Shore hills until you pick your own.")}
         </span>
       </div>
 
@@ -111,8 +115,8 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
           className="space-y-3 border border-[#232a31] bg-[#13181d] p-4"
         >
           <p className="text-sm text-[#c9d3dd]">
-            Tick what you want on your dashboard, then use the controls under each
-            card to reorder or remove it. You can also add hills from{" "}
+            Tick what you want on My hills, then use the controls under each card to
+            reorder or remove it. You can also add hills from{" "}
             <Link href="/hills" transitionTypes={NAV_FADE} className="underline hover:text-white">
               All hills
             </Link>{" "}
@@ -123,25 +127,47 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
             {groups.map((g) => (
               <div key={g.region}>
                 <p className="text-xs uppercase tracking-widest text-[#9aa7b5]">{g.region}</p>
-                <ul className="mt-2 space-y-1.5">
+                <ul className="-mx-2 mt-1">
                   {g.places.map((p) => (
                     <li key={p.id}>
-                      <label className="flex cursor-pointer items-center gap-2 text-sm text-white">
+                      <label
+                        className="check-row text-[15px] text-white"
+                        style={{ "--orb": p.color } as CSSProperties}
+                      >
                         <input
                           type="checkbox"
                           checked={ids.includes(p.id)}
                           onChange={() => toggle(p.id)}
-                          className="h-4 w-4 accent-white"
+                          className="sr-only"
                         />
+                        <span className="check-box" aria-hidden="true">
+                          <svg
+                            viewBox="0 0 16 16"
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.25"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 8.5 6.5 12 13 4.5" />
+                          </svg>
+                        </span>
                         {p.kind === "Backcountry" ? (
-                          <RangeIcon color={p.color} className="h-3 w-4" />
+                          <RangeIcon color={p.color} className="h-3.5 w-5 shrink-0" />
                         ) : (
-                          <MountainIcon id={p.id as MountainId} color={p.color} className="h-3 w-4" />
+                          <MountainIcon
+                            id={p.id as MountainId}
+                            color={p.color}
+                            className="h-3.5 w-5 shrink-0"
+                          />
                         )}
-                        {p.name}
-                        {p.kind === "Backcountry" && (
-                          <span className="text-xs text-[#9aa7b5]">backcountry</span>
-                        )}
+                        <span className="min-w-0">
+                          {p.name}
+                          {p.kind === "Backcountry" && (
+                            <span className="ml-1.5 text-xs text-[#9aa7b5]">backcountry</span>
+                          )}
+                        </span>
                       </label>
                     </li>
                   ))}
