@@ -1,4 +1,4 @@
-import type { DangerLevel } from "@/lib/Avalanche";
+import type { DangerLevel } from "@/lib/Danger";
 
 // Kept apart from lib/Avalanche.ts (which uses server-only caching) so client
 // components such as the nav drawer can use it.

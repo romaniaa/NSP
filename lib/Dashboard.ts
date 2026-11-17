@@ -51,9 +51,10 @@ export function writeSaved(ids: string[]) {
 // the selection from the share hash, storage, or the defaults if nothing has been
 // stored, records it on the wrapper as
 // data-dash, and sets each card's position as a --o-<id> custom property. The CSS
-// below turns those into which cards show and in what order. Without JavaScript
-// nothing is set and every card shows in config order.
-export const INLINE_SCRIPT = `(function(){var ok=${JSON.stringify(PLACE_IDS)},src="",ids=[],s=null;try{src=decodeURIComponent(location.hash.slice(1))}catch(e){}if(!src){try{s=localStorage.getItem(${JSON.stringify(DASHBOARD_KEY)})}catch(e){}src=s===null?${JSON.stringify(DEFAULT_IDS.join(","))}:s}src.split(/[,\\s]+/).forEach(function(id){if(ok.indexOf(id)>=0&&ids.indexOf(id)<0)ids.push(id)});var el=document.currentScript.parentElement;el.setAttribute("data-dash",ids.join(" "));ids.forEach(function(id,i){el.style.setProperty("--o-"+id,i)})})()`;
+// below turns those into which cards show and in what order. The page's HTML has
+// only the default cards, so when the pick includes others it also sets
+// data-pending, showing placeholders until the browser draws them.
+export const INLINE_SCRIPT = `(function(){var ok=${JSON.stringify(PLACE_IDS)},def=${JSON.stringify(DEFAULT_IDS)},src="",ids=[],s=null;try{src=decodeURIComponent(location.hash.slice(1))}catch(e){}if(!src){try{s=localStorage.getItem(${JSON.stringify(DASHBOARD_KEY)})}catch(e){}src=s===null?${JSON.stringify(DEFAULT_IDS.join(","))}:s}src.split(/[,\\s]+/).forEach(function(id){if(ok.indexOf(id)>=0&&ids.indexOf(id)<0)ids.push(id)});var el=document.currentScript.parentElement;el.setAttribute("data-dash",ids.join(" "));if(ids.some(function(id){return def.indexOf(id)<0}))el.setAttribute("data-pending","");ids.forEach(function(id,i){el.style.setProperty("--o-"+id,i)})})()`;
 
 // Show only selected cards once data-dash is set, and the empty state when it's
 // set but empty. Generated per known id, so no selector comes from user input.
@@ -66,4 +67,7 @@ export const DASHBOARD_CSS = [
   ...PLACE_IDS.map((id) => `#dashboard [data-place="${id}"]{order:var(--o-${id},999)}`),
   // Per-card move and remove controls appear only while editing.
   "#dashboard:not([data-editing]) .card-actions{display:none}",
+  // Placeholders for picked cards that aren't drawn yet, after the drawn ones.
+  "#dashboard .dash-skel{display:none;order:1000}",
+  "#dashboard[data-pending] .dash-skel{display:block}",
 ].join("\n");

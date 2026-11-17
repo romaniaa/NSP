@@ -2,13 +2,13 @@ import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import { ElevationDiagram } from "@/components/ElevationVisualizer";
 import RangeIcon from "@/components/RangeIcon";
 import type { ZoneConfig } from "@/config/zones";
-import { highestDanger, type AvalancheForecast } from "@/lib/Avalanche";
+import { highestDanger, type AvalancheForecast } from "@/lib/Danger";
 import { SNOW_LINE_OFFSET, conditionAt, fmt } from "@/lib/Conditions";
-import { tempAt, windAloft } from "@/lib/Model";
+import { tempAt, windAloft } from "@/lib/Profile";
 import { compass } from "@/components/WindCard";
 import { DANGER_STYLE } from "@/lib/DangerStyle";
 import type { SnowNow } from "@/lib/SnowNow";
-import type { HillNow } from "@/lib/Weather";
+import type { HillNow } from "@/lib/PlaceWeather";
 
 // A generic range outline: zones span many peaks, so no single ridge is drawn as
 // a likeness. Its heights are scaled to the zone's terrain, so the snow line and

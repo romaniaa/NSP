@@ -1,7 +1,7 @@
 import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import type { Landmark, MountainConfig } from "@/config/mountains";
 import type { SnowNow } from "@/lib/SnowNow";
-import type { MountainWeather } from "@/lib/Weather";
+import type { MountainWeather } from "@/lib/PlaceWeather";
 import {
   CONDITION,
   PRECIP,

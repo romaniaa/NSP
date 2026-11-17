@@ -1,21 +1,10 @@
 import { cacheLife } from "next/cache";
 import type { MountainConfig } from "@/config/mountains";
-import { fetchSnapshot, freezingLevel, tempAt, type ModelHour, type PlaceId } from "@/lib/Model";
+import { fetchSnapshot, freezingLevel, type ModelHour, type PlaceId } from "@/lib/Model";
+import { weatherFrom, type HillNow, type MountainWeather } from "@/lib/PlaceWeather";
 
-export interface HillNow extends ModelHour {
-  freezingLevel: number; // metres
-}
-
-export interface MountainWeather {
-  freezingLevel: number; // metres
-  precipitation: number; // mm/h
-  wind: number; // km/h
-  cloud: number | null; // % total cloud cover
-  code: number | null; // WMO weather code
-  time: string; // ISO, UTC, the model hour shown
-  // Air temperature (°C) at the top and bottom lift stations.
-  temps: { top: number; bottom: number };
-}
+// The card-facing shapes live in lib/PlaceWeather.ts, safe to use in the browser.
+export { weatherFrom, type HillNow, type MountainWeather } from "@/lib/PlaceWeather";
 
 // Older than this and the data is treated as unavailable rather than shown as current.
 const MAX_AGE_MS = 90 * 60 * 1000;
@@ -48,18 +37,4 @@ export async function getCurrentConditions(): Promise<Record<PlaceId, HillNow>> 
 
 export async function getMountainWeather(m: MountainConfig): Promise<MountainWeather> {
   return weatherFrom((await getCurrentConditions())[m.id], m);
-}
-
-// The summary a hill card needs, from a place's current conditions.
-export function weatherFrom(h: HillNow, m: MountainConfig): MountainWeather {
-  const t = (z: number) => Math.round(tempAt(h.profile, z) * 10) / 10;
-  return {
-    temps: { top: t(m.lifts.top.elevation), bottom: t(m.lifts.bottom.elevation) },
-    freezingLevel: h.freezingLevel,
-    precipitation: h.precipitation,
-    wind: Math.round(h.wind),
-    cloud: h.cloud,
-    code: h.code,
-    time: h.time,
-  };
 }

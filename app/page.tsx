@@ -1,22 +1,15 @@
 import type { Metadata } from "next";
-import type { CSSProperties, ReactNode } from "react";
-import CardActions from "@/components/CardActions";
 import DashboardControls, { type PickerGroup } from "@/components/DashboardControls";
 import Link from "next/link";
-import ElevationVisualizer from "@/components/ElevationVisualizer";
+import MyHillsCards, { type CardData } from "@/components/MyHillsCards";
 import SiteNav from "@/components/SiteNav";
-import {
-  NAV_FADE,
-  NAV_FORWARD,
-  PageTransition,
-  SharedTransition,
-} from "@/components/Transitions";
+import { NAV_FADE, PageTransition } from "@/components/Transitions";
 import { PillLink } from "@/components/Ui";
-import ZoneDiagram from "@/components/ZoneDiagram";
 import { MOUNTAINS } from "@/config/mountains";
 import { REGIONS } from "@/config/regions";
-import { ZONES } from "@/config/zones";
-import { DASHBOARD_CSS, INLINE_SCRIPT } from "@/lib/Dashboard";
+import { ZONES, type ZoneId } from "@/config/zones";
+import { DASHBOARD_CSS, INLINE_SCRIPT, PLACE_IDS } from "@/lib/Dashboard";
+import type { PlaceId } from "@/lib/Model";
 import { getPlacesNow } from "@/lib/Places";
 import {
   HOME_DESCRIPTION,
@@ -26,7 +19,6 @@ import {
   SITE_URL,
   jsonLd,
 } from "@/lib/Site";
-import { weatherFrom } from "@/lib/Weather";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -66,26 +58,28 @@ const GROUPS: PickerGroup[] = REGIONS.map((r) => ({
   ],
 })).filter((g) => g.places.length > 0);
 
-// The whole card is a link to the place's page, with the overview's hover.
-function CardLink({ href, color, children }: { href: string; color: string; children: ReactNode }) {
-  return (
-    <Link
-      href={href}
-      transitionTypes={NAV_FORWARD}
-      className="group block flex-1 transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-      style={{ "--accent": color } as CSSProperties}
-    >
-      {children}
-    </Link>
-  );
-}
-
 // The home page is the visitor's own dashboard, My hills: the North Shore hills
-// until they pick their own. Every card is rendered into this static page and the
-// visitor's picks decide which show (lib/Dashboard.ts), so a visit costs no
-// server work or API calls. Without JavaScript every card shows.
+// until they pick their own. It's static and served from the CDN, so a visit
+// costs no server work or API calls. The HTML holds only the default cards; the
+// page carries compact data for every place and draws the visitor's picks in
+// the browser (components/MyHillsCards.tsx).
 export default async function Home() {
   const { now, avalanche, snow } = await getPlacesNow();
+
+  // Everything a card needs, for every place. Zones' forecasts are cut to today,
+  // the only day a card shows.
+  const cards: Record<string, CardData> = {};
+  for (const id of PLACE_IDS) {
+    const zone = ZONES.some((z) => z.id === id);
+    const f = zone ? (avalanche[id as ZoneId] ?? null) : undefined;
+    cards[id] = {
+      now: now?.[id as PlaceId] ?? null,
+      snow: snow[id as PlaceId],
+      ...(zone && {
+        avalanche: f?.status === "ok" ? { ...f, days: f.days.slice(0, 1), problems: [] } : f,
+      }),
+    };
+  }
 
   return (
     <>
@@ -132,37 +126,13 @@ export default async function Home() {
             </p>
 
             {/* The same rain-and-snow-line cards as the overview, each linking to
-                its page. Zones get the generic-ridge version with avalanche danger. */}
+                its page; zones get the generic-ridge version with avalanche danger.
+                Drawn in the browser from compact data, so the page doesn't carry
+                every card (components/MyHillsCards.tsx). */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {MOUNTAINS.map((m) => {
-                const h = now?.[m.id];
-                return (
-                  <div key={m.id} data-place={m.id} className="flex flex-col">
-                    <CardLink href={`/${m.id}`} color={m.color}>
-                      <SharedTransition name={`resort-${m.id}`}>
-                        <ElevationVisualizer
-                          config={m}
-                          weather={h ? weatherFrom(h, m) : null}
-                          snow={snow[m.id]}
-                        />
-                      </SharedTransition>
-                    </CardLink>
-                    <CardActions id={m.id} name={m.fullName} />
-                  </div>
-                );
-              })}
-              {ZONES.map((z) => (
-                <div key={z.id} data-place={z.id} className="flex flex-col">
-                  <CardLink href={`/backcountry/${z.id}`} color={z.color}>
-                    <ZoneDiagram
-                      zone={z}
-                      now={now?.[z.id] ?? null}
-                      forecast={avalanche[z.id] ?? null}
-                      snow={snow[z.id]}
-                    />
-                  </CardLink>
-                  <CardActions id={z.id} name={z.fullName} />
-                </div>
+              <MyHillsCards data={cards} />
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="dash-skel h-[640px] border border-[#232a31] bg-[#13181d]" />
               ))}
             </div>
 

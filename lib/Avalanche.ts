@@ -1,5 +1,18 @@
 import { cacheLife } from "next/cache";
 import { ZONES, type ZoneId } from "@/config/zones";
+import { isRated, type AvalancheForecast, type Danger } from "@/lib/Danger";
+
+// The forecast shapes and danger helpers live in lib/Danger.ts, safe to use in the browser.
+export {
+  DANGER_LEVELS,
+  highestDanger,
+  isRated,
+  type AvalancheForecast,
+  type Danger,
+  type DangerDay,
+  type DangerLevel,
+  type Problem,
+} from "@/lib/Danger";
 
 // Avalanche danger from Avalanche Canada's public forecast API (no key needed,
 // https://avalanche.ca/api-docs). Forecast regions merge and split from day to day,
@@ -11,48 +24,6 @@ import { ZONES, type ZoneId } from "@/config/zones";
 
 const API = "https://api.avalanche.ca/forecasts/en/products/point";
 const MAP_URL = "https://avalanche.ca/map";
-
-// North American Public Avalanche Danger Scale.
-export type DangerLevel = "low" | "moderate" | "considerable" | "high" | "extreme";
-export const DANGER_LEVELS: DangerLevel[] = ["low", "moderate", "considerable", "high", "extreme"];
-
-export interface Danger {
-  value: string; // a DangerLevel, or "earlyseason", "norating", "noforecast", "spring"…
-  display: string; // as Avalanche Canada words it
-}
-
-export interface DangerDay {
-  date: string; // ISO, start of the day the rating is for
-  label: string; // e.g. "Saturday"
-  alp: Danger; // alpine
-  tln: Danger; // treeline
-  btl: Danger; // below treeline
-}
-
-export interface Problem {
-  type: string; // e.g. "Wind Slab"
-  elevations: string[]; // e.g. ["Alpine", "Treeline"]
-  aspects: string[]; // e.g. ["North", "Northeast"]
-  likelihood: string | null; // e.g. "likely"
-  size: { min: string; max: string } | null; // destructive size range
-}
-
-export type AvalancheForecast =
-  | {
-      status: "ok";
-      title: string;
-      owner: string; // e.g. "Avalanche Canada" or "Parks Canada"
-      url: string; // the full forecast
-      issued: string; // ISO
-      validUntil: string; // ISO
-      days: DangerDay[]; // today first, ratings from today on
-      // When no current day carries a rating: the forecast's status instead, as
-      // Avalanche Canada words it, e.g. "Early Season" or "No Rating".
-      note: string | null;
-      problems: Problem[];
-    }
-  // No current forecast covers this zone (none issued, or the last one expired).
-  | { status: "none"; url: string };
 
 interface RawDanger {
   rating?: { value?: string; display?: string };
@@ -165,15 +136,4 @@ export async function getAvalancheForecast(id: ZoneId): Promise<AvalancheForecas
   const latest = days[0] ?? f.days.at(-1);
   const rated = days.some((d) => [d.alp, d.tln, d.btl].some(isRated));
   return { ...f, days, note: !rated && latest ? latest.alp.display : null };
-}
-
-// Ratings that sit on the danger scale, as opposed to "early season" and the like.
-export const isRated = (d: Danger): d is Danger & { value: DangerLevel } =>
-  (DANGER_LEVELS as string[]).includes(d.value);
-
-// Highest rated danger across the bands for a day, or null if none is rated.
-export function highestDanger(day: DangerDay): DangerLevel | null {
-  const rated = [day.alp, day.tln, day.btl].filter(isRated).map((d) => d.value);
-  if (rated.length === 0) return null;
-  return rated.reduce((a, b) => (DANGER_LEVELS.indexOf(b) > DANGER_LEVELS.indexOf(a) ? b : a));
 }
