@@ -62,7 +62,7 @@ function CardLink({ href, color, children }: { href: string; color: string; chil
 // Every card is rendered into this static page and the visitor's picks decide
 // which show (lib/Dashboard.ts), so a visit costs no server work or API calls.
 export default async function DashboardPage() {
-  const { now, avalanche } = await getPlacesNow();
+  const { now, avalanche, snow } = await getPlacesNow();
 
   return (
     <>
@@ -102,7 +102,11 @@ export default async function DashboardPage() {
                   <div key={m.id} data-place={m.id} className="flex flex-col">
                     <CardLink href={`/${m.id}`} color={m.color}>
                       <SharedTransition name={`resort-${m.id}`}>
-                        <ElevationVisualizer config={m} weather={h ? weatherFrom(h, m) : null} />
+                        <ElevationVisualizer
+                          config={m}
+                          weather={h ? weatherFrom(h, m) : null}
+                          snow={snow[m.id]}
+                        />
                       </SharedTransition>
                     </CardLink>
                     <CardActions id={m.id} name={m.fullName} />
@@ -116,6 +120,7 @@ export default async function DashboardPage() {
                       zone={z}
                       now={now?.[z.id] ?? null}
                       forecast={avalanche[z.id] ?? null}
+                      snow={snow[z.id]}
                     />
                   </CardLink>
                   <CardActions id={z.id} name={z.fullName} />

@@ -20,6 +20,8 @@ import { MOUNTAINS } from "@/config/mountains";
 // The overview covers the North Shore; other hills are on their own pages and /hills.
 const HILLS = MOUNTAINS.filter((m) => m.region === "north-shore");
 import { tallestId } from "@/lib/Conditions";
+import { snowFromReport } from "@/lib/SnowNow";
+import { getSnowReport } from "@/lib/SnowReport";
 import { getFreezingSeries, getPointReadings } from "@/lib/Forecast";
 import { trendDetail, trendWord } from "@/lib/Trend";
 import {
@@ -53,13 +55,14 @@ const STRUCTURED_DATA = {
 };
 
 export default async function Home() {
-  const [mountainResults, readingsResult, freezingResult] = await Promise.all([
+  const [mountainResults, snowResults, readingsResult, freezingResult] = await Promise.all([
     Promise.allSettled(HILLS.map((m) => getMountainWeather(m))),
+    Promise.allSettled(HILLS.map((m) => getSnowReport(m.id))),
     Promise.allSettled([getPointReadings("north-shore")]).then((r) => r[0]),
     Promise.allSettled([getFreezingSeries(HILLS.map((m) => m.id))]).then((r) => r[0]),
   ]);
 
-  for (const r of [...mountainResults, readingsResult, freezingResult]) {
+  for (const r of [...mountainResults, ...snowResults, readingsResult, freezingResult]) {
     if (r.status === "rejected") console.error("Fetch failure:", r.reason);
   }
 
@@ -70,7 +73,12 @@ export default async function Home() {
 
   const rows = HILLS.map((config, i) => {
     const r = mountainResults[i];
-    return { config, weather: r.status === "fulfilled" ? r.value : null };
+    const s = snowResults[i];
+    return {
+      config,
+      weather: r.status === "fulfilled" ? r.value : null,
+      snow: s.status === "fulfilled" ? snowFromReport(s.value) : undefined,
+    };
   });
   const tallest = tallestId(HILLS);
 
@@ -161,7 +169,7 @@ export default async function Home() {
 
             <SectionLabel>Rain and snow line</SectionLabel>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              {rows.map(({ config, weather }) => (
+              {rows.map(({ config, weather, snow }) => (
                 <Link
                   key={config.id}
                   href={`/${config.id}`}
@@ -174,6 +182,7 @@ export default async function Home() {
                       config={config}
                       weather={weather}
                       isTallest={config.id === tallest}
+                      snow={snow}
                     />
                   </SharedTransition>
                 </Link>

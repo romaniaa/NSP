@@ -27,6 +27,7 @@ import {
   mountainDescription,
   mountainTitle,
 } from "@/lib/Site";
+import { snowFromReport } from "@/lib/SnowNow";
 import { getSnowReport, type SnowReport } from "@/lib/SnowReport";
 import { trendDetail, trendWord } from "@/lib/Trend";
 import { getMountainWeather } from "@/lib/Weather";
@@ -293,7 +294,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
           <SectionLabel>Rain and snow line, and lifts</SectionLabel>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <SharedTransition name={`resort-${config.id}`}>
-              <ElevationVisualizer config={config} weather={weather} />
+              <ElevationVisualizer config={config} weather={weather} snow={snowFromReport(snow)} />
             </SharedTransition>
             <div className="lg:col-span-2">
               {stations && freezingLevel != null ? (

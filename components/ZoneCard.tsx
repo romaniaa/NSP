@@ -1,13 +1,15 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import { DANGER_STYLE } from "@/lib/DangerStyle";
 import RangeIcon from "@/components/RangeIcon";
 import { NAV_FORWARD } from "@/components/Transitions";
 import type { ZoneConfig } from "@/config/zones";
 import { highestDanger, type AvalancheForecast } from "@/lib/Avalanche";
-import { CONDITION, conditionAt, fmt } from "@/lib/Conditions";
+import { conditionAt, fmt } from "@/lib/Conditions";
 import { tempAt, windAloft } from "@/lib/Model";
 import { compass } from "@/components/WindCard";
+import type { SnowNow } from "@/lib/SnowNow";
 import type { HillNow } from "@/lib/Weather";
 
 // Compact backcountry conditions for one zone: today's highest avalanche danger
@@ -16,10 +18,12 @@ export default function ZoneCard({
   zone,
   now,
   forecast,
+  snow,
 }: {
   zone: ZoneConfig;
   now: HillNow | null;
   forecast: AvalancheForecast | null;
+  snow?: SnowNow;
 }) {
   const top = Math.max(...zone.heights);
   const bottom = Math.min(...zone.heights);
@@ -74,29 +78,26 @@ export default function ZoneCard({
         </div>
 
         {now && sky ? (
-          <dl className="mt-3 grid grid-cols-2 gap-x-2 gap-y-3 text-xs sm:grid-cols-3">
-            {[top, bottom].map((elevation) => {
-              const c = conditionAt(elevation, now.freezingLevel, sky);
-              return (
-                <div key={elevation}>
-                  <dt className="text-[#9aa7b5]">{fmt(elevation)} m</dt>
-                  <dd className="mt-1 flex flex-wrap items-center gap-1.5">
-                    <span className="tabular-nums text-white">
-                      {Math.round(tempAt(now.profile, elevation) * 10) / 10}°
-                    </span>
-                    <span className={`chip ${CONDITION[c].chip}`}>{CONDITION[c].label}</span>
-                  </dd>
-                </div>
-              );
-            })}
-            <div>
-              <dt className="text-[#9aa7b5]">Ridgetop wind</dt>
-              <dd className="mt-1 tabular-nums text-white">
-                {ridge?.speed} km/h
-                <span className="text-[#8f8f8f]"> {ridge && compass(ridge.dir)}</span>
-              </dd>
-            </div>
-          </dl>
+          <>
+            <StatStrip>
+              {[
+                { label: "Upper", elevation: top },
+                { label: "Lower", elevation: bottom },
+              ].map(({ label, elevation }) => (
+                <TempStat
+                  key={label}
+                  label={label}
+                  elevation={elevation}
+                  temp={tempAt(now.profile, elevation)}
+                  condition={conditionAt(elevation, now.freezingLevel, sky)}
+                />
+              ))}
+              {snow && <SnowStat snow={snow} />}
+            </StatStrip>
+            <p className="mt-3 text-sm tabular-nums text-[#9aa7b5]">
+              Ridgetop wind {ridge?.speed} km/h {ridge && compass(ridge.dir)}
+            </p>
+          </>
         ) : (
           <p className="mt-3 text-sm text-[#8f8f8f]">
             Weather data is unavailable. It will retry on the next refresh.

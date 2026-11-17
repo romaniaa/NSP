@@ -1,11 +1,13 @@
+import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import { ElevationDiagram } from "@/components/ElevationVisualizer";
 import RangeIcon from "@/components/RangeIcon";
 import type { ZoneConfig } from "@/config/zones";
 import { highestDanger, type AvalancheForecast } from "@/lib/Avalanche";
-import { CONDITION, SNOW_LINE_OFFSET, conditionAt, fmt } from "@/lib/Conditions";
+import { SNOW_LINE_OFFSET, conditionAt, fmt } from "@/lib/Conditions";
 import { tempAt, windAloft } from "@/lib/Model";
 import { compass } from "@/components/WindCard";
 import { DANGER_STYLE } from "@/lib/DangerStyle";
+import type { SnowNow } from "@/lib/SnowNow";
 import type { HillNow } from "@/lib/Weather";
 
 // A generic range outline: zones span many peaks, so no single ridge is drawn as
@@ -24,10 +26,12 @@ export default function ZoneDiagram({
   zone,
   now,
   forecast,
+  snow,
 }: {
   zone: ZoneConfig;
   now: HillNow | null;
   forecast?: AvalancheForecast | null;
+  snow?: SnowNow; // dashboard only: snow at the zone's highest station with snow
 }) {
   const heights = [...zone.heights].sort((a, b) => b - a);
   const top = heights[0];
@@ -67,6 +71,24 @@ export default function ZoneDiagram({
           </div>
         )}
       </div>
+
+      {details && now && sky && (
+        <StatStrip>
+          {[
+            { label: "Upper", elevation: top },
+            { label: "Lower", elevation: bottom },
+          ].map(({ label, elevation }) => (
+            <TempStat
+              key={label}
+              label={label}
+              elevation={elevation}
+              temp={tempAt(now.profile, elevation)}
+              condition={conditionAt(elevation, now.freezingLevel, sky)}
+            />
+          ))}
+          {snow && <SnowStat snow={snow} />}
+        </StatStrip>
+      )}
 
       {now ? (
         <ElevationDiagram
@@ -112,32 +134,6 @@ export default function ZoneDiagram({
                 </dd>
               </div>
             </dl>
-          )}
-          {now && (
-            <div className="mt-4 space-y-3 border-t border-[#2f3840] pt-4 text-sm">
-              {[
-                ["Upper", top],
-                ["Lower", bottom],
-              ].map(([label, h]) => {
-                const z = h as number;
-                const c = conditionAt(z, now.freezingLevel, sky!);
-                return (
-                  <div key={label} className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs text-[#8f8f8f]">{label} slopes</p>
-                      <p className="text-white">{zone.name}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="tabular-nums text-[#8f8f8f]">~{fmt(z)} m</span>
-                      <span className="w-12 text-right tabular-nums text-white">
-                        {Math.round(tempAt(now.profile, z) * 10) / 10}°
-                      </span>
-                      <span className={`chip ${CONDITION[c].chip}`}>{CONDITION[c].label}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           )}
           <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#2f3840] pt-4 text-sm">
             <div>

@@ -12,9 +12,9 @@ import { ZONES } from "@/config/zones";
 import { getPlacesNow } from "@/lib/Places";
 import { OPEN_GRAPH, SITE_NAME } from "@/lib/Site";
 
-const TITLE = "Ski & Backcountry Conditions Near Vancouver";
+const TITLE = "Ski & Backcountry Conditions in BC and the Rockies";
 const DESCRIPTION =
-  "Rain or snow, freezing level, temperature and wind right now at the North Shore hills, Whistler Blackcomb, Sasquatch, Manning Park and Mt. Baker, plus avalanche danger for nearby backcountry. Updated hourly.";
+  "Temperature, snow depth, rain or snow and freezing level right now at ski hills from the North Shore and Whistler to Vancouver Island, the Okanagan, the Kootenays and the Rockies, plus avalanche danger for the backcountry. Updated hourly.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HillsPage() {
-  const { now, avalanche } = await getPlacesNow();
+  const { now, avalanche, snow } = await getPlacesNow();
 
   return (
     <>
@@ -61,7 +61,7 @@ export default async function HillsPage() {
                     {hills.map((m) => (
                       <div key={m.id} className="flex flex-col gap-2">
                         <div className="flex-1">
-                          <HillCard config={m} now={now?.[m.id] ?? null} />
+                          <HillCard config={m} now={now?.[m.id] ?? null} snow={snow[m.id]} />
                         </div>
                         <PinButton id={m.id} name={m.fullName} color={m.color} />
                       </div>
@@ -73,6 +73,7 @@ export default async function HillsPage() {
                             zone={z}
                             now={now?.[z.id] ?? null}
                             forecast={avalanche[z.id] ?? null}
+                            snow={snow[z.id]}
                           />
                         </div>
                         <PinButton id={z.id} name={z.fullName} color={z.color} />

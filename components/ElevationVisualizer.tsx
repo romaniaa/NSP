@@ -1,4 +1,6 @@
+import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import type { Landmark, MountainConfig } from "@/config/mountains";
+import type { SnowNow } from "@/lib/SnowNow";
 import type { MountainWeather } from "@/lib/Weather";
 import {
   CONDITION,
@@ -321,12 +323,14 @@ interface Props {
   config: MountainConfig;
   weather: MountainWeather | null;
   isTallest?: boolean;
+  snow?: SnowNow; // snow on the ground, when the resort's report has it
 }
 
 export default function ElevationVisualizer({
   config,
   weather,
   isTallest = false,
+  snow,
 }: Props) {
   const { minElevation, maxElevation, landmarks, name, profile } = config;
 
@@ -380,6 +384,24 @@ export default function ElevationVisualizer({
         </div>
       </div>
 
+      <StatStrip>
+        {(
+          [
+            ["Top lift", config.lifts.top.elevation, weather.temps.top],
+            ["Lowest lift", config.lifts.bottom.elevation, weather.temps.bottom],
+          ] as const
+        ).map(([label, elevation, temp]) => (
+          <TempStat
+            key={label}
+            label={label}
+            elevation={elevation}
+            temp={temp}
+            condition={conditionAt(elevation, fl, sky)}
+          />
+        ))}
+        {snow && <SnowStat snow={snow} />}
+      </StatStrip>
+
       <ElevationDiagram
         id={config.id}
         name={name}
@@ -409,38 +431,6 @@ export default function ElevationVisualizer({
         </div>
       </dl>
 
-      <div className="mt-4 space-y-3 border-t border-[#2f3840] pt-4 text-sm">
-        {(
-          [
-            ["Top lift", config.lifts.top, weather.temps.top],
-            ["Lowest lift", config.lifts.bottom, weather.temps.bottom],
-          ] as const
-        ).map(([title, lift, temp]) => {
-          const p = conditionAt(lift.elevation, fl, sky);
-          return (
-            <div
-              key={title}
-              className="flex items-center justify-between gap-3"
-            >
-              <div>
-                <p className="text-xs text-[#8f8f8f]">{title}</p>
-                <p className="text-white">{lift.label}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="tabular-nums text-[#8f8f8f]">
-                  ~{lift.elevation.toLocaleString("en-CA")} m
-                </span>
-                <span className="w-12 text-right tabular-nums text-white">{temp}°</span>
-                <span
-                  className={`chip ${CONDITION[p].chip}`}
-                >
-                  {CONDITION[p].label}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </section>
   );
 }

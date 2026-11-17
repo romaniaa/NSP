@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import MountainIcon from "@/components/MountainIcon";
 import { NAV_FORWARD } from "@/components/Transitions";
 import type { MountainConfig } from "@/config/mountains";
-import { CONDITION, conditionAt, extremes, fmt, verdict } from "@/lib/Conditions";
+import { conditionAt, extremes, fmt, verdict } from "@/lib/Conditions";
 import { tempAt } from "@/lib/Model";
+import type { SnowNow } from "@/lib/SnowNow";
 import type { HillNow } from "@/lib/Weather";
 
 // Compact current conditions for one hill, linking to its page. Used on /hills
@@ -12,9 +14,11 @@ import type { HillNow } from "@/lib/Weather";
 export default function HillCard({
   config,
   now,
+  snow,
 }: {
   config: MountainConfig;
   now: HillNow | null;
+  snow?: SnowNow;
 }) {
   const { low, high } = extremes(config);
   const sky = now && {
@@ -57,37 +61,27 @@ export default function HillCard({
 
         {now && sky ? (
           <>
-            <p className="mt-2 text-sm text-[#d4d4d4]">
-              {verdict(config, now.freezingLevel, sky)}
-            </p>
-            <dl className="mt-3 grid grid-cols-2 gap-x-2 gap-y-3 text-xs sm:grid-cols-3">
+            <StatStrip>
               {[
                 { label: "Top", elevation: high },
                 { label: "Base", elevation: low },
-              ].map(({ label, elevation }) => {
-                const c = conditionAt(elevation, now.freezingLevel, sky);
-                return (
-                  <div key={label}>
-                    <dt className="text-[#9aa7b5]">
-                      {label} · {fmt(elevation)} m
-                    </dt>
-                    <dd className="mt-1 flex flex-wrap items-center gap-1.5">
-                      <span className="tabular-nums text-white">
-                        {Math.round(tempAt(now.profile, elevation) * 10) / 10}°
-                      </span>
-                      <span className={`chip ${CONDITION[c].chip}`}>{CONDITION[c].label}</span>
-                    </dd>
-                  </div>
-                );
-              })}
-              <div>
-                <dt className="text-[#9aa7b5]">Wind</dt>
-                <dd className="mt-1 tabular-nums text-white">
-                  {Math.round(now.wind)} km/h
-                  <span className="text-[#8f8f8f]"> · gusts {Math.round(now.gust)}</span>
-                </dd>
-              </div>
-            </dl>
+              ].map(({ label, elevation }) => (
+                <TempStat
+                  key={label}
+                  label={label}
+                  elevation={elevation}
+                  temp={tempAt(now.profile, elevation)}
+                  condition={conditionAt(elevation, now.freezingLevel, sky)}
+                />
+              ))}
+              {snow && <SnowStat snow={snow} />}
+            </StatStrip>
+            <p className="mt-3 flex flex-wrap justify-between gap-x-3 gap-y-1 text-sm">
+              <span className="text-[#d4d4d4]">{verdict(config, now.freezingLevel, sky)}</span>
+              <span className="tabular-nums text-[#9aa7b5]">
+                Wind {Math.round(now.wind)} km/h · gusts {Math.round(now.gust)}
+              </span>
+            </p>
           </>
         ) : (
           <p className="mt-3 text-sm text-[#8f8f8f]">
