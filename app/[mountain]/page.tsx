@@ -190,8 +190,8 @@ function Intro({
   return (
     <p className="mt-3 max-w-3xl text-[#c9d3dd]">
       {[now, depth].filter(Boolean).join(" ")}{" "}
-      Below: a 7-day forecast, {cams ? "live webcams, " : ""}and rain or snow at each
-      lift on this {config.locality} ski area, updated hourly.
+      Below: {cams ? "live webcams, " : ""}rain or snow at each lift and a 7-day
+      forecast for this {config.locality} ski area, updated hourly.
     </p>
   );
 }
@@ -294,18 +294,6 @@ async function MountainContent({ config }: { config: MountainConfig }) {
             )}
           </div>
 
-          <SectionLabel>Forecast</SectionLabel>
-          {daily && daily.days.length > 0 ? (
-            <DailyForecast
-              days={daily.days}
-              top={{ label: "Top", elevation: config.lifts.top.elevation }}
-              bottom={{ label: "Base", elevation: config.lifts.bottom.elevation }}
-              color={config.color}
-            />
-          ) : (
-            <Unavailable title="Forecast" />
-          )}
-
           {webcams && (
             <>
               <SectionLabel>Webcams</SectionLabel>
@@ -331,6 +319,18 @@ async function MountainContent({ config }: { config: MountainConfig }) {
               )}
             </div>
           </div>
+
+          <SectionLabel>Forecast</SectionLabel>
+          {daily && daily.days.length > 0 ? (
+            <DailyForecast
+              days={daily.days}
+              top={{ label: "Top", elevation: config.lifts.top.elevation }}
+              bottom={{ label: "Base", elevation: config.lifts.bottom.elevation }}
+              color={config.color}
+            />
+          ) : (
+            <Unavailable title="Forecast" />
+          )}
 
           <SectionLabel>Freezing level</SectionLabel>
           {freezing ? (
