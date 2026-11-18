@@ -11,7 +11,7 @@ import { OPEN_GRAPH, SITE_NAME } from "@/lib/Site";
 
 const TITLE = "Backcountry Conditions & Avalanche Danger in BC and the Rockies";
 const DESCRIPTION =
-  "Today's avalanche danger, temperature by elevation, ridgetop wind and snow depth for the North Shore, Whistler, Duffey Lake, Coquihalla, Rogers Pass, Kananaskis and Icefields Parkway backcountry. Updated hourly.";
+  "Today's avalanche danger, temperature by elevation, ridgetop wind and snow depth for Mt. Strachan, Whistler, the Sunshine Coast, Duffey Lake, Coquihalla, Rogers Pass, Kananaskis and the Icefields Parkway. Updated hourly.";
 
 export const metadata: Metadata = {
   title: TITLE,

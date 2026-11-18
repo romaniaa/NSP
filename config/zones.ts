@@ -1,9 +1,11 @@
 import { regionOf, type AreaId, type RegionId } from "@/config/regions";
 
 export type ZoneId =
-  | "north-shore-backcountry"
+  | "strachan"
   | "spearhead"
   | "brandywine"
+  | "tetrahedron"
+  | "knuckleheads"
   | "duffey"
   | "coquihalla"
   | "rogers-pass"
@@ -33,17 +35,18 @@ export interface ZoneConfig {
 
 const LIST: Omit<ZoneConfig, "region">[] = [
   {
-    id: "north-shore-backcountry",
-    name: "North Shore",
-    fullName: "North Shore backcountry",
+    id: "strachan",
+    name: "Strachan",
+    fullName: "Mt. Strachan",
     description:
-      "Hollyburn, Mt. Strachan, the Seymour backcountry and the peaks above Vancouver.",
+      "Mt. Strachan and Hollyburn Mountain above Cypress, the closest touring to Vancouver.",
     area: "north-shore",
     timeZone: "America/Vancouver",
     color: "#8fb3a8",
-    lat: 49.4,
-    lon: -123.08,
-    heights: [1600, 1300, 1000],
+    // Between the summit (about 1,450 m) and Cypress's base.
+    lat: 49.405,
+    lon: -123.195,
+    heights: [1400, 1200, 1000],
     stations: [11, 10],
   },
   {
@@ -72,6 +75,40 @@ const LIST: Omit<ZoneConfig, "region">[] = [
     lon: -123.12,
     heights: [2000, 1600, 1200],
     stations: [71],
+  },
+  {
+    id: "tetrahedron",
+    name: "Tetrahedron",
+    fullName: "Tetrahedron Provincial Park",
+    description:
+      "Mt. Steele, Tetrahedron Peak and the club cabins above Sechelt, reached by a 4x4 road.",
+    area: "sunshine-coast",
+    timeZone: "America/Vancouver",
+    color: "#a6d0b8",
+    // Between Edwards Lake and Mt. Steele cabin (about 1,500 m); the road ends
+    // near 1,100 m and the peaks reach about 1,700 m.
+    lat: 49.605,
+    lon: -123.615,
+    heights: [1700, 1400, 1100],
+    // No public station nearby; the closest are at sea level.
+    stations: [],
+  },
+  {
+    id: "knuckleheads",
+    name: "Knuckleheads",
+    fullName: "Knuckleheads Recreation Area",
+    description:
+      "Ridges and free winter cabins above Lois Lake, northeast of Powell River, reached by logging roads with weekday restrictions.",
+    area: "sunshine-coast",
+    timeZone: "America/Vancouver",
+    color: "#d0c08f",
+    // Near Vic Cole Lodge (about 1,420 m); people stage around 1,100 m on the
+    // Vic Cole road and the ridges reach about 1,650 m.
+    lat: 49.93,
+    lon: -124.175,
+    heights: [1700, 1400, 1100],
+    // No public station nearby.
+    stations: [],
   },
   {
     id: "duffey",

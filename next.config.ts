@@ -31,6 +31,12 @@ const nextConfig: NextConfig = {
         destination: "https://openpeaks.ca/:path*",
         permanent: true,
       },
+      // The North Shore backcountry zone is now named for Mt. Strachan.
+      {
+        source: "/backcountry/north-shore-backcountry",
+        destination: "/backcountry/strachan",
+        permanent: true,
+      },
       // My hills moved from /dashboard to the home page. Share links keep their
       // #hash, since browsers carry it across a redirect.
       { source: "/dashboard", destination: "/", permanent: true },

@@ -8,6 +8,7 @@ export type RegionId = "coast" | "vancouver-island" | "okanagan" | "kootenays" |
 export type AreaId =
   | "north-shore"
   | "sea-to-sky"
+  | "sunshine-coast"
   | "duffey"
   | "fraser-valley"
   | "coquihalla"
@@ -39,9 +40,9 @@ export const REGIONS: RegionConfig[] = [
     name: "Coast",
     title: "Coast Ski Conditions: North Shore, Whistler, Sasquatch, Manning & Baker",
     description:
-      "Rain or snow, freezing level, temperature and snow depth right now at Cypress, Grouse, Seymour, Whistler Blackcomb, Sasquatch, Manning Park and Mt. Baker, plus avalanche danger for the Coast backcountry. Updated hourly.",
+      "Rain or snow, freezing level, temperature and snow depth right now at Cypress, Grouse, Seymour, Whistler Blackcomb, Sasquatch, Manning Park and Mt. Baker, plus avalanche danger for the Coast backcountry from Strachan to the Sunshine Coast. Updated hourly.",
     intro:
-      "The ski hills within a few hours of Vancouver, from the North Shore up the Sea to Sky to Whistler, out the Fraser Valley to Sasquatch and Manning, and across the border at Mt. Baker. On the Coast the rain-or-snow line decides the day.",
+      "The ski hills within a few hours of Vancouver, from the North Shore up the Sea to Sky to Whistler, out the Fraser Valley to Sasquatch and Manning, and across the border at Mt. Baker, with backcountry from Strachan to Tetrahedron and the Knuckleheads on the Sunshine Coast. On the Coast the rain-or-snow line decides the day.",
   },
   {
     id: "vancouver-island",
@@ -84,6 +85,7 @@ export const REGIONS: RegionConfig[] = [
 export const AREAS: AreaConfig[] = [
   { id: "north-shore", name: "North Shore", region: "coast" },
   { id: "sea-to-sky", name: "Sea to Sky", region: "coast" },
+  { id: "sunshine-coast", name: "Sunshine Coast", region: "coast" },
   { id: "duffey", name: "Duffey Lake", region: "coast" },
   { id: "fraser-valley", name: "Fraser Valley", region: "coast" },
   { id: "coquihalla", name: "Coquihalla", region: "coast" },

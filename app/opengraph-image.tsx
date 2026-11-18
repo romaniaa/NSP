@@ -10,7 +10,7 @@ export default function Image() {
   return ogImage({
     eyebrow: SITE_NAME,
     title: "Ski conditions in BC and the Rockies",
-    subtitle: "26 hills and 8 backcountry zones: temperature, snow depth, rain or snow",
+    subtitle: "26 hills and 10 backcountry zones: temperature, snow depth, rain or snow",
     mountains: MOUNTAINS.filter((m) => ["cypress", "whistler", "revelstoke"].includes(m.id)),
   });
 }

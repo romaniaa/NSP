@@ -22,7 +22,7 @@ export const OPEN_GRAPH = {
 
 export const HOME_TITLE = "Ski Conditions in BC & the Rockies";
 export const HOME_DESCRIPTION =
-  "Live ski conditions for 26 hills and 8 backcountry zones in BC and the Rockies, from the North Shore and Whistler to the Okanagan, Kootenays and Banff: temperature, snow depth, freezing level, the rain-or-snow line and avalanche danger. Updated hourly.";
+  "Live ski conditions for 26 hills and 10 backcountry zones in BC and the Rockies, from the North Shore and Whistler to the Okanagan, Kootenays and Banff: temperature, snow depth, freezing level, the rain-or-snow line and avalanche danger. Updated hourly.";
 
 // Only claim webcams where the page embeds them.
 const hasCams = (m: MountainConfig) => (WEBCAMS[m.id]?.cams.length ?? 0) > 0;

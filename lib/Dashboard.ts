@@ -18,11 +18,17 @@ export const DEFAULT_IDS: string[] = MOUNTAINS.filter((m) => m.area === "north-s
   (m) => m.id
 );
 
+// Places whose id changed after visitors could save them: old id → new. Saved
+// selections and share links still carry the old ids, so they're read as the new.
+const RENAMED: Record<string, string> = { "north-shore-backcountry": "strachan" };
+const current = (id: string) => (Object.hasOwn(RENAMED, id) ? RENAMED[id] : id);
+
 // Known ids only, in the visitor's order, without duplicates. Anything else is
 // dropped, so a hand-edited hash or stored value can't inject anything.
 export function parseSelection(raw: string | null | undefined): string[] {
   const ids: string[] = [];
-  for (const id of (raw ?? "").split(/[,\s]+/)) {
+  for (const old of (raw ?? "").split(/[,\s]+/)) {
+    const id = current(old);
     if (PLACE_IDS.includes(id) && !ids.includes(id)) ids.push(id);
   }
   return ids;
@@ -54,7 +60,7 @@ export function writeSaved(ids: string[]) {
 // below turns those into which cards show and in what order. The page's HTML has
 // only the default cards, so when the pick includes others it also sets
 // data-pending, showing placeholders until the browser draws them.
-export const INLINE_SCRIPT = `(function(){var ok=${JSON.stringify(PLACE_IDS)},def=${JSON.stringify(DEFAULT_IDS)},src="",ids=[],s=null;try{src=decodeURIComponent(location.hash.slice(1))}catch(e){}if(!src){try{s=localStorage.getItem(${JSON.stringify(DASHBOARD_KEY)})}catch(e){}src=s===null?${JSON.stringify(DEFAULT_IDS.join(","))}:s}src.split(/[,\\s]+/).forEach(function(id){if(ok.indexOf(id)>=0&&ids.indexOf(id)<0)ids.push(id)});var el=document.currentScript.parentElement;el.setAttribute("data-dash",ids.join(" "));if(ids.some(function(id){return def.indexOf(id)<0}))el.setAttribute("data-pending","");ids.forEach(function(id,i){el.style.setProperty("--o-"+id,i)})})()`;
+export const INLINE_SCRIPT = `(function(){var ok=${JSON.stringify(PLACE_IDS)},rn=${JSON.stringify(RENAMED)},def=${JSON.stringify(DEFAULT_IDS)},src="",ids=[],s=null;try{src=decodeURIComponent(location.hash.slice(1))}catch(e){}if(!src){try{s=localStorage.getItem(${JSON.stringify(DASHBOARD_KEY)})}catch(e){}src=s===null?${JSON.stringify(DEFAULT_IDS.join(","))}:s}src.split(/[,\\s]+/).forEach(function(id){if(Object.prototype.hasOwnProperty.call(rn,id))id=rn[id];if(ok.indexOf(id)>=0&&ids.indexOf(id)<0)ids.push(id)});var el=document.currentScript.parentElement;el.setAttribute("data-dash",ids.join(" "));if(ids.some(function(id){return def.indexOf(id)<0}))el.setAttribute("data-pending","");ids.forEach(function(id,i){el.style.setProperty("--o-"+id,i)})})()`;
 
 // Show only selected cards once data-dash is set, and the empty state when it's
 // set but empty. Generated per known id, so no selector comes from user input.
