@@ -153,6 +153,7 @@ export default async function RegionPage({ id }: { id: RegionId }) {
                                 weather={h ? weatherFrom(h, m) : null}
                                 isTallest={hills.length > 1 && m.id === tallest}
                                 snow={snow[m.id]}
+                                more
                               />
                             </SharedTransition>
                           </CardLink>
@@ -168,6 +169,7 @@ export default async function RegionPage({ id }: { id: RegionId }) {
                             now={now?.[z.id] ?? null}
                             forecast={avalanche[z.id] ?? null}
                             snow={snow[z.id]}
+                            more
                           />
                         </CardLink>
                         <PinButton id={z.id} name={z.fullName} color={z.color} />

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import CardMore from "@/components/CardMore";
 import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import MountainIcon from "@/components/MountainIcon";
 import { NAV_FORWARD } from "@/components/Transitions";
@@ -35,7 +36,7 @@ export default function HillCard({
       style={{ "--accent": config.color } as CSSProperties}
     >
       <section
-        className="plate h-full border border-[#232a31] bg-[#13181d] p-4"
+        className="plate flex h-full flex-col border border-[#232a31] bg-[#13181d] p-4"
         style={{ borderTop: `3px solid ${config.color}` }}
       >
         <div className="flex items-start justify-between gap-3">
@@ -88,6 +89,7 @@ export default function HillCard({
             Weather data is unavailable. It will retry on the next refresh.
           </p>
         )}
+        <CardMore />
       </section>
     </Link>
   );

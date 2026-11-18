@@ -46,6 +46,7 @@ function PlaceCard({ id, data }: { id: string; data: CardData | undefined }) {
               config={m}
               weather={data?.now ? weatherFrom(data.now, m) : null}
               snow={data?.snow}
+              more
             />
           </SharedTransition>
         </CardLink>
@@ -63,6 +64,7 @@ function PlaceCard({ id, data }: { id: string; data: CardData | undefined }) {
           now={data?.now ?? null}
           forecast={data?.avalanche ?? null}
           snow={data?.snow}
+          more
         />
       </CardLink>
       <CardActions id={z.id} name={z.fullName} />

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import CardMore from "@/components/CardMore";
 import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import { DANGER_STYLE } from "@/lib/DangerStyle";
 import RangeIcon from "@/components/RangeIcon";
@@ -40,7 +41,7 @@ export default function ZoneCard({
       style={{ "--accent": zone.color } as CSSProperties}
     >
       <section
-        className="plate h-full border border-[#232a31] bg-[#13181d] p-4"
+        className="plate flex h-full flex-col border border-[#232a31] bg-[#13181d] p-4"
         style={{ borderTop: `3px solid ${zone.color}` }}
       >
         <div className="flex items-start justify-between gap-3">
@@ -103,6 +104,7 @@ export default function ZoneCard({
             Weather data is unavailable. It will retry on the next refresh.
           </p>
         )}
+        <CardMore />
       </section>
     </Link>
   );

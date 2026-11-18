@@ -1,3 +1,4 @@
+import CardMore from "@/components/CardMore";
 import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import { ElevationDiagram } from "@/components/ElevationVisualizer";
 import RangeIcon from "@/components/RangeIcon";
@@ -27,11 +28,13 @@ export default function ZoneDiagram({
   now,
   forecast,
   snow,
+  more = false,
 }: {
   zone: ZoneConfig;
   now: HillNow | null;
   forecast?: AvalancheForecast | null;
   snow?: SnowNow; // dashboard only: snow at the zone's highest station with snow
+  more?: boolean; // the card links to the zone's page: show the "Full report" footer
 }) {
   const heights = [...zone.heights].sort((a, b) => b - a);
   const top = heights[0];
@@ -47,7 +50,7 @@ export default function ZoneDiagram({
 
   return (
     <section
-      className="h-full border border-[#232a31] bg-[#13181d] p-5"
+      className={`h-full border border-[#232a31] bg-[#13181d] p-5 ${more ? "flex flex-col" : ""}`}
       style={{ borderTop: `3px solid ${zone.color}` }}
     >
       <div className="flex items-start justify-between gap-4">
@@ -156,6 +159,7 @@ export default function ZoneDiagram({
           </div>
         </>
       )}
+      {more && <CardMore />}
     </section>
   );
 }

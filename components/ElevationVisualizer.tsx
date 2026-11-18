@@ -1,3 +1,4 @@
+import CardMore from "@/components/CardMore";
 import { SnowStat, StatStrip, TempStat } from "@/components/CardStats";
 import type { Landmark, MountainConfig } from "@/config/mountains";
 import type { SnowNow } from "@/lib/SnowNow";
@@ -324,6 +325,7 @@ interface Props {
   weather: MountainWeather | null;
   isTallest?: boolean;
   snow?: SnowNow; // snow on the ground, when the resort's report has it
+  more?: boolean; // the card links to the hill's page: show the "Full report" footer
 }
 
 export default function ElevationVisualizer({
@@ -331,19 +333,21 @@ export default function ElevationVisualizer({
   weather,
   isTallest = false,
   snow,
+  more = false,
 }: Props) {
   const { minElevation, maxElevation, landmarks, name, profile } = config;
 
   if (!weather) {
     return (
       <section
-      className="h-full border border-[#232a31] bg-[#13181d] p-5"
+      className={`h-full border border-[#232a31] bg-[#13181d] p-5 ${more ? "flex flex-col" : ""}`}
       style={{ borderTop: `3px solid ${config.color}` }}
     >
         <h2 className="text-lg font-semibold text-white">{name}</h2>
         <p className="mt-3 text-sm text-[#8f8f8f]">
           Weather data is unavailable. It will retry on the next refresh.
         </p>
+        {more && <CardMore />}
       </section>
     );
   }
@@ -358,7 +362,7 @@ export default function ElevationVisualizer({
 
   return (
     <section
-      className="h-full border border-[#232a31] bg-[#13181d] p-5"
+      className={`h-full border border-[#232a31] bg-[#13181d] p-5 ${more ? "flex flex-col" : ""}`}
       style={{ borderTop: `3px solid ${config.color}` }}
     >
       <div className="flex items-start justify-between gap-4">
@@ -430,7 +434,7 @@ export default function ElevationVisualizer({
           <dd className="tabular-nums text-white">~{snowLine} m</dd>
         </div>
       </dl>
-
+      {more && <CardMore />}
     </section>
   );
 }
