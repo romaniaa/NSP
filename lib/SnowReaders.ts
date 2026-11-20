@@ -764,9 +764,8 @@ const MAX_DEPTH_CM = 800;
 const MAX_SNOWFALL_CM = 400;
 
 // The resort's report as of now, with feed timestamps shown in `timeZone` (the
-// resort's own). A report whose every depth is zero is a placeholder ahead of the
-// season (feeds such as ReportPal fill unset figures with 0), so it counts as not
-// posted. An implausible figure throws, as a reader that can't find its figures does.
+// resort's own). Figures are shown as the resort posts them, zeros included. An
+// implausible figure throws, as a reader that can't find its figures does.
 export async function readSnowReport(id: MountainId, timeZone = TZ): Promise<SnowReport> {
   const report = await READERS[id](timeZone);
   if (report.status !== "ok") return report;
@@ -778,7 +777,6 @@ export async function readSnowReport(id: MountainId, timeZone = TZ): Promise<Sno
   if (bad.length) {
     throw new Error(`snow report ${id}: implausible ${bad.map((d) => `${d.label} ${d.cm} cm`).join(", ")}`);
   }
-  if (report.depths.every((d) => d.cm === 0)) return { status: "not-posted", url: report.url };
   return report;
 }
 
