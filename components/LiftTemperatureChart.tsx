@@ -44,8 +44,8 @@ export default function LiftTemperatureChart({
 
   return (
     <Card>
-      <h3 className="font-semibold text-white">Temperature by station</h3>
-      <p className="mb-5 mt-1 text-xs text-[#9aa7b5]">
+      <h3 className="font-semibold text-ink">Temperature by station</h3>
+      <p className="mb-5 mt-1 text-xs text-muted">
         Model estimates at {topsOnly ? "the top of each lift" : "each lift station"},
         highest first
       </p>

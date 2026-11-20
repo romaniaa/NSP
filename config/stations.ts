@@ -37,6 +37,17 @@ export const STATIONS: StationConfig[] = [
   { id: 3, name: "Mud Lake", elevation: 1900, lat: 50.79417, lon: -115.30714, where: "Smith-Dorrien valley at the Burstall trailhead", source: "Kananaskis Country" },
   { id: 113, name: "Vulture Peak", elevation: 2930, lat: 51.6244, lon: -116.47188, where: "Wapta Icefield, exposed alpine", source: "Parks Canada" },
   { id: 112, name: "Bow Summit", elevation: 2040, lat: 51.70937, lon: -116.47904, where: "Highway 93 at Bow Summit", source: "Parks Canada" },
+
+  // Snow sensors beside ski hills, for a hill's snow depth when its resort has no
+  // report (see snowStation in config/mountains.ts). Each is within about 12 km of
+  // the hill and no more than about 150 m below its lowest lift (checked 2026-11-19).
+  { id: 14, name: "Apex Roadside", elevation: 1750, lat: 49.39693, lon: -119.9008, where: "Apex Mountain Road, by the village", source: MOTI },
+  { id: 22, name: "Southridge", elevation: 1990, lat: 49.41778, lon: -117.16111, where: "Ridge above Whitewater, 3 km away", source: MOTI },
+  { id: 122, name: "Sunshine", elevation: 2200, lat: 51.078358, lon: -115.782455, where: "Sunshine Village", source: "Parks Canada" },
+  { id: 130, name: "Morrissey High", elevation: 1998, lat: 49.3725, lon: -115.046944, where: "Morrissey Ridge, 10 km south of Fernie", source: MOTI },
+  { id: 73, name: "Allison Pass", elevation: 1340, lat: 49.11564, lon: -120.86744, where: "Highway 3 at the pass, 6 km from the lifts", source: MOTI },
+  { id: 30, name: "Toby Creek", elevation: 1180, lat: 50.45147, lon: -116.25674, where: "Toby Creek road at the base of Panorama", source: MOTI },
+  { id: 75, name: "Strawberry Pass", elevation: 1575, lat: 49.20444, lon: -117.89664, where: "Highway 3B at the pass, 12 km from RED", source: MOTI },
 ];
 
 export const stationById = (id: number) => STATIONS.find((s) => s.id === id);

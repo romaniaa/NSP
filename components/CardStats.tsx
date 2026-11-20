@@ -7,12 +7,12 @@ import type { SnowNow } from "@/lib/SnowNow";
 // Three columns throughout, so the numbers line up across a row of cards.
 export function StatStrip({ children }: { children: ReactNode }) {
   return (
-    <dl className="mt-3 grid grid-cols-3 gap-3 border-y border-[#2f3840] py-3">{children}</dl>
+    <dl className="mt-3 grid grid-cols-3 gap-3 border-y border-line-2 py-3">{children}</dl>
   );
 }
 
 const Label = ({ children }: { children: ReactNode }) => (
-  <dt className="truncate text-xs text-[#9aa7b5]">{children}</dt>
+  <dt className="truncate text-xs text-muted">{children}</dt>
 );
 
 // Temperature at one height, with what would be falling there.
@@ -32,7 +32,7 @@ export function TempStat({
       <Label>
         {label} · <span className="tabular-nums">{fmt(elevation)} m</span>
       </Label>
-      <dd className="font-display text-3xl font-bold leading-tight tabular-nums text-white">
+      <dd className="font-display text-3xl font-bold leading-tight tabular-nums text-ink">
         {Math.round(temp * 10) / 10}°
       </dd>
       <dd className="mt-1">
@@ -47,11 +47,11 @@ export function SnowStat({ snow }: { snow: SnowNow }) {
   return (
     <div className="min-w-0">
       <Label>Snow · {snow.where}</Label>
-      <dd className="font-display text-3xl font-bold leading-tight tabular-nums text-white">
+      <dd className="font-display text-3xl font-bold leading-tight tabular-nums text-ink">
         {fmt(snow.cm)}
-        <span className="ml-0.5 text-sm font-normal text-[#8f8f8f]">cm</span>
+        <span className="ml-0.5 text-sm font-normal text-muted">cm</span>
       </dd>
-      <dd className="mt-1 truncate text-xs tabular-nums text-[#9aa7b5]">
+      <dd className="mt-1 truncate text-xs tabular-nums text-muted">
         {snow.new24 ? `+${snow.new24} cm in 24 h` : snow.source === "report" ? "Resort report" : "Station"}
       </dd>
     </div>

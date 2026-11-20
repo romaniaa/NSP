@@ -35,15 +35,15 @@ export default async function HillsPage() {
     <>
       <SiteNav />
       <PageTransition>
-        <main className="min-h-screen px-4 py-8 text-white md:px-10">
+        <main className="min-h-screen px-4 py-8 text-ink md:px-10">
           <div className="mx-auto max-w-8xl space-y-5">
             <header className="pb-2">
               <h1 className="text-6xl font-bold">All hills and backcountry</h1>
-              <p className="mt-2 max-w-3xl text-[#c9d3dd]">
+              <p className="mt-2 max-w-3xl text-ink-2">
                 Current conditions at every ski area and backcountry zone we cover,
                 grouped by region. Open one for its freezing-level forecast, and lifts
                 or avalanche danger.{" "}
-                <Link href="/" transitionTypes={NAV_FORWARD} className="underline hover:text-white">
+                <Link href="/" transitionTypes={NAV_FORWARD} className="underline hover:text-ink">
                   Pick your favourites for My hills
                 </Link>
                 .
@@ -84,15 +84,15 @@ export default async function HillsPage() {
               );
             })}
 
-            <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
+            <footer className="pb-4 pt-2 text-xs text-faint">
               Avalanche danger from{" "}
-              <a href="https://avalanche.ca" className="underline hover:text-white">
+              <a href="https://avalanche.ca" className="underline hover:text-ink">
                 Avalanche Canada
               </a>
               ; open a zone for the link to its full forecast. Weather is model
               estimates, not station observations. Snow line is estimated at
               150 m below the freezing level. Weather data by{" "}
-              <a href="https://open-meteo.com" className="underline hover:text-white">
+              <a href="https://open-meteo.com" className="underline hover:text-ink">
                 Open-Meteo.com
               </a>
               .

@@ -9,7 +9,7 @@ export default function CardMore({ label = "Full report" }: { label?: string }) 
   return (
     <div className="mt-auto pt-4">
       <div className="flex items-center gap-3">
-        <span className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-[#c9d3dd] transition-colors group-hover:text-white group-focus-visible:text-white">
+        <span className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-ink-2 transition-colors group-hover:text-ink group-focus-visible:text-ink">
           {label}
         </span>
         <span
@@ -20,7 +20,7 @@ export default function CardMore({ label = "Full report" }: { label?: string }) 
         </span>
         <span
           aria-hidden="true"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#3a4550] bg-[#1a2026] text-[var(--accent)] transition delay-0 duration-200 group-hover:translate-x-1 group-hover:delay-[400ms] group-focus-visible:delay-[400ms] group-active:delay-0 group-hover:border-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-[#0a0d10] group-focus-visible:border-[var(--accent)] group-focus-visible:bg-[var(--accent)] group-focus-visible:text-[#0a0d10] group-active:border-[var(--accent)] group-active:bg-[var(--accent)] group-active:text-[#0a0d10] motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-edge bg-raised text-[var(--accent)] transition delay-0 duration-200 group-hover:translate-x-1 group-hover:delay-[400ms] group-focus-visible:delay-[400ms] group-active:delay-0 group-hover:border-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-on-fill group-focus-visible:border-[var(--accent)] group-focus-visible:bg-[var(--accent)] group-focus-visible:text-on-fill group-active:border-[var(--accent)] group-active:bg-[var(--accent)] group-active:text-on-fill motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
         >
           <svg
             viewBox="0 0 16 16"

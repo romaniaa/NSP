@@ -89,7 +89,7 @@ export default async function Home() {
       />
       <SiteNav />
       <PageTransition>
-        <main className="min-h-screen px-4 py-8 text-white md:px-10">
+        <main className="min-h-screen px-4 py-8 text-ink md:px-10">
           {/* data-dash is set by the inline script before React hydrates. */}
           <div id="dashboard" className="mx-auto max-w-8xl space-y-5" suppressHydrationWarning>
             <script dangerouslySetInnerHTML={{ __html: INLINE_SCRIPT }} />
@@ -97,7 +97,7 @@ export default async function Home() {
 
             <header className="pb-2">
               <h1 className="text-6xl font-bold">My hills</h1>
-              <p className="mt-2 max-w-3xl text-[#c9d3dd]">
+              <p className="mt-2 max-w-3xl text-ink-2">
                 Ski conditions for the hills and backcountry you care about, on one page:
                 temperature, snow depth, rain or snow and avalanche danger, updated hourly.
                 It starts with the North Shore; pick your own from any region.
@@ -116,10 +116,10 @@ export default async function Home() {
 
             <DashboardControls groups={GROUPS} />
 
-            <p className="dash-empty border border-dashed border-[#2f3840] p-6 text-[#c9d3dd]">
+            <p className="dash-empty border border-dashed border-line-2 p-6 text-ink-2">
               Nothing picked yet. Tick hills and backcountry zones above, or use{" "}
-              <span className="whitespace-nowrap text-white">+ Add to My hills</span> on{" "}
-              <Link href="/hills" transitionTypes={NAV_FADE} className="underline hover:text-white">
+              <span className="whitespace-nowrap text-ink">+ Add to My hills</span> on{" "}
+              <Link href="/hills" transitionTypes={NAV_FADE} className="underline hover:text-ink">
                 All hills
               </Link>{" "}
               or any hill&apos;s page. They&apos;ll be here whenever you come back.
@@ -132,17 +132,17 @@ export default async function Home() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               <MyHillsCards data={cards} />
               {[0, 1, 2].map((i) => (
-                <div key={i} className="dash-skel h-[640px] border border-[#232a31] bg-[#13181d]" />
+                <div key={i} className="dash-skel h-[640px] border border-line bg-surface" />
               ))}
             </div>
 
-            <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
+            <footer className="pb-4 pt-2 text-xs text-faint">
               Avalanche danger from{" "}
-              <a href="https://avalanche.ca" className="underline hover:text-white">
+              <a href="https://avalanche.ca" className="underline hover:text-ink">
                 Avalanche Canada
               </a>
               . Weather is model estimates, not station observations. Weather data by{" "}
-              <a href="https://open-meteo.com" className="underline hover:text-white">
+              <a href="https://open-meteo.com" className="underline hover:text-ink">
                 Open-Meteo.com
               </a>
               .

@@ -49,8 +49,8 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
   return (
     <div className="space-y-3">
       {shared && (
-        <div className="flex flex-wrap items-center gap-3 border border-[#3a4550] bg-[#13181d] px-4 py-3 text-sm">
-          <span className="text-[#c9d3dd]">You&apos;re viewing a shared dashboard.</span>
+        <div className="flex flex-wrap items-center gap-3 border border-edge bg-surface px-4 py-3 text-sm">
+          <span className="text-ink-2">You&apos;re viewing a shared dashboard.</span>
           <button
             type="button"
             onClick={() => save(fromHash)}
@@ -101,7 +101,7 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
             Clear all
           </button>
         )}
-        <span className="text-xs text-[#7d8da1]">
+        <span className="text-xs text-faint">
           {hydrated &&
             (chosen || shared
               ? `${ids.length} picked · Saved in this browser only.`
@@ -112,12 +112,12 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
       {editing && (
         <div
           id="dashboard-picker"
-          className="space-y-3 border border-[#232a31] bg-[#13181d] p-4"
+          className="space-y-3 border border-line bg-surface p-4"
         >
-          <p className="text-sm text-[#c9d3dd]">
+          <p className="text-sm text-ink-2">
             Tick what you want on My hills, then use the controls under each card to
             reorder or remove it. You can also add hills from{" "}
-            <Link href="/hills" transitionTypes={NAV_FADE} className="underline hover:text-white">
+            <Link href="/hills" transitionTypes={NAV_FADE} className="underline hover:text-ink">
               All hills
             </Link>{" "}
             or any hill&apos;s page.
@@ -126,12 +126,12 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
             <legend className="sr-only">Hills and backcountry zones to show</legend>
             {groups.map((g) => (
               <div key={g.region}>
-                <p className="text-xs uppercase tracking-widest text-[#9aa7b5]">{g.region}</p>
+                <p className="text-xs uppercase tracking-widest text-muted">{g.region}</p>
                 <ul className="-mx-2 mt-1">
                   {g.places.map((p) => (
                     <li key={p.id}>
                       <label
-                        className="check-row text-[15px] text-white"
+                        className="check-row text-[15px] text-ink"
                         style={{ "--orb": p.color } as CSSProperties}
                       >
                         <input
@@ -165,7 +165,7 @@ export default function DashboardControls({ groups }: { groups: PickerGroup[] })
                         <span className="min-w-0">
                           {p.name}
                           {p.kind === "Backcountry" && (
-                            <span className="ml-1.5 text-xs text-[#9aa7b5]">backcountry</span>
+                            <span className="ml-1.5 text-xs text-muted">backcountry</span>
                           )}
                         </span>
                       </label>

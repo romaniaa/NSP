@@ -27,7 +27,7 @@ function CardLink({ href, color, children }: { href: string; color: string; chil
     <Link
       href={href}
       transitionTypes={NAV_FORWARD}
-      className="group block flex-1 transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+      className="group block flex-1 transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/60"
       style={{ "--accent": color } as CSSProperties}
     >
       {children}

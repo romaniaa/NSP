@@ -1,0 +1,22 @@
+# Reads every resort's snow report each morning and fails if a reader errors,
+# which usually means a resort changed its site. GitHub emails a failed scheduled
+# run to whoever last changed this schedule. Run it by hand from the Actions tab.
+name: Snow report readers
+
+on:
+  schedule:
+    # 16:30 UTC: 8:30 a.m. Pacific, after the morning reports are posted.
+    - cron: "30 16 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # The readers have no dependencies to install.
+      - run: npm run snow:check

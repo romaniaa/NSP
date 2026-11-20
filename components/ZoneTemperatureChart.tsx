@@ -28,8 +28,8 @@ export default function ZoneTemperatureChart({ zone, now }: { zone: ZoneConfig; 
 
   return (
     <Card>
-      <h3 className="font-semibold text-white">Temperature by height</h3>
-      <p className="mb-5 mt-1 text-xs text-[#9aa7b5]">
+      <h3 className="font-semibold text-ink">Temperature by height</h3>
+      <p className="mb-5 mt-1 text-xs text-muted">
         Model estimates every {STEP} m across this terrain, highest first
       </p>
       <BubbleChart rows={rows} min={min} max={max} step={step} axisLabel="Temperature (°C)" zeroLine />

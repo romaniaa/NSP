@@ -23,12 +23,12 @@ export default function WindChart({ rows }: { rows: WindRow[] }) {
     <Card>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-white">Wind speed</h3>
-          <p className="mt-1 text-xs text-[#9aa7b5]">
+          <h3 className="font-semibold text-ink">Wind speed</h3>
+          <p className="mt-1 text-xs text-muted">
             Model wind at 10 m above ground
           </p>
         </div>
-        <div className="flex border border-[#2f3840] font-display text-sm uppercase tracking-wider">
+        <div className="flex border border-line-2 font-display text-sm uppercase tracking-wider">
           {(["avg", "gust"] as const).map((m) => (
             <button
               key={m}
@@ -37,8 +37,8 @@ export default function WindChart({ rows }: { rows: WindRow[] }) {
               aria-pressed={mode === m}
               className={`px-3 py-1 font-semibold ${
                 mode === m
-                  ? "bg-[#e6edf3] text-[#0a0d10]"
-                  : "text-[#9aa7b5] hover:text-white"
+                  ? "bg-ink text-on-fill"
+                  : "text-muted hover:text-ink"
               }`}
             >
               {m === "avg" ? "Average" : "Gusts"}

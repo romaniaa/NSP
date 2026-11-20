@@ -41,7 +41,7 @@ function CardLink({ href, color, children }: { href: string; color: string; chil
     <Link
       href={href}
       transitionTypes={NAV_FORWARD}
-      className="group block flex-1 transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+      className="group block flex-1 transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/60"
       style={{ "--accent": color } as CSSProperties}
     >
       {children}
@@ -97,21 +97,21 @@ export default async function RegionPage({ id }: { id: RegionId }) {
       />
       <SiteNav />
       <PageTransition>
-        <main className="min-h-screen px-4 py-8 text-white md:px-10">
+        <main className="min-h-screen px-4 py-8 text-ink md:px-10">
           <div className="mx-auto max-w-8xl space-y-5">
             <header className="pb-2">
               <h1 className="text-6xl font-bold">{region.name} ski conditions</h1>
-              <p className="mt-2 max-w-3xl text-[#c9d3dd]">
+              <p className="mt-2 max-w-3xl text-ink-2">
                 {region.intro} Rain or snow, temperature and snow depth for each, updated
                 hourly.
               </p>
-              <ul className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#c9d3dd]">
+              <ul className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink-2">
                 {hills.map((m) => (
                   <li key={m.id}>
                     <Link
                       href={`/${m.id}`}
                       transitionTypes={NAV_FORWARD}
-                      className="flex items-center gap-1.5 hover:text-white hover:underline"
+                      className="flex items-center gap-1.5 hover:text-ink hover:underline"
                     >
                       <MountainIcon id={m.id} color={m.color} className="h-3 w-4" />
                       {m.fullName}
@@ -123,7 +123,7 @@ export default async function RegionPage({ id }: { id: RegionId }) {
                     <Link
                       href={`/backcountry/${z.id}`}
                       transitionTypes={NAV_FORWARD}
-                      className="flex items-center gap-1.5 hover:text-white hover:underline"
+                      className="flex items-center gap-1.5 hover:text-ink hover:underline"
                     >
                       <RangeIcon color={z.color} className="h-3 w-4" />
                       {z.fullName} backcountry
@@ -198,15 +198,15 @@ export default async function RegionPage({ id }: { id: RegionId }) {
               <Unavailable title="Temperature and wind" />
             )}
 
-            <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
+            <footer className="pb-4 pt-2 text-xs text-faint">
               Model estimates, not station observations. Snow line is estimated at 150 m
               below the freezing level. Snow depth from each resort&apos;s report, and for
               the backcountry from Avalanche Canada weather stations. Avalanche danger from{" "}
-              <a href="https://avalanche.ca" className="underline hover:text-white">
+              <a href="https://avalanche.ca" className="underline hover:text-ink">
                 Avalanche Canada
               </a>
               . Weather data by{" "}
-              <a href="https://open-meteo.com" className="underline hover:text-white">
+              <a href="https://open-meteo.com" className="underline hover:text-ink">
                 Open-Meteo.com
               </a>
               .

@@ -15,8 +15,8 @@ export default function TemperatureChart({
 
   return (
     <Card>
-      <h3 className="font-semibold text-white">Temperature by elevation</h3>
-      <p className="mb-5 mt-1 text-xs text-[#9aa7b5]">
+      <h3 className="font-semibold text-ink">Temperature by elevation</h3>
+      <p className="mb-5 mt-1 text-xs text-muted">
         Model estimates at each lift, not station readings
       </p>
       <BubbleChart

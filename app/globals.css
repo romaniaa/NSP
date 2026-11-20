@@ -6,12 +6,154 @@
   --font-display: var(--font-barlow-condensed);
   /* Page content cap, used as max-w-8xl. */
   --container-8xl: 1560px;
+
+  /* Theme colours, as utilities (bg-surface, text-muted, border-line, …). Each
+     resolves to the variable below, so light mode only swaps the variables. */
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-raised: var(--raised);
+  --color-raised-hover: var(--raised-hover);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-edge: var(--edge);
+  --color-tick: var(--tick);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-on-fill: var(--on-fill);
+  --color-frost: var(--frost);
+  --color-cool: var(--cool);
+  --color-cold: var(--cold);
+  --color-warm: var(--warm);
+  --color-wet: var(--wet);
+  --color-rain: var(--rain);
+  --color-sun: var(--sun);
+  --color-partly: var(--partly);
+  --color-cloud: var(--cloud);
+  --color-fog: var(--fog);
+  --color-chart-band: var(--chart-band);
+  --color-chart-line: var(--chart-line);
+  --color-scene: var(--scene);
+  --color-scene-ground: var(--scene-ground);
+  --color-scene-line: var(--scene-line);
+  --color-scene-label: var(--scene-label);
+}
+
+/* Dark is the default, and is forced on any element marked data-theme="dark". */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0a0d10;
+  --surface: #13181d;
+  --sunken: #0f1316;
+  --raised: #1a2026;
+  --raised-hover: #222a31;
+  --line: #232a31;
+  --line-2: #2f3840;
+  --edge: #3a4550;
+  --tick: #5f6e7b;
+  --ink: #e6edf3;
+  --ink-2: #c9d3dd;
+  --muted: #9aa7b5;
+  --faint: #7d8da1;
+  --on-fill: #0a0d10; /* text on a filled place-colour or snow-blue button */
+  --frost: #7dd3fc; /* snow blue, as text */
+  --cool: #7fb0ff;
+  --cold: #4f7cff;
+  --warm: #f87171;
+  --wet: #c4b5fd;
+  --rain: #4f8bff;
+  --sun: #f2c94c;
+  --partly: #b8c4d0;
+  --cloud: #aab6c2;
+  --fog: #c4b8a8;
+  --chart-band: #94a3b8;
+  --chart-line: #6f7f90;
+  /* The elevation diagram: a night scene in dark mode, overcast grey in light. */
+  --scene: #000000;
+  --scene-ground: rgb(0 0 0 / 0.45); /* below the ridge line */
+  --scene-line: #ffffff; /* freezing level and altimeter ticks */
+  --scene-label: #000000;
+}
+
+/* Light: the visitor's choice (data-theme="light" on <html>), or their system
+   setting when they haven't chosen. Accent text is darkened to stay readable on
+   white; fills (buttons, place colours) keep their dark-mode colours. CSS can't
+   share one block between a media query and a selector, so the two light blocks
+   below are copies: change both together. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --page: #f3f5f7;
+    --surface: #ffffff;
+    --sunken: #e9edf1;
+    --raised: #ffffff;
+    --raised-hover: #eef2f6;
+    --line: #dde3e9;
+    --line-2: #cbd3dc;
+    --edge: #aab6c2;
+    --tick: #9aa7b5;
+    --ink: #0d1620;
+    --ink-2: #2e3b48;
+    --muted: #4b5968;
+    --faint: #637284;
+    --frost: #0369a1;
+    --cool: #1d4ed8;
+    --cold: #2563eb;
+    --warm: #dc2626;
+    --wet: #6d28d9;
+    --rain: #1d4ed8;
+    --sun: #a16207;
+    --partly: #475569;
+    --cloud: #52606f;
+    --fog: #78716c;
+    --chart-band: #64748b;
+    --chart-line: #7b8a9a;
+    --scene: #cfd6dd;
+    --scene-ground: rgb(255 255 255 / 0.5);
+    --scene-line: #0d1620;
+    --scene-label: #ffffff;
+  }
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --page: #f3f5f7;
+  --surface: #ffffff;
+  --sunken: #e9edf1;
+  --raised: #ffffff;
+  --raised-hover: #eef2f6;
+  --line: #dde3e9;
+  --line-2: #cbd3dc;
+  --edge: #aab6c2;
+  --tick: #9aa7b5;
+  --ink: #0d1620;
+  --ink-2: #2e3b48;
+  --muted: #4b5968;
+  --faint: #637284;
+  --frost: #0369a1;
+  --cool: #1d4ed8;
+  --cold: #2563eb;
+  --warm: #dc2626;
+  --wet: #6d28d9;
+  --rain: #1d4ed8;
+  --sun: #a16207;
+  --partly: #475569;
+  --cloud: #52606f;
+  --fog: #78716c;
+  --chart-band: #64748b;
+  --chart-line: #7b8a9a;
+  --scene: #cfd6dd;
+  --scene-ground: rgb(255 255 255 / 0.5);
+  --scene-line: #0d1620;
+  --scene-label: #ffffff;
 }
 
 @layer base {
   html {
-    background: #0a0d10;
-    color: #e6edf3;
+    background: var(--page);
+    color: var(--ink);
   }
 
   /* Keep the page from scrolling behind the open nav drawer. */
@@ -54,7 +196,7 @@
 @layer components {
   /* Square panel with survey registration ticks in each corner. */
   .plate {
-    --tick: #5f6e7b;
+    --tick-c: var(--tick);
     background-image:
       linear-gradient(var(--tick), var(--tick)),
       linear-gradient(var(--tick), var(--tick)),
@@ -109,9 +251,9 @@
     height: 2.75rem;
     border-radius: 9999px;
     overflow: hidden;
-    color: #e6edf3;
-    background: #1a2026;
-    border: 1px solid #3a4550;
+    color: var(--ink);
+    background: var(--raised);
+    border: 1px solid var(--edge);
     transition:
       transform 0.15s ease,
       border-color 0.15s ease,
@@ -137,14 +279,14 @@
     clip-path: inset(0);
   }
   .orb[data-on] {
-    color: #0a0d10;
+    color: var(--on-fill);
     border-color: var(--orb);
   }
 
   /* Hover and press, on the orb or on a trigger wrapping it. */
   .orb:hover,
   .orb-trigger:hover .orb {
-    background: #222a31;
+    background: var(--raised-hover);
     border-color: var(--orb);
   }
   .orb:active,
@@ -196,7 +338,7 @@
     transition: background-color 0.15s ease;
   }
   .check-row:hover {
-    background: rgb(255 255 255 / 0.04);
+    background: color-mix(in srgb, var(--ink) 4%, transparent);
   }
   .check-box {
     position: relative;
@@ -208,9 +350,9 @@
     height: 1.75rem;
     border-radius: 0.375rem;
     overflow: hidden;
-    color: #0a0d10;
-    background: #1a2026;
-    border: 1px solid #3a4550;
+    color: var(--on-fill);
+    background: var(--raised);
+    border: 1px solid var(--edge);
     transition:
       border-color 0.15s ease,
       transform 0.15s ease;
@@ -266,9 +408,9 @@
     overflow: hidden;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #e6edf3;
-    background: #1a2026;
-    border: 1px solid #3a4550;
+    color: var(--ink);
+    background: var(--raised);
+    border: 1px solid var(--edge);
     transition:
       transform 0.15s ease,
       border-color 0.15s ease,
@@ -283,7 +425,7 @@
     font-size: 0.8125rem;
   }
   .orb-pill:hover {
-    background: #222a31;
+    background: var(--raised-hover);
     border-color: var(--orb);
   }
   .orb-pill::before {
@@ -296,7 +438,7 @@
     transition: clip-path 0.3s cubic-bezier(0.65, 0, 0.35, 1);
   }
   .orb-pill[data-on] {
-    color: #0a0d10;
+    color: var(--on-fill);
     border-color: var(--orb);
   }
   .orb-pill[data-on]::before {
@@ -317,7 +459,7 @@
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     font-weight: 600;
-    color: #0a0d10;
+    color: var(--on-fill);
     background: #7dd3fc;
   }
 
@@ -337,7 +479,7 @@
     font-family: var(--font-mono);
     font-size: 0.75rem;
     font-weight: 400;
-    color: #7d8da1;
+    color: var(--faint);
   }
 }
 
@@ -406,6 +548,16 @@
   display: none;
 }
 ::view-transition-new(site-nav) {
+  animation: none;
+}
+::view-transition-group(mobile-nav) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(mobile-nav) {
+  display: none;
+}
+::view-transition-new(mobile-nav) {
   animation: none;
 }
 

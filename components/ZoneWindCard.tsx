@@ -14,28 +14,28 @@ export default function ZoneWindCard({ zone, now }: { zone: ZoneConfig; now: Hil
 
   return (
     <Card>
-      <h3 className="font-semibold text-white">Wind</h3>
-      <p className="mt-1 text-xs text-[#9aa7b5]">
+      <h3 className="font-semibold text-ink">Wind</h3>
+      <p className="mt-1 text-xs text-muted">
         Model estimates. Ridgetop wind is the free air at ~{fmt(top)} m
       </p>
 
       <div className="mt-6 flex items-center justify-between gap-6">
         <div className="space-y-4">
           <div>
-            <p className="text-xs text-[#9aa7b5]">Ridgetop</p>
-            <p className="font-display text-5xl font-bold tabular-nums text-white">
+            <p className="text-xs text-muted">Ridgetop</p>
+            <p className="font-display text-5xl font-bold tabular-nums text-ink">
               {ridge.speed}
-              <span className="ml-1 text-base font-normal text-[#9aa7b5]">km/h</span>
+              <span className="ml-1 text-base font-normal text-muted">km/h</span>
             </p>
-            <p className="text-sm text-[#c9d3dd]">From the {compass(ridge.dir)}</p>
+            <p className="text-sm text-ink-2">From the {compass(ridge.dir)}</p>
           </div>
           <div>
-            <p className="text-xs text-[#9aa7b5]">Near the surface</p>
-            <p className="font-display text-3xl font-bold tabular-nums text-white">
+            <p className="text-xs text-muted">Near the surface</p>
+            <p className="font-display text-3xl font-bold tabular-nums text-ink">
               {Math.round(now.wind)}
-              <span className="ml-1 text-base font-normal text-[#9aa7b5]">km/h</span>
+              <span className="ml-1 text-base font-normal text-muted">km/h</span>
             </p>
-            <p className="text-sm text-[#c9d3dd]">
+            <p className="text-sm text-ink-2">
               Gusts {Math.round(now.gust)} km/h · from the {compass(now.dir)}
             </p>
           </div>
@@ -43,10 +43,10 @@ export default function ZoneWindCard({ zone, now }: { zone: ZoneConfig; now: Hil
         <Compass dir={ridge.dir} color={zone.color} />
       </div>
 
-      <p className="mt-5 text-xs text-[#7d8da1]">
+      <p className="mt-5 text-xs text-faint">
         Exposed ridges and peaks usually see the ridgetop wind; sheltered slopes and
         valleys, the near-surface wind. Humidity{" "}
-        <span className="tabular-nums text-white">{Math.round(now.rh)}%</span>.
+        <span className="tabular-nums text-ink">{Math.round(now.rh)}%</span>.
       </p>
     </Card>
   );

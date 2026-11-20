@@ -33,11 +33,11 @@ export default async function BackcountryPage() {
     <>
       <SiteNav />
       <PageTransition>
-        <main className="min-h-screen px-4 py-8 text-white md:px-10">
+        <main className="min-h-screen px-4 py-8 text-ink md:px-10">
           <div className="mx-auto max-w-8xl space-y-5">
             <header className="pb-2">
               <h1 className="text-6xl font-bold">Backcountry</h1>
-              <p className="mt-2 max-w-3xl text-[#c9d3dd]">
+              <p className="mt-2 max-w-3xl text-ink-2">
                 Avalanche danger, temperature at each elevation, ridgetop wind and snow
                 depth for popular touring areas. A summary, not the forecast: read the
                 full avalanche forecast before heading out, and travel in avalanche
@@ -70,14 +70,14 @@ export default async function BackcountryPage() {
               );
             })}
 
-            <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
+            <footer className="pb-4 pt-2 text-xs text-faint">
               Avalanche danger from{" "}
-              <a href="https://avalanche.ca" className="underline hover:text-white">
+              <a href="https://avalanche.ca" className="underline hover:text-ink">
                 Avalanche Canada
               </a>
               . Snow depth from Avalanche Canada weather stations. Weather is model
               estimates. Weather data by{" "}
-              <a href="https://open-meteo.com" className="underline hover:text-white">
+              <a href="https://open-meteo.com" className="underline hover:text-ink">
                 Open-Meteo.com
               </a>
               .

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef } from "react";
 import MountainIcon from "@/components/MountainIcon";
 import RangeIcon from "@/components/RangeIcon";
+import ThemeToggle from "@/components/ThemeToggle";
 import { NAV_BACK, NAV_FADE, NAV_FORWARD } from "@/components/Transitions";
 import { useDashboard } from "@/components/useDashboard";
 import { MOUNTAINS, type MountainId } from "@/config/mountains";
@@ -83,7 +84,7 @@ function PlaceRow({
         onClick={onNavigate}
         aria-current={current ? "page" : undefined}
         className={`flex items-center gap-3 border-l-2 px-3 py-2.5 ${
-          current ? "bg-white/[0.06]" : "border-transparent hover:bg-white/[0.04]"
+          current ? "bg-ink/[0.06]" : "border-transparent hover:bg-ink/[0.04]"
         }`}
         style={current ? { borderLeftColor: place.color } : undefined}
       >
@@ -95,8 +96,8 @@ function PlaceRow({
           )}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[15px] font-medium text-white">{place.name}</span>
-          <span className="mt-0.5 flex items-center gap-2 text-xs text-[#9aa7b5]">
+          <span className="block truncate text-[15px] font-medium text-ink">{place.name}</span>
+          <span className="mt-0.5 flex items-center gap-2 text-xs text-muted">
             {status?.danger && (
               <span
                 className={`h-2 w-2 shrink-0 ${DANGER_STYLE[status.danger].chip}`}
@@ -111,11 +112,11 @@ function PlaceRow({
         </span>
         {status?.freezingLevel != null && (
           <span className="shrink-0 text-right">
-            <span className="block font-mono text-sm text-white">
+            <span className="block font-mono text-sm text-ink">
               {status.freezingLevel.toLocaleString("en-CA")}
-              <span className="text-[10px] text-[#8f8f8f]"> m</span>
+              <span className="text-[10px] text-muted"> m</span>
             </span>
-            <span className="block text-[10px] uppercase tracking-wider text-[#7d8da1]">
+            <span className="block text-[10px] uppercase tracking-wider text-faint">
               Freezing
             </span>
           </span>
@@ -162,31 +163,56 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
     <nav
       aria-label="Main"
       style={{ viewTransitionName: "site-nav" }}
-      className="border-b border-[#2f3840] bg-[#0a0d10]/70 px-4 md:px-10"
+      className="border-b border-line-2 bg-page/70 px-4 md:px-10"
     >
-      {/* Phones: brand (linking to My hills) and the menu. */}
-      <div className="flex items-center gap-2 py-2 md:hidden">
+      {/* Phones: the brand up top, and the controls in a bar floating at the
+          bottom centre, within reach of a thumb. */}
+      <div className="py-3 md:hidden">
         <Link
           href="/"
           transitionTypes={NAV_BACK}
-          className="mr-auto whitespace-nowrap py-1 font-display text-lg font-bold uppercase tracking-widest text-white"
+          className="whitespace-nowrap font-display text-lg font-bold uppercase tracking-widest text-ink"
         >
           OpenPeaks
         </Link>
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          aria-controls={drawerId}
-          onClick={() => drawer.current?.showModal()}
-          aria-label="Menu: every hill and zone, with live conditions"
-          className="orb"
-        >
-          <svg viewBox="0 0 16 12" className="h-3 w-4" aria-hidden="true" fill="currentColor">
-            <rect width="16" height="2" rx="1" />
-            <rect y="5" width="16" height="2" rx="1" />
-            <rect y="10" width="16" height="2" rx="1" />
-          </svg>
-        </button>
+      </div>
+      <div
+        // Named so it stays put, like the nav, while the page changes beneath it.
+        style={{ viewTransitionName: "mobile-nav" }}
+        className="pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex justify-center px-4 md:hidden"
+      >
+        <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-edge bg-raised/85 p-1.5 shadow-lg shadow-black/25 backdrop-blur-md">
+          <Link
+            href="/"
+            transitionTypes={NAV_BACK}
+            aria-current={active === "mine" ? "page" : undefined}
+            data-on={active === "mine" || undefined}
+            className="orb-pill min-h-11 border-transparent bg-transparent px-4"
+          >
+            My hills
+            {hydrated && saved.length ? (
+              <span className="orb-badge" aria-label={`${saved.length} saved`}>
+                {saved.length}
+              </span>
+            ) : null}
+          </Link>
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            aria-controls={drawerId}
+            onClick={() => drawer.current?.showModal()}
+            aria-label="All hills: every hill and zone, with live conditions"
+            className="orb-pill min-h-11 border-transparent bg-transparent px-4"
+          >
+            <svg viewBox="0 0 16 12" className="h-3 w-4" aria-hidden="true" fill="currentColor">
+              <rect width="16" height="2" rx="1" />
+              <rect y="5" width="16" height="2" rx="1" />
+              <rect y="10" width="16" height="2" rx="1" />
+            </svg>
+            All hills
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Larger screens: the tab row. */}
@@ -194,7 +220,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
         <Link
           href="/"
           transitionTypes={NAV_BACK}
-          className="mr-4 whitespace-nowrap py-3 font-display text-lg font-bold uppercase tracking-widest text-white"
+          className="mr-4 whitespace-nowrap py-3 font-display text-lg font-bold uppercase tracking-widest text-ink"
         >
           OpenPeaks
         </Link>
@@ -207,9 +233,9 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
               transitionTypes={transitionTo(item.id)}
               aria-current={isActive ? "page" : undefined}
               className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-sm ${
-                isActive ? "text-white" : "border-transparent text-[#9aa7b5] hover:text-white"
+                isActive ? "text-ink" : "border-transparent text-muted hover:text-ink"
               }`}
-              style={isActive ? { borderBottomColor: "#e6edf3" } : undefined}
+              style={isActive ? { borderBottomColor: "var(--ink)" } : undefined}
             >
               {item.label}
               {item.count ? (
@@ -220,11 +246,13 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
             </Link>
           );
         })}
+        <ThemeToggle className="ml-auto" />
       </div>
 
-      {/* A modal dialog: it traps focus, closes on Escape, makes the page behind
-          inert, and returns focus to the menu button when it closes. Tapping the
-          backdrop (the dialog element itself, outside the panel) closes it too. */}
+      {/* A modal dialog, rising from the bottom bar as a sheet: it traps focus,
+          closes on Escape, makes the page behind inert, and returns focus to the
+          menu button when it closes. Tapping the backdrop (the dialog element
+          itself, outside the panel) closes it too. */}
       <dialog
         id={drawerId}
         data-nav-drawer
@@ -233,15 +261,15 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
         onClick={(e) => {
           if (e.target === e.currentTarget) close();
         }}
-        className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-none w-[min(90vw,400px)] max-w-none border-0 border-l border-[#2f3840] bg-[#0d1115] p-0 text-white transition-[translate,display,overlay] transition-discrete duration-200 ease-out not-open:translate-x-full starting:open:translate-x-full backdrop:bg-black/70 motion-reduce:transition-none"
+        className="fixed inset-x-0 top-auto bottom-0 m-0 h-[88dvh] max-h-none w-full max-w-none rounded-t-2xl border-0 border-t border-line-2 bg-sunken p-0 pb-[env(safe-area-inset-bottom)] text-ink shadow-2xl transition-[translate,display,overlay] transition-discrete duration-300 ease-out not-open:translate-y-full starting:open:translate-y-full backdrop:bg-black/50 motion-reduce:transition-none"
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between gap-3 border-b border-[#2f3840] px-4 py-3">
+          <div className="flex items-center justify-between gap-3 border-b border-line-2 px-4 py-3">
             <div>
               <p className="font-display text-lg font-bold uppercase tracking-widest">
                 OpenPeaks
               </p>
-              <p className="text-xs text-[#7d8da1]">
+              <p className="text-xs text-faint">
                 {status?.asOf
                   ? `Conditions as of ${status.asOf} · updated hourly`
                   : "Live conditions unavailable right now"}
@@ -286,7 +314,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
 
             <section aria-labelledby="drawer-mine" className="px-1">
               <div className="flex items-baseline justify-between px-3 pb-1">
-                <h2 id="drawer-mine" className="text-sm text-[#9aa7b5]">
+                <h2 id="drawer-mine" className="text-sm text-muted">
                   My hills
                 </h2>
                 <Link
@@ -312,9 +340,9 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                   ))}
                 </ul>
               ) : (
-                <p className="mx-3 border border-dashed border-[#2f3840] px-3 py-3 text-sm text-[#9aa7b5]">
+                <p className="mx-3 border border-dashed border-line-2 px-3 py-3 text-sm text-muted">
                   Pin the hills you ski with{" "}
-                  <span className="text-white">+ Add to My hills</span> and they&apos;ll be
+                  <span className="text-ink">+ Add to My hills</span> and they&apos;ll be
                   here.
                 </p>
               )}
@@ -323,7 +351,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
             {GROUPS.map((g) => (
               <section key={g.region.id} aria-label={g.region.name} className="mt-4 px-1">
                 <div className="flex items-baseline justify-between px-3 pb-1">
-                  <h2 className="text-sm text-[#9aa7b5]">{g.region.name}</h2>
+                  <h2 className="text-sm text-muted">{g.region.name}</h2>
                   <Link
                     href={`/${g.region.id}`}
                     transitionTypes={NAV_FORWARD}
@@ -348,7 +376,7 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
               </section>
             ))}
 
-            <p className="mt-6 px-4 text-xs text-[#7d8da1]">
+            <p className="mt-6 px-4 text-xs text-faint">
               Freezing level and rain or snow are model estimates. Avalanche danger
               from Avalanche Canada: read the full forecast before heading out.
             </p>

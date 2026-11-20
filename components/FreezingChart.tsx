@@ -72,18 +72,18 @@ export default function FreezingChart({
   return (
     <Card>
       <div className="flex items-start justify-between gap-3">
-        <h3 className="font-semibold text-white">{title}</h3>
-        <span className="chip bg-[#7fb0ff]/10 text-[#7fb0ff]">{badge}</span>
+        <h3 className="font-semibold text-ink">{title}</h3>
+        <span className="chip bg-cool/10 text-cool">{badge}</span>
       </div>
 
       <div className="mt-5 flex items-center gap-4">
-        <p className="font-display text-6xl font-bold tabular-nums text-white">
+        <p className="font-display text-6xl font-bold tabular-nums text-ink">
           {fmt(current)}
-          <span className="ml-1 text-2xl text-[#9aa7b5]">m</span>
+          <span className="ml-1 text-2xl text-muted">m</span>
         </p>
         <div>
-          <p className="font-semibold text-white">{trend}</p>
-          <p className="text-sm text-[#9aa7b5]">{detail}</p>
+          <p className="font-semibold text-ink">{trend}</p>
+          <p className="text-sm text-muted">{detail}</p>
         </div>
       </div>
 
@@ -105,24 +105,24 @@ export default function FreezingChart({
               x2={PLOT_W}
               y1={yPct(v)}
               y2={yPct(v)}
-              stroke="#3a444d"
+              className="stroke-edge"
               strokeWidth="1"
               strokeDasharray="2 4"
               vectorEffect="non-scaling-stroke"
             />
           ))}
-          <path d={band} fill="#94a3b8" fillOpacity="0.16" />
+          <path d={band} className="fill-chart-band" fillOpacity="0.16" />
           <path
             d={smooth(low)}
             fill="none"
-            stroke="#6f7f90"
+            className="stroke-chart-line"
             strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           />
           <path
             d={smooth(high)}
             fill="none"
-            stroke="#e6edf3"
+            className="stroke-ink"
             strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           />
@@ -130,7 +130,7 @@ export default function FreezingChart({
         {grid.map((v) => (
           <span
             key={v}
-            className="absolute right-0 -translate-y-1/2 text-xs tabular-nums text-[#9aa7b5]"
+            className="absolute right-0 -translate-y-1/2 text-xs tabular-nums text-muted"
             style={{ top: `${yPct(v)}%` }}
           >
             {fmt(v)}m
@@ -138,7 +138,7 @@ export default function FreezingChart({
         ))}
       </div>
 
-      <div className="relative mt-2 h-9 text-xs leading-tight text-[#9aa7b5]">
+      <div className="relative mt-2 h-9 text-xs leading-tight text-muted">
         {days.map((d, i) =>
           i % labelStep === 0 ? (
             <span
@@ -154,22 +154,22 @@ export default function FreezingChart({
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-[#c9d3dd]">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-ink-2">
         <span>
           Lowest{" "}
-          <b className="font-semibold text-white tabular-nums">
+          <b className="font-semibold text-ink tabular-nums">
             {fmt(lowest)}m
           </b>
         </span>
         <span>
           Highest{" "}
-          <b className="font-semibold text-white tabular-nums">
+          <b className="font-semibold text-ink tabular-nums">
             {fmt(highest)}m
           </b>
         </span>
-        <span className="text-xs text-[#9aa7b5]">{updated}</span>
+        <span className="text-xs text-muted">{updated}</span>
       </div>
-      <p className="mt-3 text-xs text-[#7d8da1]">{note}</p>
+      <p className="mt-3 text-xs text-faint">{note}</p>
     </Card>
   );
 }

@@ -1,5 +1,6 @@
 import { cacheLife } from "next/cache";
 import { STATIONS, stationById } from "@/config/stations";
+import { MOUNTAINS, type MountainId } from "@/config/mountains";
 import type { ZoneId } from "@/config/zones";
 import { ZONES } from "@/config/zones";
 
@@ -77,7 +78,8 @@ function summarise(id: number, rows: Measurement[]): StationSummary | null {
 }
 
 // Latest summary for every station, refreshed every 30 minutes (stations report
-// hourly) and shared between server instances: about 430 small requests a day.
+// hourly) and shared between server instances: one small request per station
+// every half hour.
 // A station that fails or has no data is null; the others still show.
 export async function fetchStations(): Promise<Record<number, StationSummary | null>> {
   "use cache: remote";
@@ -123,4 +125,36 @@ export async function getZoneStations(id: ZoneId): Promise<ZoneStation[]> {
       { ...config, reading, stale: reading != null && now - Date.parse(reading.time) > STALE_MS },
     ];
   });
+}
+
+export type HillStation = ZoneStation & {
+  km: number; // straight-line distance from the hill's weather point
+};
+
+const toRad = (d: number) => (d * Math.PI) / 180;
+function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const a =
+    Math.sin(toRad(lat2 - lat1) / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(toRad(lon2 - lon1) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(a));
+}
+
+// The snow sensor beside a hill (config/mountains.ts snowStation) with its latest
+// reading, or null when the hill has none. Its reading is null when the station
+// isn't reporting, or reports no snow depth.
+export async function getHillSnowStation(id: MountainId): Promise<HillStation | null> {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 900, expire: 3600 });
+
+  const hill = MOUNTAINS.find((m) => m.id === id);
+  const config = hill?.snowStation != null ? stationById(hill.snowStation) : undefined;
+  if (!hill || !config) return null;
+  const all = await fetchStations();
+  const reading = all[config.id] ?? null;
+  return {
+    ...config,
+    reading: reading?.snow != null ? reading : null,
+    stale: reading != null && Date.now() - Date.parse(reading.time) > STALE_MS,
+    km: Math.round(distanceKm(hill.lat, hill.lon, config.lat, config.lon)),
+  };
 }

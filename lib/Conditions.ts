@@ -13,24 +13,24 @@ export const PRECIP: Record<
 > = {
   snow: {
     label: "Snow",
-    text: "text-[#7dd3fc]",
-    chip: "bg-[#7dd3fc]/15 text-[#7dd3fc]",
-    dot: "bg-[#7dd3fc]",
-    band: "bg-[#7dd3fc]/10",
+    text: "text-frost",
+    chip: "bg-frost/15 text-frost",
+    dot: "bg-frost",
+    band: "bg-frost/10",
   },
   mixed: {
     label: "Wet snow",
-    text: "text-[#c4b5fd]",
-    chip: "bg-[#c4b5fd]/15 text-[#c4b5fd]",
-    dot: "bg-[#c4b5fd]",
-    band: "bg-[#c4b5fd]/10",
+    text: "text-wet",
+    chip: "bg-wet/15 text-wet",
+    dot: "bg-wet",
+    band: "bg-wet/10",
   },
   rain: {
     label: "Rain",
-    text: "text-[#4f8bff]",
-    chip: "bg-[#4f8bff]/15 text-[#4f8bff]",
-    dot: "bg-[#4f8bff]",
-    band: "bg-[#4f8bff]/10",
+    text: "text-rain",
+    chip: "bg-rain/15 text-rain",
+    dot: "bg-rain",
+    band: "bg-rain/10",
   },
 };
 
@@ -52,26 +52,26 @@ export const CONDITION: Record<
   snow: PRECIP.snow,
   mixed: PRECIP.mixed,
   rain: PRECIP.rain,
-  dry: { label: "Dry", chip: "bg-white/10 text-[#d4d4d4]", dot: "bg-[#d4d4d4]" },
+  dry: { label: "Dry", chip: "bg-ink/10 text-ink-2", dot: "bg-ink-2" },
   clear: {
     label: "Clear",
-    chip: "bg-[#f2c94c]/15 text-[#f2c94c]",
-    dot: "bg-[#f2c94c]",
+    chip: "bg-sun/15 text-sun",
+    dot: "bg-sun",
   },
   partly: {
     label: "Partly cloudy",
-    chip: "bg-[#b8c4d0]/15 text-[#b8c4d0]",
-    dot: "bg-[#b8c4d0]",
+    chip: "bg-partly/15 text-partly",
+    dot: "bg-partly",
   },
   cloudy: {
     label: "Cloudy",
-    chip: "bg-[#8c99a6]/20 text-[#aab6c2]",
-    dot: "bg-[#8c99a6]",
+    chip: "bg-cloud/20 text-cloud",
+    dot: "bg-cloud",
   },
   fog: {
     label: "Fog",
-    chip: "bg-[#c4b8a8]/15 text-[#c4b8a8]",
-    dot: "bg-[#c4b8a8]",
+    chip: "bg-fog/15 text-fog",
+    dot: "bg-fog",
   },
 };
 

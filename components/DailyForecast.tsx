@@ -38,17 +38,17 @@ function Precip({ h, big }: { h: HeightDay; big?: boolean }) {
     );
   }
   return big ? (
-    <span className={`${size} tabular-nums text-[#7d8da1]`}>
+    <span className={`${size} tabular-nums text-faint`}>
       0<span className="ml-0.5 text-xs font-normal">cm</span>
     </span>
   ) : (
-    <span className={`${size} text-[#7d8da1]`}>Dry</span>
+    <span className={`${size} text-faint`}>Dry</span>
   );
 }
 
 const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div>
-    <p className="text-[11px] uppercase tracking-wider text-[#7d8da1]">{label}</p>
+    <p className="text-[11px] uppercase tracking-wider text-faint">{label}</p>
     <div className="mt-0.5">{children}</div>
   </div>
 );
@@ -70,27 +70,27 @@ export default function DailyForecast({
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h3 className="font-semibold text-white">{days.length}-day forecast</h3>
-        <p className="text-xs text-[#9aa7b5]">
+        <h3 className="font-semibold text-ink">{days.length}-day forecast</h3>
+        <p className="text-xs text-muted">
           {top.label} {fmt(top.elevation)} m · {bottom.label} {fmt(bottom.elevation)} m
         </p>
       </div>
 
       <div className="-mx-5 mt-4 overflow-x-auto px-5 pb-1">
-        <ol className="grid min-w-[1050px] grid-cols-7 gap-px border border-[#232a31] bg-[#232a31] lg:min-w-[880px]">
+        <ol className="grid min-w-[1050px] grid-cols-7 gap-px border border-line bg-line lg:min-w-[880px]">
           {days.map((d, i) => {
             const label = dayLabel(d.date, i);
             const c = CONDITION[d.condition];
             return (
-              <li key={d.date} className="space-y-3 whitespace-nowrap bg-[#13181d] p-3">
+              <li key={d.date} className="space-y-3 whitespace-nowrap bg-surface p-3">
                 <div>
                   <p
-                    className="text-sm font-semibold text-white"
+                    className="text-sm font-semibold text-ink"
                     style={i === 0 ? { color } : undefined}
                   >
                     {label.name}
                   </p>
-                  <p className="text-xs text-[#9aa7b5]">{label.date}</p>
+                  <p className="text-xs text-muted">{label.date}</p>
                 </div>
                 <span className={`chip ${c.chip}`}>{c.label}</span>
                 <Row label={`New snow · ${top.label.toLowerCase()}`}>
@@ -100,28 +100,28 @@ export default function DailyForecast({
                   <Precip h={d.bottom} />
                 </Row>
                 <Row label="High / low">
-                  <p className="text-sm tabular-nums text-white">
+                  <p className="text-sm tabular-nums text-ink">
                     {d.top.max}° / {d.top.min}°
-                    <span className="ml-1 text-xs text-[#7d8da1]">{top.label.toLowerCase()}</span>
+                    <span className="ml-1 text-xs text-faint">{top.label.toLowerCase()}</span>
                   </p>
-                  <p className="text-sm tabular-nums text-[#c9d3dd]">
+                  <p className="text-sm tabular-nums text-ink-2">
                     {d.bottom.max}° / {d.bottom.min}°
-                    <span className="ml-1 text-xs text-[#7d8da1]">{bottom.label.toLowerCase()}</span>
+                    <span className="ml-1 text-xs text-faint">{bottom.label.toLowerCase()}</span>
                   </p>
                 </Row>
                 <Row label="Freezing level">
-                  <p className="text-sm tabular-nums text-white">
+                  <p className="text-sm tabular-nums text-ink">
                     {d.freezing.min === d.freezing.max
                       ? `${fmt(d.freezing.min)} m`
                       : `${fmt(d.freezing.min)}–${fmt(d.freezing.max)} m`}
                   </p>
                 </Row>
                 <Row label="Wind">
-                  <p className="text-sm tabular-nums text-white">
+                  <p className="text-sm tabular-nums text-ink">
                     Ridge {d.ridge.speed}
-                    <span className="text-xs text-[#9aa7b5]"> km/h {compass(d.ridge.dir)}</span>
+                    <span className="text-xs text-muted"> km/h {compass(d.ridge.dir)}</span>
                   </p>
-                  <p className="text-xs tabular-nums text-[#9aa7b5]">Gusts {d.gust} km/h</p>
+                  <p className="text-xs tabular-nums text-muted">Gusts {d.gust} km/h</p>
                 </Row>
               </li>
             );
@@ -129,7 +129,7 @@ export default function DailyForecast({
         </ol>
       </div>
 
-      <p className="mt-3 text-xs text-[#7d8da1]">
+      <p className="mt-3 text-xs text-faint">
         Environment Canada&apos;s GEM model via Open-Meteo, sharpest for the first two
         days. Wind is the strongest of the day. New snow assumes about 1 cm per mm of
         water; real snow runs from half that (wet coastal snow) to double (cold, dry

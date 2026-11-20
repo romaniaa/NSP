@@ -29,8 +29,10 @@ import {
   mountainDescription,
   mountainTitle,
 } from "@/lib/Site";
-import { snowFromReport } from "@/lib/SnowNow";
+import { REPORT_PAGES } from "@/lib/SnowReaders";
+import { hillSnow, snowFromStation, type SnowNow } from "@/lib/SnowNow";
 import { getSnowReport, type SnowReport } from "@/lib/SnowReport";
+import { getHillSnowStation } from "@/lib/Stations";
 import { trendDetail, trendWord } from "@/lib/Trend";
 import { getMountainWeather } from "@/lib/Weather";
 
@@ -143,7 +145,7 @@ export default async function MountainPage({
       />
       <SiteNav />
       <PageTransition>
-        <main className="min-h-screen px-4 py-8 text-white md:px-10">
+        <main className="min-h-screen px-4 py-8 text-ink md:px-10">
           <div className="mx-auto max-w-8xl space-y-5">
             <MountainContent config={config} />
           </div>
@@ -168,11 +170,13 @@ function Intro({
   sky,
   freezingLevel,
   snow,
+  stationSnow,
 }: {
   config: MountainConfig;
   sky: { precipitation: number; cloud: number | null; code: number | null } | null;
   freezingLevel: number | null;
   snow: SnowReport | null;
+  stationSnow: SnowNow | undefined; // the sensor beside the hill, when reporting
 }) {
   const now =
     freezingLevel != null
@@ -183,12 +187,14 @@ function Intro({
       ? `The resort reports ${snow.depths
           .map((d) => `${fmt(d.cm)} cm at the ${d.label.toLowerCase()}`)
           .join(" and ")}.`
-      : null;
+      : stationSnow
+        ? `The snow sensor beside the hill (${stationSnow.where}) reads ${fmt(stationSnow.cm)} cm.`
+        : null;
 
   const cams = (WEBCAMS[config.id]?.cams.length ?? 0) > 0;
 
   return (
-    <p className="mt-3 max-w-3xl text-[#c9d3dd]">
+    <p className="mt-3 max-w-3xl text-ink-2">
       {[now, depth].filter(Boolean).join(" ")}{" "}
       Below: {cams ? "live webcams, " : ""}rain or snow at each lift and a 7-day
       forecast for this {config.locality} ski area, updated hourly.
@@ -200,15 +206,16 @@ async function MountainContent({ config }: { config: MountainConfig }) {
   const lifts = LIFTS[config.id];
   const webcams = WEBCAMS[config.id];
 
-  const [weatherRes, stationsRes, freezingRes, snowRes, dailyRes] =
+  const [weatherRes, stationsRes, freezingRes, snowRes, dailyRes, snowStationRes] =
     await Promise.allSettled([
       getMountainWeather(config),
       getMountainReadings(config.id),
       getFreezingSeries([config.id]),
       getSnowReport(config.id),
       getDailyForecast(config.id),
+      getHillSnowStation(config.id),
     ]);
-  for (const r of [weatherRes, stationsRes, freezingRes, snowRes, dailyRes]) {
+  for (const r of [weatherRes, stationsRes, freezingRes, snowRes, dailyRes, snowStationRes]) {
     if (r.status === "rejected") console.error("Fetch failure:", r.reason);
   }
 
@@ -219,6 +226,11 @@ async function MountainContent({ config }: { config: MountainConfig }) {
   const snowFailed = snowRes.status === "rejected";
   const snow = snowRes.status === "fulfilled" ? snowRes.value : null;
   const daily = dailyRes.status === "fulfilled" ? dailyRes.value : null;
+  // The snow sensor beside the hill, used in the snow season when the resort has
+  // no figures (and shown as a check when it does).
+  const inSeason = snow != null || snowFailed;
+  const snowStation =
+    inSeason && snowStationRes.status === "fulfilled" ? snowStationRes.value : null;
 
   const freezingLevel = weather?.freezingLevel ?? freezing?.current ?? null;
   const { low, high } = extremes(config);
@@ -238,7 +250,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
                 />
                 {config.fullName}
               </h1>
-              <p className="mt-2 text-sm tabular-nums text-[#9aa7b5]">
+              <p className="mt-2 text-sm tabular-nums text-muted">
                 {fmt(low)}–{fmt(high)} m lifts · {fmt(vertical(config))} m
                 vertical · {config.lat.toFixed(3)}°N{" "}
                 {Math.abs(config.lon).toFixed(3)}°W
@@ -248,13 +260,14 @@ async function MountainContent({ config }: { config: MountainConfig }) {
                 sky={weather}
                 freezingLevel={freezingLevel}
                 snow={snow}
+                stationSnow={snowFromStation(snowStation)}
               />
               <div className="mt-4">
                 <PinButton id={config.id} name={config.fullName} color={config.color} size="large" />
               </div>
             </div>
             {freezing && (
-              <p className="text-xs text-[#7d8da1]">
+              <p className="text-xs text-faint">
                 Model data · updated {freezing.updated}
               </p>
             )}
@@ -264,7 +277,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
               season there is no depth card, so the summary takes the full width. */}
           <div
             className={`grid grid-cols-1 gap-4 ${
-              snow || snowFailed ? "lg:grid-cols-5" : ""
+              inSeason ? "lg:grid-cols-5" : ""
             }`}
           >
             <div className="lg:col-span-3">
@@ -283,13 +296,15 @@ async function MountainContent({ config }: { config: MountainConfig }) {
                 <Unavailable title={`${config.name} summary`} />
               )}
             </div>
-            {(snow || snowFailed) && (
+            {inSeason && (
               <div className="lg:col-span-2">
-                {snow ? (
-                  <SnowDepthCard name={config.name} report={snow} />
-                ) : (
-                  <Unavailable title="Snow depth" />
-                )}
+                <SnowDepthCard
+                  name={config.name}
+                  report={snow}
+                  station={snowStation}
+                  url={REPORT_PAGES[config.id]}
+                  timeZone={config.timeZone}
+                />
               </div>
             )}
           </div>
@@ -304,7 +319,7 @@ async function MountainContent({ config }: { config: MountainConfig }) {
           <SectionLabel>Rain and snow line, and lifts</SectionLabel>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <SharedTransition name={`resort-${config.id}`}>
-              <ElevationVisualizer config={config} weather={weather} snow={snowFromReport(snow)} />
+              <ElevationVisualizer config={config} weather={weather} snow={hillSnow(snow, snowStation)} />
             </SharedTransition>
             <div className="lg:col-span-2">
               {stations && freezingLevel != null ? (
@@ -389,12 +404,12 @@ async function MountainContent({ config }: { config: MountainConfig }) {
             <Unavailable title="Temperature and wind" />
           )}
 
-          <footer className="pb-4 pt-2 text-xs text-[#7d8da1]">
+          <footer className="pb-4 pt-2 text-xs text-faint">
             Model estimates, not station observations. Snow line is estimated at
             150 m below the freezing level. Weather data by{" "}
             <a
               href="https://open-meteo.com"
-              className="underline hover:text-white"
+              className="underline hover:text-ink"
             >
               Open-Meteo.com
             </a>

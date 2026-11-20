@@ -3,7 +3,7 @@ import { Card } from "@/components/Ui";
 import { isRated, type AvalancheForecast, type Danger } from "@/lib/Avalanche";
 import { DANGER_STYLE } from "@/lib/DangerStyle";
 
-const UNRATED = "bg-[#2f3840] text-[#c9d3dd]";
+const UNRATED = "bg-line-2 text-ink-2";
 
 export function dangerClass(d: Danger) {
   return isRated(d) ? DANGER_STYLE[d.value].cell : UNRATED;
@@ -71,7 +71,7 @@ function ForecastLink({
 
 function Disclaimer() {
   return (
-    <p className="text-xs text-[#9aa7b5]">
+    <p className="text-xs text-muted">
       A summary, not the forecast. Read the full forecast before you go, and travel
       in avalanche terrain only with training and rescue gear.
     </p>
@@ -91,10 +91,10 @@ export default function AvalancheCard({
     return (
       <Card className="space-y-3">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="font-semibold text-white">{name} avalanche danger</h3>
-          <span className="chip bg-white/10 text-[#c9d3dd]">Avalanche Canada</span>
+          <h3 className="font-semibold text-ink">{name} avalanche danger</h3>
+          <span className="chip bg-ink/10 text-ink-2">Avalanche Canada</span>
         </div>
-        <p className="text-sm text-[#c9d3dd]">
+        <p className="text-sm text-ink-2">
           No current avalanche forecast covers this area. Check Avalanche Canada&apos;s
           map for the latest.
         </p>
@@ -113,20 +113,20 @@ export default function AvalancheCard({
     <Card className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-white">{name} avalanche danger</h3>
-          <p className="mt-1 text-xs text-[#9aa7b5]">
+          <h3 className="font-semibold text-ink">{name} avalanche danger</h3>
+          <p className="mt-1 text-xs text-muted">
             Issued {when(forecast.issued, timeZone)} · valid until{" "}
             {when(forecast.validUntil, timeZone)}
           </p>
         </div>
-        <span className="chip bg-white/10 text-[#c9d3dd]">{forecast.owner}</span>
+        <span className="chip bg-ink/10 text-ink-2">{forecast.owner}</span>
       </div>
 
       {rated ? (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[420px] border-separate border-spacing-1 text-sm">
             <thead>
-              <tr className="text-xs text-[#9aa7b5]">
+              <tr className="text-xs text-muted">
                 <th className="text-left font-normal" />
                 {days.map((d) => (
                   <th key={d.date} className="text-left font-normal">
@@ -138,7 +138,7 @@ export default function AvalancheCard({
             <tbody>
               {BANDS.map((b) => (
                 <tr key={b.key}>
-                  <th className="pr-2 text-left text-xs font-normal text-[#9aa7b5]">{b.label}</th>
+                  <th className="pr-2 text-left text-xs font-normal text-muted">{b.label}</th>
                   {days.map((d) => (
                     <td key={d.date} className={`px-2 py-2 font-semibold ${dangerClass(d[b.key])}`}>
                       {dangerLabel(d[b.key])}
@@ -150,8 +150,8 @@ export default function AvalancheCard({
           </table>
         </div>
       ) : (
-        <p className="text-sm text-[#c9d3dd]">
-          <span className="chip mr-2 bg-white/10 text-white">{forecast.note ?? "No rating"}</span>
+        <p className="text-sm text-ink-2">
+          <span className="chip mr-2 bg-ink/10 text-ink">{forecast.note ?? "No rating"}</span>
           Avalanche Canada isn&apos;t issuing daily danger ratings for this area right
           now. The full forecast may still describe conditions.
         </p>
@@ -159,11 +159,11 @@ export default function AvalancheCard({
 
       {forecast.problems.length > 0 && (
         <div>
-          <h4 className="text-xs text-[#9aa7b5]">Avalanche problems</h4>
+          <h4 className="text-xs text-muted">Avalanche problems</h4>
           <ul className="mt-2 space-y-2 text-sm">
             {forecast.problems.map((p, i) => (
-              <li key={`${p.type}-${i}`} className="text-[#c9d3dd]">
-                <span className="font-semibold text-white">{p.type}</span>
+              <li key={`${p.type}-${i}`} className="text-ink-2">
+                <span className="font-semibold text-ink">{p.type}</span>
                 {[
                   p.elevations.length > 0 ? p.elevations.join(", ") : null,
                   p.aspects.length > 0 ? `${p.aspects.length === 8 ? "all aspects" : p.aspects.join(", ")}` : null,

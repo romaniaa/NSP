@@ -81,9 +81,9 @@ export default function Summary({
 
   return (
     <Card className={compact ? "h-full p-4!" : ""}>
-      <h2 className="text-sm font-medium text-[#9aa7b5]">{title}</h2>
+      <h2 className="text-sm font-medium text-muted">{title}</h2>
       <div
-        className={`grid md:auto-cols-fr md:grid-flow-col md:gap-0 md:divide-x md:divide-[#2f3840] ${
+        className={`grid md:auto-cols-fr md:grid-flow-col md:gap-0 md:divide-x md:divide-line-2 ${
           compact ? "mt-3 gap-3" : "mt-4 gap-5"
         }`}
       >
@@ -93,13 +93,13 @@ export default function Summary({
             className={`md:first:pl-0 md:last:pr-0 ${compact ? "md:px-4" : "md:px-5"}`}
           >
             <p
-              className={`font-display font-bold uppercase tracking-wide text-white ${
+              className={`font-display font-bold uppercase tracking-wide text-ink ${
                 compact ? "text-lg leading-tight" : "text-2xl"
               }`}
             >
               {it.title}
             </p>
-            <p className={`mt-1 text-[#c9d3dd] ${compact ? "text-sm" : ""}`}>
+            <p className={`mt-1 text-ink-2 ${compact ? "text-sm" : ""}`}>
               {it.body}
             </p>
           </div>

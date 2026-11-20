@@ -58,7 +58,7 @@ export default function BubbleChart({
           {rows.map((r) => (
             <div
               key={r.label}
-              className="flex items-center text-xs text-[#c9d3dd]"
+              className="flex items-center text-xs text-ink-2"
               style={{ height: ROW_H }}
             >
               <span className="flex items-center gap-2">
@@ -71,13 +71,13 @@ export default function BubbleChart({
           ))}
         </div>
         <div
-          className="relative flex-1 border border-[#2f3840]"
+          className="relative flex-1 border border-line-2"
           style={{ height: rows.length * ROW_H }}
         >
           {ticks.map((t) => (
             <div
               key={t}
-              className="absolute inset-y-0 border-l border-[#2f3840]"
+              className="absolute inset-y-0 border-l border-line-2"
               style={{ left: `${pct(t)}%` }}
             />
           ))}
@@ -92,7 +92,7 @@ export default function BubbleChart({
               i > 0 && (
                 <div
                   key={`line-${r.label}`}
-                  className="absolute inset-x-0 border-t border-[#2f3840]"
+                  className="absolute inset-x-0 border-t border-line-2"
                   style={{ top: i * ROW_H }}
                 />
               )
@@ -136,7 +136,7 @@ export default function BubbleChart({
           ))}
         </div>
       </div>
-      <div className="relative ml-28 mt-2 h-4 text-xs tabular-nums text-[#9aa7b5]">
+      <div className="relative ml-28 mt-2 h-4 text-xs tabular-nums text-muted">
         {ticks.map((t) => (
           <span
             key={t}
@@ -147,7 +147,7 @@ export default function BubbleChart({
           </span>
         ))}
       </div>
-      <p className="ml-28 mt-1 text-center text-xs text-[#9aa7b5]">
+      <p className="ml-28 mt-1 text-center text-xs text-muted">
         {axisLabel}
       </p>
     </div>

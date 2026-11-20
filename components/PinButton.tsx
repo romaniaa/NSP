@@ -63,7 +63,7 @@ export default function PinButton({
             <path d="M3 8.5 6.5 12 13 4.5" />
           </svg>
         </span>
-        <span className={on ? "font-medium text-white" : "text-[#c9d3dd]"}>
+        <span className={on ? "font-medium text-ink" : "text-ink-2"}>
           {on ? "On My hills" : "Add to My hills"}
         </span>
       </button>

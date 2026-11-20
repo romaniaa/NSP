@@ -21,10 +21,10 @@ function Chip({ elevation, fl }: { elevation: number; fl: number }) {
 
 export default function SummaryTable({ rows }: { rows: Row[] }) {
   return (
-    <div className="overflow-x-auto border border-[#262626] bg-[#121212]">
+    <div className="overflow-x-auto border border-line bg-sunken">
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
-          <tr className="border-b border-[#262626] text-xs text-[#8f8f8f]">
+          <tr className="border-b border-line text-xs text-muted">
             <th className="px-5 py-3 font-normal">Mountain</th>
             <th className="px-3 py-3 font-normal">Right now</th>
             <th className="px-3 py-3 text-right font-normal">Freezing level</th>
@@ -40,17 +40,17 @@ export default function SummaryTable({ rows }: { rows: Row[] }) {
             return (
               <tr
                 key={config.id}
-                className="border-b border-[#262626] last:border-0"
+                className="border-b border-line last:border-0"
               >
-                <td className="px-5 py-4 font-semibold text-white">
+                <td className="px-5 py-4 font-semibold text-ink">
                   {config.name}
                 </td>
                 {weather ? (
                   <>
-                    <td className="px-3 py-4 text-[#d4d4d4]">
+                    <td className="px-3 py-4 text-ink-2">
                       {verdict(config, weather.freezingLevel)}
                     </td>
-                    <td className="px-3 py-4 text-right tabular-nums text-white">
+                    <td className="px-3 py-4 text-right tabular-nums text-ink">
                       {weather.freezingLevel.toLocaleString("en-CA")} m
                     </td>
                     <td className="px-3 py-4">
@@ -59,17 +59,17 @@ export default function SummaryTable({ rows }: { rows: Row[] }) {
                     <td className="px-3 py-4">
                       <Chip elevation={high} fl={weather.freezingLevel} />
                     </td>
-                    <td className="px-3 py-4 text-right tabular-nums text-white">
+                    <td className="px-3 py-4 text-right tabular-nums text-ink">
                       {weather.precipitation > 0
                         ? `${weather.precipitation} mm/h`
                         : "None"}
                     </td>
-                    <td className="px-5 py-4 text-right tabular-nums text-white">
+                    <td className="px-5 py-4 text-right tabular-nums text-ink">
                       {weather.wind} km/h
                     </td>
                   </>
                 ) : (
-                  <td colSpan={6} className="px-3 py-4 text-[#8f8f8f]">
+                  <td colSpan={6} className="px-3 py-4 text-muted">
                     Data unavailable
                   </td>
                 )}

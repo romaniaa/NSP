@@ -61,6 +61,9 @@ export interface MountainConfig {
   lifts: { bottom: LiftPoint; top: LiftPoint };
   // Ridge outline for the diagram: [x from 0 to 100, elevation in metres].
   profile: [number, number][];
+  // A weather station beside the hill with a snow sensor (an id in
+  // config/stations.ts), for its snow depth when the resort has no report.
+  snowStation?: number;
 }
 
 // Elevations come from resort trail maps and public listings and are approximate.
@@ -93,6 +96,7 @@ const LIST: Omit<MountainConfig, "region">[] = [
     country: "CA",
     area: "north-shore",
     timeZone: "America/Vancouver",
+    snowStation: 11,
     website: "https://www.cypressmountain.com",
     color: "#8aa583",
     lat: 49.396,
@@ -223,6 +227,7 @@ const LIST: Omit<MountainConfig, "region">[] = [
     country: "CA",
     area: "manning",
     timeZone: "America/Vancouver",
+    snowStation: 73,
     website: "https://manningpark.com",
     color: "#c98a8f",
     lat: 49.072,
@@ -404,6 +409,7 @@ const LIST: Omit<MountainConfig, "region">[] = [
     country: "CA",
     area: "okanagan",
     timeZone: "America/Vancouver",
+    snowStation: 14,
     website: "https://www.apexresort.com",
     color: "#7fb08a",
     lat: 49.385,
@@ -480,6 +486,7 @@ const LIST: Omit<MountainConfig, "region">[] = [
     country: "CA",
     area: "kootenays",
     timeZone: "America/Vancouver",
+    snowStation: 75,
     website: "https://www.redresort.com",
     color: "#c46b5e",
     lat: 49.105,
@@ -505,6 +512,7 @@ const LIST: Omit<MountainConfig, "region">[] = [
     country: "CA",
     area: "kootenays",
     timeZone: "America/Vancouver",
+    snowStation: 22,
     website: "https://whitewatermountainresort.com",
     color: "#7fb7c0",
     lat: 49.443,
@@ -531,6 +539,7 @@ const LIST: Omit<MountainConfig, "region">[] = [
     country: "CA",
     area: "kootenays",
     timeZone: "America/Edmonton",
+    snowStation: 30,
     website: "https://www.panoramaresort.com",
     color: "#82b08a",
     lat: 50.448,
@@ -583,6 +592,7 @@ const LIST: Omit<MountainConfig, "region">[] = [
     country: "CA",
     area: "rockies",
     timeZone: "America/Edmonton",
+    snowStation: 130,
     website: "https://skifernie.com",
     color: "#c27c6a",
     lat: 49.457,
@@ -659,6 +669,7 @@ const LIST: Omit<MountainConfig, "region">[] = [
     country: "CA",
     area: "rockies",
     timeZone: "America/Edmonton",
+    snowStation: 122,
     website: "https://www.skibanff.com",
     color: "#d4b05c",
     lat: 51.086,

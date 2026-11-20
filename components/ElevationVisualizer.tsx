@@ -60,8 +60,7 @@ function Ridge({
       />
       <path
         d={`${line(profile)} L100 100 L0 100 Z`}
-        fill="black"
-        fillOpacity="0.45"
+        className="fill-scene-ground"
         stroke={color}
         strokeOpacity="0.9"
         strokeWidth="1.25"
@@ -252,7 +251,7 @@ export function ElevationDiagram({
   return (
     <>
       <div
-        className="relative mt-5 h-96 overflow-hidden border border-[#2f3840] bg-black"
+        className="relative mt-5 h-96 overflow-hidden border border-line-2 bg-scene"
         role="img"
         aria-label={`${name} elevation diagram. Freezing level ${fl} metres.`}
       >
@@ -276,14 +275,14 @@ export function ElevationDiagram({
         <Trees id={id} profile={profile} pct={pct} color={color} />
 
         <div
-          className="absolute inset-x-0 border-t border-dashed border-white/70"
+          className="absolute inset-x-0 border-t border-dashed border-scene-line/70"
           style={{ bottom: `${pct(fl)}%` }}
         />
 
         {ticks.map((m) => (
           <div
             key={m}
-            className="absolute left-0 border-t border-white/40"
+            className="absolute left-0 border-t border-scene-line/40"
             style={{ bottom: `${pct(m)}%`, width: m % 500 === 0 ? 10 : 5 }}
           />
         ))}
@@ -296,9 +295,9 @@ export function ElevationDiagram({
               className="absolute left-4 right-2 flex -translate-y-1/2 items-center justify-between gap-2 text-xs"
               style={{ bottom: `${Math.min(91, Math.max(9, pct(l.elevation)))}%` }}
             >
-              <span className="bg-black/90 px-2 py-1 text-white">
+              <span className="bg-scene-label/90 px-2 py-1 text-ink">
                 {l.name}{" "}
-                <span className="tabular-nums text-[#8f8f8f]">
+                <span className="tabular-nums text-muted">
                   {l.elevation} m
                 </span>
               </span>
@@ -312,7 +311,7 @@ export function ElevationDiagram({
         })}
       </div>
 
-      <p className="mt-2 text-xs text-[#7d8da1]">
+      <p className="mt-2 text-xs text-faint">
         Shaded bands show what would fall at each height. Chips show what is
         happening now.
       </p>
@@ -340,11 +339,11 @@ export default function ElevationVisualizer({
   if (!weather) {
     return (
       <section
-      className={`h-full border border-[#232a31] bg-[#13181d] p-5 ${more ? "flex flex-col" : ""}`}
+      className={`h-full border border-line bg-surface p-5 ${more ? "flex flex-col" : ""}`}
       style={{ borderTop: `3px solid ${config.color}` }}
     >
-        <h2 className="text-lg font-semibold text-white">{name}</h2>
-        <p className="mt-3 text-sm text-[#8f8f8f]">
+        <h2 className="text-lg font-semibold text-ink">{name}</h2>
+        <p className="mt-3 text-sm text-muted">
           Weather data is unavailable. It will retry on the next refresh.
         </p>
         {more && <CardMore />}
@@ -362,29 +361,29 @@ export default function ElevationVisualizer({
 
   return (
     <section
-      className={`h-full border border-[#232a31] bg-[#13181d] p-5 ${more ? "flex flex-col" : ""}`}
+      className={`h-full border border-line bg-surface p-5 ${more ? "flex flex-col" : ""}`}
       style={{ borderTop: `3px solid ${config.color}` }}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-3xl font-bold text-white">{name}</h2>
+            <h2 className="text-3xl font-bold text-ink">{name}</h2>
             {isTallest && (
-              <span className="chip bg-white/10 text-white">Highest peak</span>
+              <span className="chip bg-ink/10 text-ink">Highest peak</span>
             )}
           </div>
-          <p className="font-sans text-xs tabular-nums text-[#8f8f8f]">
+          <p className="font-sans text-xs tabular-nums text-muted">
             {fmt(extremes(config).low)}–{fmt(extremes(config).high)} m lifts ·{" "}
             {fmt(vertical(config))} m vertical
           </p>
-          <p className="mt-1 text-sm text-[#d4d4d4]">{verdict(config, fl, sky)}</p>
+          <p className="mt-1 text-sm text-ink-2">{verdict(config, fl, sky)}</p>
         </div>
         <div className="text-right">
-          <p className="font-display text-4xl font-bold tabular-nums text-white">
+          <p className="font-display text-4xl font-bold tabular-nums text-ink">
             {fl.toLocaleString("en-CA")}
-            <span className="ml-0.5 text-sm font-normal text-[#8f8f8f]">m</span>
+            <span className="ml-0.5 text-sm font-normal text-muted">m</span>
           </p>
-          <p className="text-xs text-[#8f8f8f]">Freezing level</p>
+          <p className="text-xs text-muted">Freezing level</p>
         </div>
       </div>
 
@@ -420,18 +419,18 @@ export default function ElevationVisualizer({
 
       <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
         <div>
-          <dt className="text-xs text-[#8f8f8f]">Precip</dt>
-          <dd className="tabular-nums text-white">
+          <dt className="text-xs text-muted">Precip</dt>
+          <dd className="tabular-nums text-ink">
             {weather.precipitation > 0 ? `${weather.precipitation} mm/h` : "None"}
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-[#8f8f8f]">Wind</dt>
-          <dd className="tabular-nums text-white">{weather.wind} km/h</dd>
+          <dt className="text-xs text-muted">Wind</dt>
+          <dd className="tabular-nums text-ink">{weather.wind} km/h</dd>
         </div>
         <div>
-          <dt className="text-xs text-[#8f8f8f]">Snow line (est.)</dt>
-          <dd className="tabular-nums text-white">~{snowLine} m</dd>
+          <dt className="text-xs text-muted">Snow line (est.)</dt>
+          <dd className="tabular-nums text-ink">~{snowLine} m</dd>
         </div>
       </dl>
       {more && <CardMore />}

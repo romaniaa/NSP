@@ -14,7 +14,7 @@ export default function WebcamGallery({
     return (
       <Card>
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-[#c9d3dd]">
+          <p className="text-sm text-ink-2">
             {name} doesn&apos;t offer its webcams for embedding.
           </p>
           <PillLink href={webcams.page} filled>
@@ -31,9 +31,9 @@ export default function WebcamGallery({
         {webcams.cams.map((cam) => (
           <figure
             key={cam.src}
-            className="plate border border-[#232a31] bg-[#13181d]"
+            className="plate border border-line bg-surface"
           >
-            <div className="relative aspect-video bg-[#0d1115]">
+            <div className="relative aspect-video bg-sunken">
               <iframe
                 src={cam.src}
                 title={`${name} ${cam.name} webcam`}
@@ -45,14 +45,14 @@ export default function WebcamGallery({
                 className="absolute inset-0 h-full w-full border-0"
               />
             </div>
-            <figcaption className="px-4 py-3 text-sm font-semibold text-white lg:px-3 lg:py-2 lg:text-xs">
+            <figcaption className="px-4 py-3 text-sm font-semibold text-ink lg:px-3 lg:py-2 lg:text-xs">
               {cam.name}
             </figcaption>
           </figure>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <p className="text-xs text-[#7d8da1]">
+        <p className="text-xs text-faint">
           Live cams from {name}. If one isn&apos;t loading, try the resort&apos;s page.
         </p>
         <PillLink href={webcams.page}>{name} webcam page</PillLink>

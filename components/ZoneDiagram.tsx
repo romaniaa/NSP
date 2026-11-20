@@ -50,27 +50,27 @@ export default function ZoneDiagram({
 
   return (
     <section
-      className={`h-full border border-[#232a31] bg-[#13181d] p-5 ${more ? "flex flex-col" : ""}`}
+      className={`h-full border border-line bg-surface p-5 ${more ? "flex flex-col" : ""}`}
       style={{ borderTop: `3px solid ${zone.color}` }}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="flex items-center gap-2 text-3xl font-bold text-white">
+          <h2 className="flex items-center gap-2 text-3xl font-bold text-ink">
             {details && <RangeIcon color={zone.color} className="h-4 w-6" />}
             {zone.name}
           </h2>
-          <p className="font-sans text-xs tabular-nums text-[#8f8f8f]">
+          <p className="font-sans text-xs tabular-nums text-muted">
             {details ? "Backcountry · " : ""}
             {fmt(bottom)}–{fmt(top)} m terrain
           </p>
         </div>
         {now && (
           <div className="text-right">
-            <p className="font-display text-4xl font-bold tabular-nums text-white">
+            <p className="font-display text-4xl font-bold tabular-nums text-ink">
               {fmt(now.freezingLevel)}
-              <span className="ml-0.5 text-sm font-normal text-[#8f8f8f]">m</span>
+              <span className="ml-0.5 text-sm font-normal text-muted">m</span>
             </p>
-            <p className="text-xs text-[#8f8f8f]">Freezing level</p>
+            <p className="text-xs text-muted">Freezing level</p>
           </div>
         )}
       </div>
@@ -106,11 +106,11 @@ export default function ZoneDiagram({
           sky={{ precipitation: now.precipitation, cloud: now.cloud, code: now.code }}
         />
       ) : (
-        <p className="mt-3 text-sm text-[#8f8f8f]">
+        <p className="mt-3 text-sm text-muted">
           Weather data is unavailable. It will retry on the next refresh.
         </p>
       )}
-      <p className="mt-1 text-xs text-[#7d8da1]">
+      <p className="mt-1 text-xs text-faint">
         Heights are to scale; the ridge is a generic outline.
       </p>
 
@@ -119,40 +119,40 @@ export default function ZoneDiagram({
           {now && (
             <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
               <div>
-                <dt className="text-xs text-[#8f8f8f]">Precip</dt>
-                <dd className="tabular-nums text-white">
+                <dt className="text-xs text-muted">Precip</dt>
+                <dd className="tabular-nums text-ink">
                   {now.precipitation > 0 ? `${now.precipitation} mm/h` : "None"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-[#8f8f8f]">Ridgetop wind</dt>
-                <dd className="tabular-nums text-white">
+                <dt className="text-xs text-muted">Ridgetop wind</dt>
+                <dd className="tabular-nums text-ink">
                   {ridge?.speed} km/h {ridge && compass(ridge.dir)}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-[#8f8f8f]">Snow line (est.)</dt>
-                <dd className="tabular-nums text-white">
+                <dt className="text-xs text-muted">Snow line (est.)</dt>
+                <dd className="tabular-nums text-ink">
                   ~{now.freezingLevel - SNOW_LINE_OFFSET} m
                 </dd>
               </div>
             </dl>
           )}
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#2f3840] pt-4 text-sm">
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-line-2 pt-4 text-sm">
             <div>
-              <p className="text-xs text-[#8f8f8f]">Avalanche danger today</p>
-              <p className="text-white">
+              <p className="text-xs text-muted">Avalanche danger today</p>
+              <p className="text-ink">
                 {forecast?.status === "ok" ? forecast.owner : "Avalanche Canada"}
               </p>
             </div>
             {forecast == null ? (
-              <span className="chip bg-white/10 text-[#c9d3dd]">Unavailable</span>
+              <span className="chip bg-ink/10 text-ink-2">Unavailable</span>
             ) : level ? (
               <span className={`chip ${DANGER_STYLE[level].chip}`}>
                 Up to {DANGER_STYLE[level].label}
               </span>
             ) : (
-              <span className="chip bg-white/10 text-[#c9d3dd]">
+              <span className="chip bg-ink/10 text-ink-2">
                 {forecast.status === "ok" ? (forecast.note ?? "No rating") : "No forecast"}
               </span>
             )}
