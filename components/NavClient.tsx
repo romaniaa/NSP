@@ -159,11 +159,14 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
   const quick = "orb-pill orb-pill-sm justify-center text-center";
 
   return (
-    // Named so it stays put while the page content slides beneath it.
+    // Named so it stays put while the page content slides beneath it. The name
+    // makes the nav a stacking context, which would trap the floating bar's z-40
+    // inside it and let later cards paint over the bar, so the nav itself sits
+    // above the page.
     <nav
       aria-label="Main"
       style={{ viewTransitionName: "site-nav" }}
-      className="border-b border-line-2 bg-page/70 px-4 md:px-10"
+      className="relative z-40 border-b border-line-2 bg-page/70 px-4 md:px-10"
     >
       {/* Phones: the brand up top, and the controls in a bar floating at the
           bottom centre, within reach of a thumb. */}
@@ -211,7 +214,6 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
             </svg>
             All hills
           </button>
-          <ThemeToggle />
         </div>
       </div>
 
@@ -275,19 +277,22 @@ export default function NavClient({ status }: { status: NavStatus | null }) {
                   : "Live conditions unavailable right now"}
               </p>
             </div>
-            <button type="button" onClick={close} aria-label="Close menu" className="orb orb-sm">
-              <svg
-                viewBox="0 0 16 16"
-                className="h-3.5 w-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                aria-hidden="true"
-              >
-                <path d="m4 4 8 8M12 4l-8 8" />
-              </svg>
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <ThemeToggle />
+              <button type="button" onClick={close} aria-label="Close menu" className="orb orb-sm">
+                <svg
+                  viewBox="0 0 16 16"
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="m4 4 8 8M12 4l-8 8" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto overscroll-contain pb-6">

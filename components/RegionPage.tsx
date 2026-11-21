@@ -100,7 +100,7 @@ export default async function RegionPage({ id }: { id: RegionId }) {
         <main className="min-h-screen px-4 py-8 text-ink md:px-10">
           <div className="mx-auto max-w-8xl space-y-5">
             <header className="pb-2">
-              <h1 className="text-6xl font-bold">{region.name} ski conditions</h1>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold">{region.name} ski conditions</h1>
               <p className="mt-2 max-w-3xl text-ink-2">
                 {region.intro} Rain or snow, temperature and snow depth for each, updated
                 hourly.

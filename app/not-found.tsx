@@ -11,7 +11,7 @@ export default function NotFound() {
       <SiteNav />
       <main className="min-h-screen px-4 py-8 text-ink md:px-10">
         <div className="mx-auto max-w-8xl space-y-4">
-          <h1 className="text-6xl font-bold">Page not found</h1>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold">Page not found</h1>
           <p className="text-ink-2">
             There&apos;s nothing at this address. Try one of the hills:
           </p>

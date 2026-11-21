@@ -1,6 +1,6 @@
 import { Card } from "@/components/Ui";
 import { fmt } from "@/lib/Conditions";
-import type { DayStat } from "@/lib/Forecast";
+import type { DayStat, FreezingSeries } from "@/lib/Forecast";
 
 type Pt = [number, number];
 
@@ -24,152 +24,163 @@ function smooth(pts: Pt[]) {
 
 const PLOT_W = 88; // % of width used by the plot; the rest holds y-axis labels
 
-interface Props {
-  title: string;
-  badge: string;
-  current: number;
-  trend: string;
-  detail: string;
-  days: DayStat[];
-  updated: string;
-  note: string;
+// A change in metres as a short arrow reading; under 100 m counts as steady.
+function change(delta: number | null) {
+  if (delta == null) return "–";
+  const m = Math.round(Math.abs(delta) / 10) * 10;
+  if (m < 100) return "Steady";
+  return `${delta > 0 ? "↑" : "↓"} ${fmt(m)} m`;
 }
 
+// One card for the freezing level: the current value, its trend either side of
+// now, and a single timeline of daily low–high ranges from the past 10 days
+// through the forecast, split at today.
 export default function FreezingChart({
-  title,
-  badge,
-  current,
-  trend,
-  detail,
-  days,
-  updated,
+  series,
   note,
-}: Props) {
+}: {
+  series: FreezingSeries;
+  note: string;
+}) {
+  const { current, deltaPast25, deltaNext24, history, forecast, updated } = series;
+
+  // history ends with today and forecast starts with it; keep one copy.
+  const seen = new Set<string>();
+  const days: DayStat[] = [...history, ...forecast].filter(
+    (d) => !seen.has(d.key) && seen.add(d.key)
+  );
+  const todayIdx = Math.max(0, history.length - 1);
+
   const lowest = Math.min(...days.map((d) => d.low));
   const highest = Math.max(...days.map((d) => d.high));
   const yMin = Math.floor(lowest / 500) * 500;
   let yMax = Math.ceil(highest / 500) * 500;
-  if (yMax === yMin) yMax = yMin + 500;
-  if (yMax - yMin < 1000) {
-    // keep at least two gridline intervals so the chart doesn't look flat
-    yMax = yMin + 1000;
-  }
+  // keep at least two gridline intervals so the chart doesn't look flat
+  if (yMax - yMin < 1000) yMax = yMin + 1000;
 
   const yPct = (v: number) => 92 - ((v - yMin) / (yMax - yMin)) * 84;
-  const xPct = (i: number) =>
-    days.length === 1 ? 0 : (i / (days.length - 1)) * PLOT_W;
+  const xPct = (i: number) => (days.length === 1 ? 0 : (i / (days.length - 1)) * PLOT_W);
 
   const high: Pt[] = days.map((d, i) => [xPct(i), yPct(d.high)]);
   const low: Pt[] = days.map((d, i) => [xPct(i), yPct(d.low)]);
-  const lowReversed = [...low].reverse();
-  const band = `${smooth(high)} ${smooth(lowReversed).replace("M", "L")} Z`;
+  const band = `${smooth(high)} ${smooth([...low].reverse()).replace("M", "L")} Z`;
 
   const grid: number[] = [];
   for (let v = yMin; v <= yMax; v += 500) grid.push(v);
 
-  const labelStep = days.length > 8 ? 2 : 1;
+  // Label every few days, counted from today so today always gets one.
+  const labelStep = days.length > 10 ? 3 : days.length > 6 ? 2 : 1;
+  const todayX = xPct(todayIdx);
 
   return (
-    <Card>
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="font-semibold text-ink">{title}</h3>
-        <span className="chip bg-cool/10 text-cool">{badge}</span>
-      </div>
-
-      <div className="mt-5 flex items-center gap-4">
-        <p className="font-display text-6xl font-bold tabular-nums text-ink">
-          {fmt(current)}
-          <span className="ml-1 text-2xl text-muted">m</span>
-        </p>
+    <Card className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(13rem,auto)_1fr] lg:gap-8">
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-3 lg:flex-col lg:items-start lg:justify-start lg:gap-y-5">
         <div>
-          <p className="font-semibold text-ink">{trend}</p>
-          <p className="text-sm text-muted">{detail}</p>
+          <h3 className="font-semibold text-ink">Freezing level now</h3>
+          <p className="mt-1 font-display text-6xl font-bold tabular-nums text-ink">
+            {fmt(current)}
+            <span className="ml-1 text-2xl text-muted">m</span>
+          </p>
         </div>
+        <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-1 text-sm">
+          <dt className="text-muted">Past 25 h</dt>
+          <dd className="font-semibold tabular-nums text-ink">{change(deltaPast25)}</dd>
+          <dt className="text-muted">Next 24 h</dt>
+          <dd className="font-semibold tabular-nums text-ink">{change(deltaNext24)}</dd>
+        </dl>
       </div>
 
-      <div
-        className="relative mt-6 h-52"
-        role="img"
-        aria-label={`${title}: from ${fmt(lowest)} to ${fmt(highest)} metres`}
-      >
-        <svg
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          className="absolute inset-0 h-full w-full"
-          aria-hidden="true"
+      <div className="min-w-0">
+        <div
+          className="relative h-40"
+          role="img"
+          aria-label={`Freezing level, past ${history.length} days and ${Math.max(0, forecast.length - 1)}-day forecast: from ${fmt(lowest)} to ${fmt(highest)} metres`}
         >
-          {grid.map((v) => (
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            className="absolute inset-0 h-full w-full"
+            aria-hidden="true"
+          >
+            {/* The forecast side, shaded faintly. */}
+            {todayIdx < days.length - 1 && (
+              <rect x={todayX} y={0} width={PLOT_W - todayX} height={100} className="fill-cool" fillOpacity="0.06" />
+            )}
+            {grid.map((v) => (
+              <line
+                key={v}
+                x1={0}
+                x2={PLOT_W}
+                y1={yPct(v)}
+                y2={yPct(v)}
+                className="stroke-edge"
+                strokeWidth="1"
+                strokeDasharray="2 4"
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
             <line
-              key={v}
-              x1={0}
-              x2={PLOT_W}
-              y1={yPct(v)}
-              y2={yPct(v)}
-              className="stroke-edge"
+              x1={todayX}
+              x2={todayX}
+              y1={0}
+              y2={100}
+              className="stroke-cool"
               strokeWidth="1"
-              strokeDasharray="2 4"
               vectorEffect="non-scaling-stroke"
             />
-          ))}
-          <path d={band} className="fill-chart-band" fillOpacity="0.16" />
-          <path
-            d={smooth(low)}
-            fill="none"
-            className="stroke-chart-line"
-            strokeWidth="1.5"
-            vectorEffect="non-scaling-stroke"
-          />
-          <path
-            d={smooth(high)}
-            fill="none"
-            className="stroke-ink"
-            strokeWidth="1.5"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-        {grid.map((v) => (
-          <span
-            key={v}
-            className="absolute right-0 -translate-y-1/2 text-xs tabular-nums text-muted"
-            style={{ top: `${yPct(v)}%` }}
-          >
-            {fmt(v)}m
-          </span>
-        ))}
-      </div>
-
-      <div className="relative mt-2 h-9 text-xs leading-tight text-muted">
-        {days.map((d, i) =>
-          i % labelStep === 0 ? (
+            <path d={band} className="fill-chart-band" fillOpacity="0.16" />
+            <path
+              d={smooth(low)}
+              fill="none"
+              className="stroke-chart-line"
+              strokeWidth="1.5"
+              vectorEffect="non-scaling-stroke"
+            />
+            <path
+              d={smooth(high)}
+              fill="none"
+              className="stroke-ink"
+              strokeWidth="1.5"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+          {todayIdx < days.length - 1 && (
             <span
-              key={d.key}
-              className={`absolute text-center ${i === 0 ? "" : "-translate-x-1/2"}`}
-              style={{ left: `${xPct(i)}%` }}
+              className="absolute top-0 pl-1.5 text-[10px] font-semibold uppercase tracking-wide text-cool"
+              style={{ left: `${todayX}%` }}
             >
-              {d.weekday}
-              <br />
-              {d.day}
+              Forecast
             </span>
-          ) : null
-        )}
-      </div>
+          )}
+          {grid.map((v) => (
+            <span
+              key={v}
+              className="absolute -translate-y-1/2 pl-2 text-xs tabular-nums text-muted"
+              style={{ top: `${yPct(v)}%`, left: `${PLOT_W}%` }}
+            >
+              {fmt(v)}m
+            </span>
+          ))}
+        </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-ink-2">
-        <span>
-          Lowest{" "}
-          <b className="font-semibold text-ink tabular-nums">
-            {fmt(lowest)}m
-          </b>
-        </span>
-        <span>
-          Highest{" "}
-          <b className="font-semibold text-ink tabular-nums">
-            {fmt(highest)}m
-          </b>
-        </span>
-        <span className="text-xs text-muted">{updated}</span>
+        <div className="relative mt-1.5 h-4 text-xs text-muted">
+          {days.map((d, i) =>
+            (i - todayIdx) % labelStep === 0 ? (
+              <span
+                key={d.key}
+                className={`absolute whitespace-nowrap ${i === 0 ? "" : "-translate-x-1/2"} ${i === todayIdx ? "font-semibold text-ink" : ""}`}
+                style={{ left: `${xPct(i)}%` }}
+              >
+                {i === todayIdx ? "Today" : `${d.weekday} ${d.day}`}
+              </span>
+            ) : null
+          )}
+        </div>
+
+        <p className="mt-3 text-xs text-faint">
+          {note} · Updated {updated}
+        </p>
       </div>
-      <p className="mt-3 text-xs text-faint">{note}</p>
     </Card>
   );
 }

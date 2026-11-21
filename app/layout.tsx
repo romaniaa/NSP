@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Condensed, IBM_Plex_Mono } from "next/font/google";
+import SiteFooter from "@/components/SiteFooter";
 import Topo from "@/components/Topo";
 import {
   HOME_DESCRIPTION,
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="relative flex min-h-full flex-col pb-[calc(5.5rem+env(safe-area-inset-bottom))] font-sans md:pb-0">
         <Topo />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );

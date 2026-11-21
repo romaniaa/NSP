@@ -96,7 +96,7 @@ export default async function Home() {
             <style>{DASHBOARD_CSS}</style>
 
             <header className="pb-2">
-              <h1 className="text-6xl font-bold">My hills</h1>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold">My hills</h1>
               <p className="mt-2 max-w-3xl text-ink-2">
                 Ski conditions for the hills and backcountry you care about, on one page:
                 temperature, snow depth, rain or snow and avalanche danger, updated hourly.

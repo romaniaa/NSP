@@ -38,7 +38,7 @@ export default async function HillsPage() {
         <main className="min-h-screen px-4 py-8 text-ink md:px-10">
           <div className="mx-auto max-w-8xl space-y-5">
             <header className="pb-2">
-              <h1 className="text-6xl font-bold">All hills and backcountry</h1>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold">All hills and backcountry</h1>
               <p className="mt-2 max-w-3xl text-ink-2">
                 Current conditions at every ski area and backcountry zone we cover,
                 grouped by region. Open one for its freezing-level forecast, and lifts

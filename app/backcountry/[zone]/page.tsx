@@ -20,7 +20,6 @@ import DailyForecast from "@/components/DailyForecast";
 import { getDailyForecast, getFreezingSeries } from "@/lib/Forecast";
 import { tempAt, windAloft } from "@/lib/Model";
 import { OPEN_GRAPH, SITE_NAME } from "@/lib/Site";
-import { trendDetail, trendWord } from "@/lib/Trend";
 import { getCurrentConditions, type HillNow } from "@/lib/Weather";
 
 export function generateStaticParams() {
@@ -73,9 +72,9 @@ export default async function ZonePage({ params }: { params: Promise<{ zone: str
           <div className="mx-auto max-w-8xl space-y-5">
             <header className="pb-2">
               <p className="text-xs uppercase tracking-widest text-muted">Backcountry</p>
-              <h1 className="flex items-center gap-4 text-6xl font-bold">
-                <RangeIcon color={zone.color} className="h-10 w-[54px]" />
-                {zone.fullName}
+              <h1 className="flex items-center gap-3 text-4xl sm:gap-4 sm:text-5xl md:text-6xl font-bold">
+                <RangeIcon color={zone.color} className="h-8 w-[43px] sm:h-10 sm:w-[54px]" />
+                <span className="min-w-0">{zone.fullName}</span>
               </h1>
               <p className="mt-2 max-w-3xl text-ink-2">{zone.description}</p>
               <div className="mt-4">
@@ -205,28 +204,10 @@ async function ZoneContent({ zone }: { zone: ZoneConfig }) {
 
       <SectionLabel>Freezing level</SectionLabel>
       {freezing ? (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <FreezingChart
-            title="Freezing level forecast"
-            badge="6-day forecast"
-            current={freezing.current}
-            trend={trendWord(freezing.deltaNext24, "Expected to rise", "Expected to fall", "Holding steady")}
-            detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
-            days={freezing.forecast}
-            updated={freezing.updated}
-            note={`Daily low–high range at ${zone.fullName} · Open-Meteo model`}
-          />
-          <FreezingChart
-            title="Freezing level history"
-            badge="10-day history"
-            current={freezing.current}
-            trend={trendWord(freezing.deltaPast25, "Rising", "Falling", "Steady")}
-            detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
-            days={freezing.history}
-            updated={freezing.updated}
-            note={`Daily low–high range at ${zone.fullName} · Open-Meteo model`}
-          />
-        </div>
+        <FreezingChart
+          series={freezing}
+          note={`Daily low–high range at ${zone.fullName} · Open-Meteo model`}
+        />
       ) : (
         <Unavailable title="Freezing level" />
       )}

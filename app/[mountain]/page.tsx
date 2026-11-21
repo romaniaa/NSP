@@ -33,7 +33,6 @@ import { REPORT_PAGES } from "@/lib/SnowReaders";
 import { hillSnow, snowFromStation, type SnowNow } from "@/lib/SnowNow";
 import { getSnowReport, type SnowReport } from "@/lib/SnowReport";
 import { getHillSnowStation } from "@/lib/Stations";
-import { trendDetail, trendWord } from "@/lib/Trend";
 import { getMountainWeather } from "@/lib/Weather";
 
 export function generateStaticParams() {
@@ -242,13 +241,13 @@ async function MountainContent({ config }: { config: MountainConfig }) {
     <>
           <header className="flex flex-wrap items-end justify-between gap-3 pb-2">
             <div>
-              <h1 className="flex items-center gap-4 text-6xl font-bold">
+              <h1 className="flex items-center gap-3 text-4xl sm:gap-4 sm:text-5xl md:text-6xl font-bold">
                 <MountainIcon
                   id={config.id}
                   color={config.color}
-                  className="h-10 w-[54px]"
+                  className="h-8 w-[43px] sm:h-10 sm:w-[54px]"
                 />
-                {config.fullName}
+                <span className="min-w-0">{config.fullName}</span>
               </h1>
               <p className="mt-2 text-sm tabular-nums text-muted">
                 {fmt(low)}–{fmt(high)} m lifts · {fmt(vertical(config))} m
@@ -349,42 +348,12 @@ async function MountainContent({ config }: { config: MountainConfig }) {
 
           <SectionLabel>Freezing level</SectionLabel>
           {freezing ? (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <SharedTransition name="freezing-forecast">
-                <FreezingChart
-                  title="Freezing level forecast"
-                  badge="6-day forecast"
-                  current={freezing.current}
-                  trend={trendWord(
-                    freezing.deltaNext24,
-                    "Expected to rise",
-                    "Expected to fall",
-                    "Holding steady"
-                  )}
-                  detail={trendDetail(freezing.deltaNext24, "the next 24 hours")}
-                  days={freezing.forecast}
-                  updated={freezing.updated}
-                  note={`Daily low–high range at ${config.fullName} · Open-Meteo model`}
-                />
-              </SharedTransition>
-              <SharedTransition name="freezing-history">
-                <FreezingChart
-                  title="Freezing level history"
-                  badge="10-day history"
-                  current={freezing.current}
-                  trend={trendWord(
-                    freezing.deltaPast25,
-                    "Rising",
-                    "Falling",
-                    "Steady"
-                  )}
-                  detail={trendDetail(freezing.deltaPast25, "the past 25 hours")}
-                  days={freezing.history}
-                  updated={freezing.updated}
-                  note={`Daily low–high range at ${config.fullName} · Open-Meteo model`}
-                />
-              </SharedTransition>
-            </div>
+            <SharedTransition name="freezing">
+              <FreezingChart
+                series={freezing}
+                note={`Daily low–high range at ${config.fullName} · Open-Meteo model`}
+              />
+            </SharedTransition>
           ) : (
             <Unavailable title="Freezing level" />
           )}
